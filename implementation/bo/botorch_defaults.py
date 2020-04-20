@@ -183,6 +183,7 @@ def get_NEI(
     # construct Objective module
     if outcome_constraints is None:
         objective = LinearMCObjective(weights=objective_weights)
+
     else:
         obj_tf = get_objective_weights_transform(objective_weights)
         con_tfs = get_outcome_constraint_transforms(outcome_constraints)

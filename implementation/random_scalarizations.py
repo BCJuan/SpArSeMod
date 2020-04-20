@@ -27,5 +27,4 @@ class random_scalarizer(object):
             random.uniform(self.ram - 0.025, self.ram + 0.025),
             random.uniform(self.latency - 0.025, self.latency + 0.025),
         ]
-        print(w_list)
         return w_list[: self.objectives]

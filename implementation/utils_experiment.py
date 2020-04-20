@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ax import Metric, Data, Runner, Experiment, OptimizationConfig, save, load
+from ax import Metric, Data, Runner, Experiment, OptimizationConfig
 from ax.storage.metric_registry import register_metric
 from ax.storage.runner_registry import register_runner
 from ax.core.objective import ScalarizedObjective, Objective
@@ -10,12 +10,10 @@ import pickle
 from os import path
 from model import Trainer
 from numpy import array, prod, max as maxim, log
-from json import loads
-from torch import randn
+from torch import randn, save, load
 from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig
 import copy
 from load_data import get_input_shape
-from ax import save, load
 from ptflops import get_model_complexity_info
 
 
@@ -63,26 +61,26 @@ class AccuracyMetric(Metric):
 
         # TODO: classes from outside
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4))
-        self.net_i = self.net(
+        net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
-        self.net_i = self.trainer.train(
-            self.net_i,
+        net_i = self.trainer.train(
+            net_i,
             self.parametrization,
             name,
             self.epochs,
             self.reload,
             self.old_net,
         )
-        self.net_i.to("cpu")
-        self.net_i.eval()
-        self.net_i.fuse_model()
-        self.net_i.qconfig = get_default_qconfig("fbgemm")
-        prepare(self.net_i, inplace=True)
-        _, self.net_i = self.trainer.evaluate(self.net_i, quant_mode=True)
-        convert(self.net_i, inplace=True)
-        result, self.net_i = self.trainer.evaluate(self.net_i, quant_mode=False)
-        save(self.net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
+        net_i.to("cpu")
+        net_i.eval()
+        net_i.fuse_model()
+        net_i.qconfig = get_default_qconfig("fbgemm")
+        prepare(net_i, inplace=True)
+        _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
+        convert(net_i, inplace=True)
+        result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
+        save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result
 
 
@@ -123,10 +121,10 @@ class WeightMetric(Metric):
         Builds the network and evaluates how many parameters does it have
         """
         # TODO: classes from outside
-        self.net_i = self.net(
+        net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
-        n_params = int(sum((p != 0).sum() for p in self.net_i.parameters()))
+        n_params = int(sum((p != 0).sum() for p in net_i.parameters()))
         weight = log(n_params) / self.top
         return weight
 
@@ -171,16 +169,16 @@ class FeatureMapMetric(Metric):
         Builds the network and evaluates how many parameters does it have
         """
         # TODO: classes from outside
-        self.net_i = self.net(
+        net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
-        self.net_i.eval()
+        net_i.eval()
         # TODO: substitute inputs by a random tensor with batch 1
         # and delete the bb (batshcsize) division in maximum
         # TODO: obtain feature map as an external function as in weight
-        shape = [1] + list(self.net_i.input_shape)
+        shape = [1] + list(net_i.input_shape)
         inputs = randn(shape)
-        fm_list = self.net_i.all_feature(inputs)
+        fm_list = net_i.all_feature(inputs)
         maximum = maxim([prod(array(i)) + prod(array(j)) for i, j in fm_list])
         # TODO: standarize_onjective
         return log(maximum) / self.top
@@ -216,11 +214,11 @@ class LatencyMetric(Metric):
         return Data(df=DataFrame.from_records(records))
 
     def latency_measure(self):
-        self.net_i = self.net(
+        net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
-        macs, params = get_model_complexity_info(self.net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
-                                           print_per_layer_stat=True, verbose=True)
+        macs, params = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
+                                           print_per_layer_stat=False, verbose=False)
         miliseconds = macs*1000/self.flops_capacity
         return log(miliseconds)/self.top
 
@@ -301,16 +299,15 @@ def save_data(exp, data, name=None, root=None, n_obj=None):
     FUnction for saving data, experiment and runner
     """
     data.df.to_csv(path.join(root, name + ".csv"))
-    metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric]
+    metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
     for i in range(n_obj):
         register_metric(metrics[i])
     register_runner(MyRunner)
-
     save(exp, path.join(root, name + ".json"))
 
 
 def load_data(name, n_obj=None):
-    metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric]
+    metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
     for i in range(n_obj):
         register_metric(metrics[i])
     register_runner(MyRunner)
