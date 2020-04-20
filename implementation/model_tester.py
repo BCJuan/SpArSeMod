@@ -22,7 +22,7 @@ objectives = 1
 std_obj = False
 datasets, n_classes = prepare_cifar10()
 
-exp = get_experiment(bits, epochs, objectives, True, datasets, n_classes, search_space(), Net)
+exp = get_experiment(bits, epochs, objectives, True, datasets, n_classes, search_space(), Net, 8*10**6)
 sobol = get_sobol(search_space=exp.search_space)
 exp.new_trial(
     sobol.gen(

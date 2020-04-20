@@ -194,6 +194,7 @@ class LatencyMetric(Metric):
         self.classes = classes
         self.net = net
         self.flops_capacity = flops_capacity
+        self.top = log(10**4)
 
     def fetch_trial_data(self, trial):
         """
@@ -220,7 +221,8 @@ class LatencyMetric(Metric):
         )
         macs, params = get_model_complexity_info(self.net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
                                            print_per_layer_stat=True, verbose=True)
-        return macs/self.flops_capacity
+        miliseconds = macs*1000/self.flops_capacity
+        return log(miliseconds)/self.top
 
 
 class MyRunner(Runner):

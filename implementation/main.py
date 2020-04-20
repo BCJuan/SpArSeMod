@@ -42,4 +42,6 @@ if __name__ == "__main__":
         debug=bool_converter(args["DEBUG"]),
         search_space=search_space,
         net=Net,
+        flops=int(args["FLOPS"]),
+        desired_latency=int(args["DESIRED_LATENCY"])
     )
