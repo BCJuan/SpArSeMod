@@ -20,7 +20,7 @@ def load_pickle(name="./results/configurations.pkl"):
 def configuration(config):
     pars = ConfigParser()
     pars.read("./config.ini")
-    return pars[config]
+    return params[config]
 
 
 def bool_converter(input):

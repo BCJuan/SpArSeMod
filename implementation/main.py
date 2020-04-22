@@ -3,6 +3,7 @@ from os import path, mkdir
 from utils_data import configuration, bool_converter # str_to_list
 from sparse import sparse
 from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2
+from torch import nn as nn
 
 from cnn import search_space, Net
 
@@ -11,13 +12,13 @@ if __name__ == "__main__":
     filterwarnings(action="ignore", category=DeprecationWarning, module=r".*")
     filterwarnings(action="ignore", module=r"torch.quantization")
     args = configuration("DEFAULT")
-
+    print(args)
     if not path.exists(args["ROOT"]):
         mkdir(args["ROOT"])
 
     datasets, n_classes = prepare_cifar2()
     search_space = search_space()
-
+    quant_params = {nn.Conv2d, nn.Linear}
     sparse(
         r1=int(args["R1"]),
         r2=int(args["R2"]),
@@ -43,5 +44,7 @@ if __name__ == "__main__":
         search_space=search_space,
         net=Net,
         flops=int(args["FLOPS"]),
-        desired_latency=int(args["DESIRED_LATENCY"])
+        desired_latency=int(args["DESIRED_LATENCY"]),
+        quant_scheme=str(args['QUANT_SCHEME']),
+        quant_params=quant_params
     )

@@ -10,8 +10,8 @@ import pickle
 from os import path
 from model import Trainer
 from numpy import array, prod, max as maxim, log
-from torch import randn, save, load
-from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig
+from torch import randn, save, load, qint8
+from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig, quantize_dynamic
 import copy
 from load_data import get_input_shape
 # TODO: use original repo
@@ -25,7 +25,7 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(self, epochs, name, pruning, datasets, classes, net):
+    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
         self.trainer = Trainer(pruning=pruning, datasets=datasets)
@@ -35,6 +35,8 @@ class AccuracyMetric(Metric):
         self.datasets = datasets
         self.classes = classes
         self.net = net
+        self.quant_scheme = quant_scheme
+        self.quant_params = quant_params
 
     def fetch_trial_data(self, trial):
         """
@@ -73,13 +75,18 @@ class AccuracyMetric(Metric):
             self.reload,
             self.old_net,
         )
-        net_i.to("cpu")
-        net_i.eval()
-        net_i.fuse_model()
-        net_i.qconfig = get_default_qconfig("fbgemm")
-        prepare(net_i, inplace=True)
-        _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
-        convert(net_i, inplace=True)
+        if self.quant_scheme == 'post':
+            net_i.to("cpu")
+            net_i.eval()
+            net_i.fuse_model()
+            net_i.qconfig = get_default_qconfig("fbgemm")
+            prepare(net_i, inplace=True)
+            _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
+            convert(net_i, inplace=True)
+        elif self.quant_scheme == 'dynamic':
+            net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
+        else:
+            raise NotImplementedError("Quantization scheme not implemented")
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
         save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result
@@ -178,7 +185,7 @@ class FeatureMapMetric(Metric):
         # and delete the bb (batshcsize) division in maximum
         # TODO: obtain feature map as an external function as in weight
         macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
-                                           print_per_layer_stat=False, verbose=False)
+                                           print_per_layer_stat=False, verbose=True)
         # TODO: standarize_onjective
         return log(maxram) / self.top
 
@@ -220,9 +227,11 @@ class LatencyMetric(Metric):
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
         macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
-                                           print_per_layer_stat=False, verbose=False)
+                                           print_per_layer_stat=False, verbose=True)
         miliseconds = macs*1000/self.flops_capacity
-        return log(miliseconds)/self.top
+        # TODO: is necessary this add to avoid negatives?
+        # https://math.stackexchange.com/questions/1111041/showing-y%E2%89%88x-for-small-x-if-y-logx1
+        return log(miliseconds + 1)/self.top
 
 
 class MyRunner(Runner):
@@ -235,7 +244,7 @@ class MyRunner(Runner):
 
 
 def get_experiment(
-    bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops
+    bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params=None
 ):
     """
     Main experiment function: establishes the experiment and defines
@@ -260,6 +269,8 @@ def get_experiment(
             datasets=datasets,
             classes=classes,
             net=net,
+            quant_scheme=quant_scheme,
+            quant_params=quant_params
         ),
         WeightMetric(name="weight", datasets=datasets, classes=classes, net=net),
         FeatureMapMetric(bits, name="ram", datasets=datasets, classes=classes, net=net),
@@ -323,7 +334,8 @@ def pass_data_to_exp(csv):
 
 
 def create_load_experiment(
-    root, name, objectives, bits, epochs1, pruning, datasets, classes, search_space, net, flops
+    root, name, objectives, bits, epochs1, pruning, datasets, classes, search_space, net, flops, quant_scheme,
+    quant_params=None
 ):
     """
     Creates or loads an experiment where all the data and trials 
@@ -340,7 +352,7 @@ def create_load_experiment(
         exp.attach_data(data)
     else:
         exp = get_experiment(
-            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops
+            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params
         )
         data = Data()
     return exp, data

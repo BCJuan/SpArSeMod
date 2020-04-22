@@ -57,7 +57,9 @@ def sparse(
     search_space,
     net,
     flops,
-    desired_latency
+    desired_latency,
+    quant_scheme,
+    quant_params=None
 ):
     """
     Main function for running the random evaluation points and
@@ -91,7 +93,9 @@ def sparse(
         classes,
         search_space,
         net,
-        flops
+        flops,
+        quant_scheme,
+        quant_params
     )
 
     # scalarization init
