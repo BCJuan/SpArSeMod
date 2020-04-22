@@ -12,7 +12,7 @@ if __name__ == "__main__":
     filterwarnings(action="ignore", category=DeprecationWarning, module=r".*")
     filterwarnings(action="ignore", module=r"torch.quantization")
     args = configuration("DEFAULT")
-    print(args)
+
     if not path.exists(args["ROOT"]):
         mkdir(args["ROOT"])
 

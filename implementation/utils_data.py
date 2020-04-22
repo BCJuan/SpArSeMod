@@ -19,7 +19,9 @@ def load_pickle(name="./results/configurations.pkl"):
 
 def configuration(config):
     pars = ConfigParser()
-    pars.read("./config.ini")
+    with open('config.cfg') as f:
+        pars.read_file(f)
+
     return pars[config]
 
 
