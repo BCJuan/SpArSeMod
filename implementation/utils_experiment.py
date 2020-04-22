@@ -14,7 +14,8 @@ from torch import randn, save, load
 from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig
 import copy
 from load_data import get_input_shape
-from ptflops import get_model_complexity_info
+# TODO: use original repo
+from flops_counter_experimental import get_model_complexity_info
 
 
 class AccuracyMetric(Metric):
@@ -176,12 +177,10 @@ class FeatureMapMetric(Metric):
         # TODO: substitute inputs by a random tensor with batch 1
         # and delete the bb (batshcsize) division in maximum
         # TODO: obtain feature map as an external function as in weight
-        shape = [1] + list(net_i.input_shape)
-        inputs = randn(shape)
-        fm_list = net_i.all_feature(inputs)
-        maximum = maxim([prod(array(i)) + prod(array(j)) for i, j in fm_list])
+        macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
+                                           print_per_layer_stat=False, verbose=False)
         # TODO: standarize_onjective
-        return log(maximum) / self.top
+        return log(maxram) / self.top
 
 
 class LatencyMetric(Metric):
@@ -214,10 +213,13 @@ class LatencyMetric(Metric):
         return Data(df=DataFrame.from_records(records))
 
     def latency_measure(self):
+        """
+        Returns in miliseconds
+        """
         net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
-        macs, params = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
+        macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
                                            print_per_layer_stat=False, verbose=False)
         miliseconds = macs*1000/self.flops_capacity
         return log(miliseconds)/self.top

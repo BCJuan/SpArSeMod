@@ -295,43 +295,6 @@ class Net(nn.Module):
         out = self.dequant(out)
         return out
 
-    # TODO: mix this function inside the normal forward?
-    def forward_featuremap_conv(self, x, fm_list, method="output"):
-        """
-        Global forward pass with parameter input and output saving
-        """
-
-        conv_num = self.parametrization.get("num_conv_blocks", 1)
-
-        for j in range(0, conv_num):
-            for layer in self.conv_blocks[j]:
-                layer_input = x
-                x = layer(x)
-                size_saver(fm_list, layer_input, layer, x)
-        return fm_list, x
-
-    def forward_featuremap_linear(self, x_main, x, fm_list, method="output"):
-
-        for _ in range(self.parametrization.get("num_fc_layers", 1) + 1):
-            layer_input = x_main
-            x_main = self.fc(x_main)
-            size_saver(fm_list, layer_input, self.fc, x_main)
-        return fm_list, x_main
-
-    def all_feature(self, x, method="output"):
-        fm_list = []
-        fm_list, x_main = self.forward_featuremap_conv(x, fm_list, method=method)
-        x_main = x_main.mean([2, 3])
-        if self.parametrization.get("num_fc_layers") > 0:
-            fm_list, x_main = self.forward_featuremap_linear(
-                x_main, x, fm_list, method=method
-            )
-        layer_input = x_main
-        x_main = self.classifier(x_main)
-        size_saver(fm_list, layer_input, self.classifier, x_main)
-
-        return fm_list
-
     def fuse_model(self):
         for m in self.modules():
             if type(m) == ConvBNReLU:
@@ -346,17 +309,6 @@ class Net(nn.Module):
                             [str(idx), str(idx + 1), str(idx + 2)],
                             inplace=True,
                         )
-
-
-def size_saver(fm_list, x, w, y, method="output"):
-    """ Saves the model input, outpout or weight sizes in a list"""
-    if method == "output":
-        fm_list.append((list(x.size()), list(y.size())))
-    elif method == "weightmap":
-        fm_list.append((list(x.size()), list(w.size())))
-    else:
-        raise ("Feature map MEthod not implemented")
-    return fm_list
 
 
 def search_space():

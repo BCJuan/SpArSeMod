@@ -14,6 +14,8 @@ from cnn import search_space, Net
 from load_data import prepare_cifar10, get_input_shape
 from ptflops import get_model_complexity_info
 from torchscope import scope
+from torchprofile import profile_macs
+from torch import randn
 
 bits = 32
 epochs = 1
@@ -36,6 +38,9 @@ net = Net(exp.trials[0].arm.parameters, classes=10, datasets=datasets)
 macs, params = get_model_complexity_info(net, (3, 32, 32), as_strings=False,
                                            print_per_layer_stat=True, verbose=True)
 scope(net, input_size=(3, 32, 32), batch_size=1, device='cpu')
+inputs = randn(1, 3, 32, 32)
+macs_jit = profile_macs(net, inputs)
+print(macs_jit)
 net
 net = trainer.train(net, exp.trials[0].arm.parameters)
 print(trainer.evaluate(net))
