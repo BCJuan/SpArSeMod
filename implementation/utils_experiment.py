@@ -84,6 +84,7 @@ class AccuracyMetric(Metric):
             _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
             convert(net_i, inplace=True)
         elif self.quant_scheme == 'dynamic':
+            net_i.to("cpu")
             net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
         else:
             raise NotImplementedError("Quantization scheme not implemented")
@@ -185,7 +186,7 @@ class FeatureMapMetric(Metric):
         # and delete the bb (batshcsize) division in maximum
         # TODO: obtain feature map as an external function as in weight
         macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
-                                           print_per_layer_stat=False, verbose=True)
+                                           print_per_layer_stat=False, verbose=False)
         # TODO: standarize_onjective
         return log(maxram) / self.top
 
@@ -227,7 +228,7 @@ class LatencyMetric(Metric):
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
         macs, params, maxram = get_model_complexity_info(net_i, tuple(get_input_shape(self.datasets)), as_strings=False,
-                                           print_per_layer_stat=False, verbose=True)
+                                           print_per_layer_stat=False, verbose=False)
         miliseconds = macs*1000/self.flops_capacity
         # TODO: is necessary this add to avoid negatives?
         # https://math.stackexchange.com/questions/1111041/showing-y%E2%89%88x-for-small-x-if-y-logx1
