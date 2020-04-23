@@ -101,7 +101,7 @@ class Net(nn.Module):
     parameters after the last convolution and a global forward pass.
     """
 
-    def __init__(self, parametrization, classes=10, datasets=None):
+    def __init__(self, parametrization, classes=10, input_shape=None):
         """
         Initializes the network according to the parametrization passed.
 
@@ -118,7 +118,7 @@ class Net(nn.Module):
 
         """
         super(Net, self).__init__()
-        self.input_shape = get_input_shape(datasets)
+        self.input_shape = input_shape
 
         channels = self.input_shape[0]
         self.parametrization = parametrization
