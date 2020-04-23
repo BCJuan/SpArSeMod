@@ -1,7 +1,15 @@
 from json import loads
 from pickle import load, dump
 from configparser import ConfigParser
+from torch.nn.utils.rnn import PackedSequence
 
+def get_shape_from_dataloader(dataloader):
+    input, label = next(iter(dataloader))
+    if isinstance(input, PackedSequence):
+        shape = input.data.shape
+    else:
+        shape =  tuple(input.shape[1:])
+    return shape
 
 def str_to_list(conf):
     return loads(conf)
