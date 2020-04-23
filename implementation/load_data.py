@@ -2,7 +2,7 @@ from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, DataLoader
 from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor
-from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load
+from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
 from itertools import product
@@ -53,9 +53,51 @@ def build_cost(folder="./data_cost/files/"):
     for i, arxiv in enumerate(listdir(folder)):
         X.append(load(path.join(folder, arxiv)))
         meta = arxiv.split("_")
-        y.append(meta[0])
-        extra[i] = {'subject': meta[1], 'variant': meta[2]}
-    return X, y, meta
+        y.append(int(meta[0]) - 1)
+        extra[str(i)] = dict({'subject': int(meta[1]), 'variant': int(meta[2])})
+    return X, y, extra
+
+
+def divide_cost(X, y, extra):
+    X_train, X_val, X_test = [], [], []
+    y_train, y_val, y_test = [], [], []
+    extra_train, extra_val, extra_test = {}, {}, {}
+    subjects = arange(1, 32)
+    train_subjects = random.choice(subjects, size=25, replace=False)
+    val_subjects = random.choice(train_subjects, size=5, replace=False)
+    train_subjects = [i for i in train_subjects if i not in val_subjects]
+    for i, (seq, label, meta) in enumerate(zip(X, y, extra)):
+        if extra[meta]['subject'] in train_subjects:
+            X_train.append(seq)
+            y_train.append(label)
+            extra_train[len(X_train)] = extra[meta]
+        elif extra[meta]['subject'] in val_subjects:
+            X_val.append(seq)
+            y_val.append(label)
+            extra_val[len(X_train)] = extra[meta]
+        else:
+            X_test.append(seq)
+            y_test.append(label)
+            extra_test[len(X_train)] = extra[meta]
+    return X_train, y_train, extra_train, X_val, y_val, extra_val, X_test, y_test, extra_test
+
+
+def scale_X(X_train, X_test):
+    scaler = StandardScaler()
+    scaler.fit(vstack(X_train))
+    X_train_esc = [scaler.transform(i).tolist() for i in X_train]
+    X_test_esc = [scaler.transform(i).tolist() for i in X_test]
+    return X_train_esc, X_test_esc, scaler
+
+
+def create_cost_dataset(folder="./data_cost/files/"):
+    # turns y labels into numbers; # generate dataset according to y labels stratification
+    # scaling, o ne hot encoding
+    X, y, extra = build_cost()
+    X_t, y_t, e_t, X_v, y_v, e_v, X_ts, y_ts, e_ts = divide_cost(X, y, extra)
+    X_t, X_ts, scaler = scale_X(X_t, X_ts)
+    X_val = [scaler.transform(seq) for seq in X_val]
+    return X_t, y_t, X_v, y_v, X_ts, y_ts
 
 def read_cifar2(folder="data_cifar2", width=20, height=20):
     for fil in listdir(folder):
