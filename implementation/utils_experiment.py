@@ -25,7 +25,7 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None):
+    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None, collate_fn=None):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
         self.trainer = Trainer(pruning=pruning, datasets=datasets)
@@ -37,7 +37,7 @@ class AccuracyMetric(Metric):
         self.net = net
         self.quant_scheme = quant_scheme
         self.quant_params = quant_params
-
+        self.collate_fn = collate_fn
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -63,7 +63,7 @@ class AccuracyMetric(Metric):
         """
 
         # TODO: classes from outside
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4))
+        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
         net_i = self.net(
             self.parametrization, classes=self.classes, datasets=self.datasets
         )
@@ -245,7 +245,8 @@ class MyRunner(Runner):
 
 
 def get_experiment(
-    bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params=None
+    bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params=None,
+    collate_fn=None
 ):
     """
     Main experiment function: establishes the experiment and defines
@@ -271,7 +272,8 @@ def get_experiment(
             classes=classes,
             net=net,
             quant_scheme=quant_scheme,
-            quant_params=quant_params
+            quant_params=quant_params,
+            collate_fn=collate_fn
         ),
         WeightMetric(name="weight", datasets=datasets, classes=classes, net=net),
         FeatureMapMetric(bits, name="ram", datasets=datasets, classes=classes, net=net),
@@ -336,7 +338,7 @@ def pass_data_to_exp(csv):
 
 def create_load_experiment(
     root, name, objectives, bits, epochs1, pruning, datasets, classes, search_space, net, flops, quant_scheme,
-    quant_params=None
+    quant_params=None, collate_fn=None
 ):
     """
     Creates or loads an experiment where all the data and trials 
@@ -353,7 +355,7 @@ def create_load_experiment(
         exp.attach_data(data)
     else:
         exp = get_experiment(
-            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params
+            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn
         )
         data = Data()
     return exp, data

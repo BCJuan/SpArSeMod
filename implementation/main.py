@@ -18,7 +18,8 @@ if __name__ == "__main__":
 
     datasets, n_classes = prepare_cifar2()
     search_space = search_space()
-    quant_params = {nn.Conv2d, nn.Linear}
+    # quant_params = {nn.Conv2d, nn.Linear}
+    
     sparse(
         r1=int(args["R1"]),
         r2=int(args["R2"]),
@@ -46,5 +47,5 @@ if __name__ == "__main__":
         flops=int(args["FLOPS"]),
         desired_latency=int(args["DESIRED_LATENCY"]),
         quant_scheme=str(args['QUANT_SCHEME']),
-        quant_params=quant_params
+        quant_params=None, collate_fn=None
     )
