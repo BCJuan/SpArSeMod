@@ -1,13 +1,15 @@
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
-from torch.utils.data import TensorDataset, DataLoader
-from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor
-from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random
+from torch.utils.data import TensorDataset, DataLoader, Dataset
+from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor, float32, long as tlong
+from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
 from itertools import product
 from collections import Counter
 from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
+from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 
 def get_input_shape(datasets):
     shape = datasets[0][0][0].shape
@@ -15,6 +17,26 @@ def get_input_shape(datasets):
         return shape
     else:
         return (1, *shape)
+
+
+def split_pad_n_pack(data, max_len):
+    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
+    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq)//max_len))
+            for i in range(n_seqs):
+                new_t_seqs.append(seq[(i*max_len):(i*max_len + max_len), :])
+                new_t_labels.append(lab)
+        else:
+            new_t_seqs.append(seq)
+            new_t_labels.append(lab)
+    lengths = [len(seq) for seq in new_t_seqs]
+    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
+    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
+    return pack_padded_data, tensor(new_t_labels)
+
 
 def read_n_save_cost(folder="data_cost", subfolder="files"):
     name_subfolder = path.join(folder, subfolder)
@@ -89,15 +111,35 @@ def scale_X(X_train, X_test):
     X_test_esc = [scaler.transform(i).tolist() for i in X_test]
     return X_train_esc, X_test_esc, scaler
 
+class CostDataset(Dataset):
 
-def create_cost_dataset(folder="./data_cost/files/"):
+    def __init__(self, X, y, transform=None):
+        self.X = X
+        self.y = y
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        sample = {'signal': self.X[idx], 'label':self.y[idx]}
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+
+
+def prepare_cost(folder="./data_cost/files/"):
     # turns y labels into numbers; # generate dataset according to y labels stratification
     # scaling, o ne hot encoding
     X, y, extra = build_cost()
-    X_t, y_t, e_t, X_v, y_v, e_v, X_ts, y_ts, e_ts = divide_cost(X, y, extra)
+    X_t, y_t, _, X_v, y_v, _, X_ts, y_ts, _ = divide_cost(X, y, extra)
     X_t, X_ts, scaler = scale_X(X_t, X_ts)
-    X_val = [scaler.transform(seq) for seq in X_val]
-    return X_t, y_t, X_v, y_v, X_ts, y_ts
+    X_v = [scaler.transform(seq) for seq in X_v]
+    t_set = CostDataset(X_t, y_t)
+    v_set = CostDataset(X_v, y_v)
+    ts_set = CostDataset(X_ts, y_ts)
+    return [t_set, v_set, ts_set], 14
 
 def read_cifar2(folder="data_cifar2", width=20, height=20):
     for fil in listdir(folder):

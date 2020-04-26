@@ -1,8 +1,8 @@
 from ax import SearchSpace, ParameterType, RangeParameter
-from torch.nn import LSTM, Linear, Sequential
-# TODO: include batch norm and try to make it static 
-# TODO: if not, build it for dynamic
-def search_space_static():
+from torch.nn import LSTM, Linear, Sequential, Module
+
+
+def search_space():
     """
     Defines the network search space parameters and returns the search
     space object
@@ -25,6 +25,10 @@ def search_space_static():
     params.append(RangeParameter(name="fc_layers", lower = 0, upper=1, parameter_type=ParameterType.INT))
     for i in range(1, 2):
         params.append(RangeParameter(name="neurons_fc_layer_" + str(i), lower=10 , upper=128, parameter_type=ParameterType.INT))
+    
+    #### SPLIT SEUENCES  ##################################################
+    params.append(RangeParameter(name='max_len', lower = 50, upper=250, parameter_type=ParameterType.INT))
+    
     ###### MANDATORY PARAMETERS ############################################
     params.append(RangeParameter(
         name="learning_rate",
@@ -58,10 +62,10 @@ def search_space_static():
 
 class Net(Module):
 
-    def __init__(self, params, classes, ):
+    def __init__(self, params, classes, input_shape):
         super(Net, self).__init__()
-
-        self.input_dim = input_dim
+        # input shpae coming from dataloader, hence we only have to take features, ie last dim
+        self.input_dim = input_shape[-1]
         self.layers = params.get("rnn_layers", 1)
 
         self.cell = LSTM(self.input_dim, params.get("neurons_layers", 64), batch_first=True,

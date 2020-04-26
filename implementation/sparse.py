@@ -60,7 +60,8 @@ def sparse(
     desired_latency,
     quant_scheme,
     quant_params=None,
-    collate_fn=None
+    collate_fn=None,
+    splitter=False
 ):
     """
     Main function for running the random evaluation points and
@@ -97,7 +98,8 @@ def sparse(
         flops,
         quant_scheme,
         quant_params,
-        collate_fn
+        collate_fn,
+        splitter
     )
 
     # scalarization init

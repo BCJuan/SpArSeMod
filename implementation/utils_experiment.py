@@ -13,6 +13,7 @@ from numpy import array, prod, max as maxim, log
 from torch import randn, save, load, qint8
 from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig, quantize_dynamic
 import copy
+from functools import partial
 
 from utils_data import get_shape_from_dataloader
 from load_data import get_input_shape
@@ -27,7 +28,8 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None, collate_fn=None):
+    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None, collate_fn=None,
+                splitter=False):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
         self.trainer = Trainer(pruning=pruning, datasets=datasets)
@@ -40,6 +42,8 @@ class AccuracyMetric(Metric):
         self.quant_scheme = quant_scheme
         self.quant_params = quant_params
         self.collate_fn = collate_fn
+        self.splitter = splitter
+
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -64,9 +68,10 @@ class AccuracyMetric(Metric):
         Trains the network and evaluates its performance on the test set
         """
 
-        # TODO: classes from outside
+        if self.splitter:
+            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'])
+        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
@@ -101,7 +106,7 @@ class WeightMetric(Metric):
     Class for the weight metric
     """
 
-    def __init__(self, name, datasets, classes, net, collate_fn):
+    def __init__(self, name, datasets, classes, net, collate_fn, splitter):
         super().__init__(name, lower_is_better=True)
         # TODO: maximum limit is nowadays hardcoded as 10**8, change to
         # variable
@@ -110,6 +115,8 @@ class WeightMetric(Metric):
         self.net = net
         self.trainer = Trainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
+        self.splitter = splitter
+
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -132,8 +139,10 @@ class WeightMetric(Metric):
         """
         Builds the network and evaluates how many parameters does it have
         """
+        if self.splitter:
+            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'])
+        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
@@ -148,7 +157,7 @@ class FeatureMapMetric(Metric):
     Class for the weight metric
     """
 
-    def __init__(self, bits, name, datasets, classes, net, collate_fn):
+    def __init__(self, bits, name, datasets, classes, net, collate_fn, splitter):
         super().__init__(name, lower_is_better=True)
         self.bits = bits
         # TODO: maximum limit is nowadays hardcoded as 10**8, change to
@@ -158,6 +167,7 @@ class FeatureMapMetric(Metric):
         self.net = net
         self.trainer = Trainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
+        self.splitter = splitter
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -182,12 +192,15 @@ class FeatureMapMetric(Metric):
         Builds the network and evaluates how many parameters does it have
         """
 
+        if self.splitter:
+            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'])
+        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
         net_i.eval()
+
         macs, params, maxram = get_model_complexity_info(net_i, input_shape, as_strings=False,
                                            print_per_layer_stat=False, verbose=False)
         # TODO: standarize_onjective
@@ -196,7 +209,7 @@ class FeatureMapMetric(Metric):
 
 class LatencyMetric(Metric):
 
-    def __init__(self, name, datasets, classes, net, flops_capacity, collate_fn):
+    def __init__(self, name, datasets, classes, net, flops_capacity, collate_fn, splitter):
         super().__init__(name, lower_is_better=True)
         self.classes = classes
         self.net = net
@@ -204,6 +217,8 @@ class LatencyMetric(Metric):
         self.top = log(10**4)
         self.trainer = Trainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
+        self.splitter = splitter
+
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -227,8 +242,11 @@ class LatencyMetric(Metric):
         """
         Returns in miliseconds
         """
+
+        if self.splitter:
+            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'])
+        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
@@ -252,7 +270,7 @@ class MyRunner(Runner):
 
 def get_experiment(
     bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params=None,
-    collate_fn=None
+    collate_fn=None, splitter=False
 ):
     """
     Main experiment function: establishes the experiment and defines
@@ -279,11 +297,12 @@ def get_experiment(
             net=net,
             quant_scheme=quant_scheme,
             quant_params=quant_params,
-            collate_fn=collate_fn
+            collate_fn=collate_fn,
+            splitter=splitter
         ),
-        WeightMetric(name="weight", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn),
-        FeatureMapMetric(bits, name="ram", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn),
-        LatencyMetric(name='latency', datasets=datasets, classes=classes, net=net, flops_capacity=flops, collate_fn=collate_fn)
+        WeightMetric(name="weight", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn, splitter=splitter),
+        FeatureMapMetric(bits, name="ram", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn, splitter=splitter),
+        LatencyMetric(name='latency', datasets=datasets, classes=classes, net=net, flops_capacity=flops, collate_fn=collate_fn, splitter=splitter)
     ]
     experiment = Experiment(
         name="experiment_building_blocks", search_space=search_space,
@@ -344,7 +363,7 @@ def pass_data_to_exp(csv):
 
 def create_load_experiment(
     root, name, objectives, bits, epochs1, pruning, datasets, classes, search_space, net, flops, quant_scheme,
-    quant_params=None, collate_fn=None
+    quant_params=None, collate_fn=None, splitter=False
 ):
     """
     Creates or loads an experiment where all the data and trials 
@@ -361,7 +380,7 @@ def create_load_experiment(
         exp.attach_data(data)
     else:
         exp = get_experiment(
-            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn
+            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn, splitter
         )
         data = Data()
     return exp, data

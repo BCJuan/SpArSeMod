@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from torch.nn import Conv2d, Linear
+from torch.nn import Conv2d, Linear, LSTM
 from torch.nn.utils import prune
 
-
+# TODO: add pruning for LSTM
+# TODO: add pruning to bias
 def modules_to_prune(net):
     modules = []
     for name, module in net.named_modules():

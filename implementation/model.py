@@ -141,7 +141,7 @@ class Trainer(object):
                             optimizer.step()
 
                     # statistics
-                    running_loss += loss.item() * inputs.size(0)
+                    running_loss += loss.item() * labels.size(0)
                     running_corrects += summ(preds == labels.data)
 
                     if phase == "train":
