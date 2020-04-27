@@ -17,7 +17,7 @@ class Morpher(object):
             params = experiment.arms_by_name[arm].parameters
             self.configs[arm] = params
 
-    def apply_morphs(self, n_morphs=100, max_n_changes=10):
+    def apply_morphs(self, n_morphs=5, max_n_changes=10):
         configs_sub = choice(list(self.configs), size=n_morphs)
         n_changes_x_morph = randint(1, max_n_changes, size=n_morphs)
         new_configs = {}

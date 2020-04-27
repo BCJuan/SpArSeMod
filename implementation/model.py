@@ -78,7 +78,7 @@ class Trainer(object):
         # TODO: change to reduce on plateau, is for cifar change 1000
         exp_lr_scheduler = lr_scheduler.StepLR(
             optimizer,
-            step_size=parameters.get("learning_step"),
+            step_size=parameters.get("learning_step")*1000,
             gamma=parameters.get("learning_gamma"),
         )
 

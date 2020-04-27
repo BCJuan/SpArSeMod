@@ -9,7 +9,7 @@ from utils_experiment import (
     create_load_experiment,
     group_attach_and_save,
 )
-
+from ax.core.observation import ObservationFeatures
 from ax.modelbridge.factory import get_sobol
 from bo.factory import get_botorch
 from tqdm import tqdm
@@ -108,7 +108,7 @@ def sparse(
     # 1. sobol process
     if begin_sobol:
         sobol = get_sobol(exp.search_space)
-        exp, data, pareto_arms = run_model(
+        exp, data, pareto_arms, sobol = run_model(
             r1,
             exp,
             sobol,
@@ -124,7 +124,7 @@ def sparse(
     # 2. botorch process
     exp.optimization_config.objective.metrics[0].epochs = epochs2
     botorch = get_botorch(experiment=exp, data=data)
-    exp, data, pareto_arms = run_model(
+    exp, data, pareto_arms, botorch = run_model(
         r2,
         exp,
         botorch,
@@ -153,7 +153,8 @@ def sparse(
             classes,
             debug,
             net,
-            morpher_ops
+            morpher_ops,
+            botorch
         )
 
 
@@ -181,7 +182,7 @@ def run_model(
                 model.update(new_data, exp)
 
     pareto_arms = clean_models_return_pareto(data)
-    return exp, data, pareto_arms
+    return exp, data, pareto_arms, model
 
 
 def develop_morphisms(
@@ -197,7 +198,8 @@ def develop_morphisms(
     classes,
     debug,
     net,
-    morpher_ops
+    morpher_ops,
+    model
 ):
     morpher = Morpher(operations=morpher_ops)
     morpher.retrieve_best_configurations(exp, pareto_arms)
@@ -208,6 +210,10 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
+        # obs_feats = [ObservationFeatures(parameters=conf) for conf in new_configs.values()]
+        # printexp.optimization_config.objective.metrics[0].epochs)
+        # f, cov = model.predict(obs_feats)
+        # print(f)
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
         old_net = reload_net(exp, new_arm[1], classes, input_shape, net)

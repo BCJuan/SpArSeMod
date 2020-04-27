@@ -19,7 +19,7 @@ def search_space():
     params.append(RangeParameter(name="neurons_layers", parameter_type=ParameterType.INT,
                         lower=8, upper=512))
     params.append(RangeParameter(name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5))
-    params.append(ChoiceParameter(name="cell_type", parameter_type=ParameterType.STRING, values=['lstm', 'gru']))
+    params.append(RangeParameter(name="cell_type", parameter_type=ParameterType.INT, lower =0, upper=1))
     #######################################################################################
 
     ### FC BLOCKS ########################################################################
@@ -40,7 +40,7 @@ def search_space():
         name="learning_gamma", lower=0.9, upper=0.99, parameter_type=ParameterType.FLOAT
     ))
     params.append(RangeParameter(
-        name="learning_step", lower=1, upper=10000, parameter_type=ParameterType.INT
+        name="learning_step", lower=1, upper=10, parameter_type=ParameterType.INT
     ))
     params.append(RangeParameter(
         name="prune_threshold",
@@ -68,9 +68,9 @@ class Net(Module):
         self.input_dim = input_shape[-1]
         self.params = params
         self.layers = params.get("rnn_layers", 1)
-        if params.get('cell_type') == 'lstm':
+        if params.get('cell_type'):
             cell = LSTM
-        elif params.get('cell_type') == 'gru':
+        else:
             cell = GRU
         
         self.cell = cell(self.input_dim, params.get("neurons_layers", 64), batch_first=True,
@@ -87,7 +87,7 @@ class Net(Module):
     def forward(self, sequence):
        
         cell_out, self.hidden = self.cell(sequence)
-        if self.params.get('cell_type') == 'lstm':
+        if self.params.get('cell_type'):
             return self.fc(self.hidden[0][self.layers - 1])     
         else:
             return self.fc(self.hidden[self.layers - 1]) 
