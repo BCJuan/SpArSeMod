@@ -104,12 +104,6 @@ def sparse(
         splitter
     )
 
-    # scalarization init
-    if scalarizations:
-        scalarizer = random_scalarizer(
-            desired_n_param, desired_acc, desired_ram, desired_latency, objectives=objectives
-        )
-        exp.optimization_config.objective.weights = scalarizer.sampler()
 
     # 1. sobol process
     if begin_sobol:
@@ -123,8 +117,6 @@ def sparse(
             root,
             objectives,
             epochs1,
-            scalarizations,
-            scalarizer,
             model_type="random",
             debug=debug,
         )
@@ -141,8 +133,6 @@ def sparse(
         root,
         objectives,
         epochs2,
-        scalarizations,
-        scalarizer,
         model_type="bo",
         debug=debug,
     )
@@ -158,8 +148,6 @@ def sparse(
             name,
             root,
             objectives,
-            scalarizations,
-            scalarizer,
             epochs3,
             datasets,
             classes,
@@ -178,8 +166,6 @@ def run_model(
     root,
     objectives,
     epochs,
-    scalarizations,
-    scalarizer,
     model_type,
     debug,
 ):
@@ -192,9 +178,7 @@ def run_model(
                 data, new_data, exp, name, root, objectives
             )
             if model_type == "bo":
-                model.update(data=new_data, experiment=exp)
-        if scalarizations:
-            exp.optimization_config.objective.weights = scalarizer.sampler()
+                model.update(new_data, exp)
 
     pareto_arms = clean_models_return_pareto(data)
     return exp, data, pareto_arms
@@ -208,8 +192,6 @@ def develop_morphisms(
     name,
     root,
     objectives,
-    scalarizations,
-    scalarizer,
     epochs3,
     datasets,
     classes,
@@ -245,8 +227,6 @@ def develop_morphisms(
             data, new_data, exp = group_attach_and_save(
                 data, new_data, exp, name, root, objectives
             )
-        if scalarizations:
-            exp.optimization_config.objective.weights = scalarizer.sampler()
 
         pareto_arms = clean_models_return_pareto(data)
         morpher.retrieve_best_configurations(exp, pareto_arms)

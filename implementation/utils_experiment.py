@@ -4,7 +4,7 @@
 from ax import Metric, Data, Runner, Experiment, OptimizationConfig
 from ax.storage.metric_registry import register_metric
 from ax.storage.runner_registry import register_runner
-from ax.core.objective import ScalarizedObjective, Objective
+from ax.core.objective import MultiObjective, Objective
 from pandas import DataFrame, read_csv
 import pickle
 from os import path
@@ -309,9 +309,8 @@ def get_experiment(
     )
 
     if objectives > 1:
-        weights = [1 / objectives for i in range(objectives)]
-        objective = ScalarizedObjective(
-            metrics=metric_list[:objectives], weights=weights, minimize=True,
+        objective = MultiObjective(
+            metrics=metric_list[:objectives], minimize=True,
         )
     else:
         objective = Objective(metric=metric_list[:objectives][0], minimize=True,)
