@@ -20,6 +20,8 @@
 5. Beware that the data shape passed to the net comes from the dataloader but without batch dimension. In the case
 
 6. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space
+7. You have to define the operations in the morpher as in `cnn.py` or `rnn.py`
+
 
 ### Parameters
 

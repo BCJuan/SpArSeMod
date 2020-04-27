@@ -89,7 +89,7 @@ class Trainer(object):
             exp_lr_scheduler,
             name,
             epochs,
-            parameters.get("prune_threshold"),
+            parameters.get("prune_threshold") 
         )
         return net
 

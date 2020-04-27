@@ -23,6 +23,7 @@ from random import choice
 from pandas import read_csv
 from torch import Size, load
 
+from utils_data import get_shape_from_dataloader
 
 # TODO: add raytune for distributing machine learning
 # TODO: refactorize main
@@ -61,7 +62,8 @@ def sparse(
     quant_scheme,
     quant_params=None,
     collate_fn=None,
-    splitter=False
+    splitter=False,
+    morpher_ops=None
 ):
     """
     Main function for running the random evaluation points and
@@ -163,6 +165,7 @@ def sparse(
             classes,
             debug,
             net,
+            morpher_ops
         )
 
 
@@ -212,8 +215,9 @@ def develop_morphisms(
     classes,
     debug,
     net,
+    morpher_ops
 ):
-    morpher = Morpher()
+    morpher = Morpher(operations=morpher_ops)
     morpher.retrieve_best_configurations(exp, pareto_arms)
     exp.optimization_config.objective.metrics[0].epochs = epochs3
     exp.optimization_config.objective.metrics[0].reload = True
@@ -222,7 +226,9 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
-        old_net = reload_net(exp, new_arm[1], classes, datasets, net)
+        input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
+                                  exp.arms_by_name[new_arm[1]].parameters)
+        old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
         exp.optimization_config.objective.metrics[0].old_net = old_net
         trial = (
             exp.new_trial()
@@ -278,8 +284,9 @@ def run_trial(experiment, trial, debug):
 
 # TODO: delete hardcoded model folder name, loook in other parts of python
 # files for hardcoded folder model name
-def reload_net(exp, arm, classes, datasets, net):
-    net = net(exp.arms_by_name[arm].parameters, classes, datasets)
+def reload_net(exp, arm, classes, input_shape, net):
+
+    net = net(exp.arms_by_name[arm].parameters, classes, input_shape)
     model_filename = "./models/" + arm + ".pth"
     net.load_state_dict(load(model_filename))
     return net

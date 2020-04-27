@@ -6,13 +6,15 @@ from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_co
 from torch import nn as nn
 
 # from cnn import search_space, Net
-from rnn import search_space, Net
+from rnn import search_space, Net, operations
 
 
 if __name__ == "__main__":
 
     filterwarnings(action="ignore", category=DeprecationWarning, module=r".*")
     filterwarnings(action="ignore", module=r"torch.quantization")
+    filterwarnings(action="ignore", category=UserWarning)
+    
     args = configuration("DEFAULT")
 
     if not path.exists(args["ROOT"]):
@@ -20,7 +22,7 @@ if __name__ == "__main__":
 
     datasets, n_classes = prepare_cost()
     search_space = search_space()
-    quant_params = {nn.LSTM, nn.Linear}
+    quant_params = {nn.LSTM, nn.Linear, nn.GRU}
     collate_fn = split_pad_n_pack
     sparse(
         r1=int(args["R1"]),
@@ -51,5 +53,6 @@ if __name__ == "__main__":
         quant_scheme=str(args['QUANT_SCHEME']),
         quant_params=quant_params,
         collate_fn=collate_fn,
-        splitter=bool_converter(args['SPLITTER'])
+        splitter=bool_converter(args['SPLITTER']),
+        morpher_ops = operations
     )
