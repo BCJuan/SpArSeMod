@@ -2,23 +2,28 @@ from warnings import filterwarnings
 from os import path, mkdir
 from utils_data import configuration, bool_converter # str_to_list
 from sparse import sparse
-from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2
+from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost, split_pad_n_pack
 from torch import nn as nn
 
-from cnn import search_space, Net
+# from cnn import search_space, Net
+from rnn import search_space, Net, operations
+
 
 if __name__ == "__main__":
 
     filterwarnings(action="ignore", category=DeprecationWarning, module=r".*")
     filterwarnings(action="ignore", module=r"torch.quantization")
+    filterwarnings(action="ignore", category=UserWarning)
+    
     args = configuration("DEFAULT")
 
     if not path.exists(args["ROOT"]):
         mkdir(args["ROOT"])
 
-    datasets, n_classes = prepare_cifar2()
+    datasets, n_classes = prepare_cost()
     search_space = search_space()
-    quant_params = {nn.Conv2d, nn.Linear}
+    quant_params = {nn.LSTM, nn.Linear, nn.GRU}
+    collate_fn = split_pad_n_pack
     sparse(
         r1=int(args["R1"]),
         r2=int(args["R2"]),
@@ -46,5 +51,8 @@ if __name__ == "__main__":
         flops=int(args["FLOPS"]),
         desired_latency=int(args["DESIRED_LATENCY"]),
         quant_scheme=str(args['QUANT_SCHEME']),
-        quant_params=quant_params
+        quant_params=quant_params,
+        collate_fn=collate_fn,
+        splitter=bool_converter(args['SPLITTER']),
+        morpher_ops = operations
     )

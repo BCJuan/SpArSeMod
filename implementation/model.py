@@ -17,7 +17,6 @@ from tqdm import tqdm
 from heir import copy_weights
 from quant_n_prune import prune_net
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
-from load_data import get_input_shape
 
 
 class Trainer(object):
@@ -30,13 +29,12 @@ class Trainer(object):
         self.datasizes = {
             i: len(sett) for i, sett in zip(["train", "val", "test"], self.datasets)
         }
-        self.data_size = get_input_shape(datasets)
         self.pruning = pruning
 
-    def load_dataloaders(self, batch_size):
+    def load_dataloaders(self, batch_size, collate_fn):
         self.dataloader = {
             i: DataLoader(
-                sett, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True
+                sett, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True, collate_fn=collate_fn
             )
             for i, sett in zip(["train", "val", "test"], self.datasets)
         }
@@ -91,7 +89,7 @@ class Trainer(object):
             exp_lr_scheduler,
             name,
             epochs,
-            parameters.get("prune_threshold"),
+            parameters.get("prune_threshold") 
         )
         return net
 
@@ -143,7 +141,7 @@ class Trainer(object):
                             optimizer.step()
 
                     # statistics
-                    running_loss += loss.item() * inputs.size(0)
+                    running_loss += loss.item() * labels.size(0)
                     running_corrects += summ(preds == labels.data)
 
                     if phase == "train":
