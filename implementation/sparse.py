@@ -210,10 +210,7 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
-        # obs_feats = [ObservationFeatures(parameters=conf) for conf in new_configs.values()]
-        # printexp.optimization_config.objective.metrics[0].epochs)
-        # f, cov = model.predict(obs_feats)
-        # print(f)
+
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
         old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
