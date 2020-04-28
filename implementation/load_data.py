@@ -1,7 +1,7 @@
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, DataLoader, Dataset
-from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor, float32, long as tlong
+from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor, float32, long as tlong, ones, stack
 from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
@@ -10,7 +10,6 @@ from collections import Counter
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
-
 
 
 def split_pad_n_pack(data, max_len):
@@ -40,15 +39,17 @@ def split_arrange_pad_n_pack(data, max_len):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq)//max_len))
             for i in range(n_seqs):
-                new_t_seqs.append(seq[(i*max_len):(i*max_len + max_len), :])
+                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
+                new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
         else:
-            new_t_seqs.append(seq)
+            len_diff = max_len - len(seq)
+            padding = ones((len_diff, 8, 8))*255
+            seq = tensor(seq).view(-1, 8, 8)
+            final_seq = cat((seq, padding), 0) 
+            new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
-    lengths = [len(seq) for seq in new_t_seqs]
-    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
-    return pack_padded_data, tensor(new_t_labels)
+    return stack(new_t_seqs), tensor(new_t_labels)
 
 
 def read_n_save_cost(folder="./data/data_cost", subfolder="files"):

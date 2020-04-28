@@ -209,9 +209,9 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
-
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
+        print(input_shape, exp.arms_by_name[new_arm[1]].parameters)
         old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
         exp.optimization_config.objective.metrics[0].old_net = old_net
         trial = (
@@ -267,7 +267,6 @@ def run_trial(experiment, trial, debug):
 # TODO: delete hardcoded model folder name, loook in other parts of python
 # files for hardcoded folder model name
 def reload_net(exp, arm, classes, input_shape, net):
-
     net = net(exp.arms_by_name[arm].parameters, classes, input_shape)
     model_filename = "./models/" + arm + ".pth"
     net.load_state_dict(load(model_filename))

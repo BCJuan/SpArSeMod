@@ -8,17 +8,16 @@ from torch.nn.utils import prune
 def modules_to_prune(net):
     modules = []
     for name, module in net.named_modules():
-        if isinstance(module, Conv2d) or isinstance(module, Linear):
+        if isinstance(module, Conv2d):
             modules.append((module, "weight"))
-            modules.append((module, "bias"))
+        if isinstance(module, Linear):
+            modules.append((module, "weight"))
         if isinstance(module, LSTM) or isinstance(module, GRU):
             for i in range(module.num_layers):
                 modules.append((module, "weight_ih_l" + str(i)))
                 modules.append((module, "weight_hh_l" + str(i)))
-                modules.append((module, "bias_ih_l" + str(i)))
-                modules.append((module, "bias_hh_l" + str(i)))
                 
-    return modules[:-1]
+    return modules[:(len(modules)-1)]
 
 
 def prune_net(net, threshold):

@@ -72,6 +72,7 @@ class AccuracyMetric(Metric):
             self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
+        print("input_shape", input_shape)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
@@ -373,7 +374,6 @@ def create_load_experiment(
     Args
     ----
     """
-    print(path.exists(path.join(root, name + ".json")), path.join(root, name + ".json"))
     if path.exists(path.join(root, name + ".json")):
         exp = load_data(path.join(root, name), objectives)
         data = pass_data_to_exp(path.join(root, name + ".csv"))

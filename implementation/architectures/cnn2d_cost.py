@@ -5,6 +5,10 @@ from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
 from random import choice, random, randint
 
+"""
+The only difference between cnn and cnn2d_cost is the inclusion of max len in the search space in the latter case
+also its inclusion in the morphing process
+"""
 
 class DownsampleConv(nn.Module):
     """
@@ -524,6 +528,8 @@ def search_space():
     param59 = RangeParameter(
         name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
     )
+    param60 = RangeParameter(name='max_len', lower = 25, upper=250, parameter_type=ParameterType.INT)
+
     search_space = SearchSpace(
         parameters=[
             param0,
@@ -569,6 +575,7 @@ def search_space():
             param57,
             param58,
             param59,
+            param60
         ]
     )
 
@@ -699,6 +706,18 @@ def num_conv_layers(config):
             config["conv_" + str(block) + "_num_layers"] -= 1
     return config
 
+def change_max_len(config):
+    max_len = config['max_len']
+    if max_len > 250:
+        config['max_len'] = config['max_len'] - 10
+    elif max_len < 50:
+        config['max_len'] = config['max_len'] + 10
+    else:
+        if random() < 0.5:
+            config['max_len'] = config['max_len'] + 10
+        else:
+            config['max_len'] = config['max_len'] - 10
+    return config
 
 operations = {
             "num_fc_layers": num_fc_layers,
@@ -709,4 +728,8 @@ operations = {
             "downsampling_rate": downsampling_rate,
             "num_fc_weights": num_fc_weights,
             "num_conv_layers": num_conv_layers,
+            "change_max_len": change_max_len
         }
+
+
+

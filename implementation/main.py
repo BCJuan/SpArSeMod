@@ -9,7 +9,7 @@ from load_data import (
 from torch import nn as nn
 
 #from architectures.rnn import search_space, Net, operations
-from architectures.cnn import search_space, Net, operations
+from architectures.cnn2d_cost import search_space, Net, operations
 
 if __name__ == "__main__":
 
