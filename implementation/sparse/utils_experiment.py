@@ -8,17 +8,17 @@ from ax.core.objective import MultiObjective, Objective
 from pandas import DataFrame, read_csv
 import pickle
 from os import path
-from model import Trainer
+from .model import Trainer
 from numpy import array, prod, max as maxim, log
 from torch import randn, save, load, qint8
 from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig, quantize_dynamic
 import copy
 from functools import partial
 
-from utils_data import get_shape_from_dataloader
-from load_data import get_input_shape
+from .utils_data import get_shape_from_dataloader
+
 # TODO: use original repo
-from flops_counter_experimental import get_model_complexity_info
+from .flops_counter_experimental import get_model_complexity_info
 
 
 class AccuracyMetric(Metric):
@@ -373,6 +373,7 @@ def create_load_experiment(
     Args
     ----
     """
+    print(path.exists(path.join(root, name + ".json")), path.join(root, name + ".json"))
     if path.exists(path.join(root, name + ".json")):
         exp = load_data(path.join(root, name), objectives)
         data = pass_data_to_exp(path.join(root, name + ".csv"))

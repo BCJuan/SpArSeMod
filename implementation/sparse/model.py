@@ -14,8 +14,8 @@ import copy
 from torch import device, cuda, save, float as floatp, Size
 from torchvision.transforms import ToTensor, Normalize, Compose
 from tqdm import tqdm
-from heir import copy_weights
-from quant_n_prune import prune_net
+from .heir import copy_weights
+from .quant_n_prune import prune_net
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 
 

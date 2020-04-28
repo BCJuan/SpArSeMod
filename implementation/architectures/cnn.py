@@ -4,6 +4,7 @@ from torch import nn, rand
 from load_data import get_input_shape
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
+from random import choice, random, randint
 
 
 class DownsampleConv(nn.Module):

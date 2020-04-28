@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils_experiment import (
+from .utils_experiment import (
     get_experiment,
     MyRunner,
     WeightMetric,
@@ -11,19 +11,18 @@ from utils_experiment import (
 )
 from ax.core.observation import ObservationFeatures
 from ax.modelbridge.factory import get_sobol
-from bo.factory import get_botorch
+from .bo.factory import get_botorch
 from tqdm import tqdm
 from ax import Arm
 from os import path, mkdir
-from random_scalarizations import random_scalarizer
 from ax.core.data import Data
-from morpher import Morpher
-from heir import clean_models_return_pareto
+from .morpher import Morpher
+from .heir import clean_models_return_pareto
 from random import choice
 from pandas import read_csv
 from torch import Size, load
 
-from utils_data import get_shape_from_dataloader
+from .utils_data import get_shape_from_dataloader
 
 # TODO: add raytune for distributing machine learning
 # TODO: refactorize main

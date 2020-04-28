@@ -11,12 +11,6 @@ from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 
-def get_input_shape(datasets):
-    shape = datasets[0][0][0].shape
-    if len(shape) > 2:
-        return shape
-    else:
-        return (1, *shape)
 
 
 def split_pad_n_pack(data, max_len):
@@ -38,7 +32,26 @@ def split_pad_n_pack(data, max_len):
     return pack_padded_data, tensor(new_t_labels)
 
 
-def read_n_save_cost(folder="data_cost", subfolder="files"):
+def split_arrange_pad_n_pack(data, max_len):
+    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
+    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq)//max_len))
+            for i in range(n_seqs):
+                new_t_seqs.append(seq[(i*max_len):(i*max_len + max_len), :])
+                new_t_labels.append(lab)
+        else:
+            new_t_seqs.append(seq)
+            new_t_labels.append(lab)
+    lengths = [len(seq) for seq in new_t_seqs]
+    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
+    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
+    return pack_padded_data, tensor(new_t_labels)
+
+
+def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
     name_subfolder = path.join(folder, subfolder)
 
     if not path.exists(name_subfolder):
@@ -68,7 +81,7 @@ def read_n_save_cost(folder="data_cost", subfolder="files"):
                     new_df = []
                     counter +=1
 
-def build_cost(folder="./data_cost/files/"):
+def build_cost(folder="./data/data_cost/files/"):
     X = []
     y = []
     extra = {}
@@ -129,7 +142,7 @@ class CostDataset(Dataset):
         return sample
 
 
-def prepare_cost(folder="./data_cost/files/"):
+def prepare_cost(folder="./data/data_cost/files/"):
     # turns y labels into numbers; # generate dataset according to y labels stratification
     # scaling, o ne hot encoding
     X, y, extra = build_cost()
@@ -141,7 +154,7 @@ def prepare_cost(folder="./data_cost/files/"):
     ts_set = CostDataset(X_ts, y_ts)
     return [t_set, v_set, ts_set], 14
 
-def read_cifar2(folder="data_cifar2", width=20, height=20):
+def read_cifar2(folder="./data/data_cifar2", width=20, height=20):
     for fil in listdir(folder):
         data = loadtxt(path.join(folder, fil), skiprows=1)
         if fil.split(".")[1] == "train":
@@ -194,11 +207,11 @@ def transform_mnist():
 
 def prepare_mnist():
     trainset = MNIST(
-        root="./data_mnist", train=True, transform=transform_mnist(), download=True
+        root="./data/data_mnist", train=True, transform=transform_mnist(), download=True
     )
     val_set, tr_set = sampleFromClass(trainset, 500)
     ts_set = MNIST(
-        root="./data_mnist", train=False, transform=transform_mnist(), download=True
+        root="./data/data_mnist", train=False, transform=transform_mnist(), download=True
     )
     return [tr_set, val_set, ts_set], len(MNIST.classes)
 
@@ -211,11 +224,11 @@ def transform_cifar10():
 
 def prepare_cifar10():
     trainset = CIFAR10(
-        root="./data_cifar10", train=True, transform=transform_cifar10(), download=True
+        root="./data/data_cifar10", train=True, transform=transform_cifar10(), download=True
     )
     val_set, tr_set = sampleFromClass(trainset, 500)
     ts_set = CIFAR10(
-        root="./data_cifar10", train=False, transform=transform_cifar10(), download=True
+        root="./data/data_cifar10", train=False, transform=transform_cifar10(), download=True
     )
     return [tr_set, val_set, ts_set], 10
 
