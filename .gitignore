@@ -2,10 +2,7 @@ results_sparse/
 paper/
 experimentation/
 __pycache__
-implementation/data_cifar2/
-implementation/data_cifar10/
-implementation/data_mnist/
-implementation/data_cost/
+implementation/data/
 implementation/models/
 implementation/results/
 implementation/__pycache__
