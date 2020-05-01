@@ -39,13 +39,15 @@ def split_arrange_pad_n_pack(data, max_len):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq)//max_len))
             for i in range(n_seqs):
-                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
+                print(tensor(seq[(i*max_len):(i*max_len + max_len), :]).shape)
+                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).reshape(-1, 8, 8)
+                print(img_sequence.shape)
                 new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
         else:
             len_diff = max_len - len(seq)
             padding = ones((len_diff, 8, 8))*255
-            seq = tensor(seq).view(-1, 8, 8)
+            seq = tensor(seq).reshape(-1, 8, 8)
             final_seq = cat((seq, padding), 0) 
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)

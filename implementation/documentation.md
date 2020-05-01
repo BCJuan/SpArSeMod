@@ -30,3 +30,7 @@
     + 'dynamic': you should establish the modules that yolu want to quantize as in pytorch tutorials, or as established in main. If not specified, for example, when using `post`.
 + Splitter: use it for telling sparse that the collate needs a splitter parameters, such as max sequence length for the inputs, and before dataloading it should make
 a partial.
+
+## Problems 
+
++ Remeber problems of samping with IID and SOBOl https://github.com/pytorch/botorch/issues/245 in `bo/factory.py` and in `get_NEI` funcvtion in `botorch_defaults`. put `False ` in `qmc`

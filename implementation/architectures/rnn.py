@@ -13,7 +13,7 @@ def search_space():
 
     """
     params = []
-    ##### CONV BLOCKS ######################################################################
+    ##### RNN BLOCKS ######################################################################
     params.append(RangeParameter(name="rnn_layers", parameter_type=ParameterType.INT,
                             lower=1, upper=5))
     params.append(RangeParameter(name="neurons_layers", parameter_type=ParameterType.INT,

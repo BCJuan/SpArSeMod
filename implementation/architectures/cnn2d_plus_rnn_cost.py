@@ -139,9 +139,19 @@ class Net(nn.Module):
             self.input_shape,
             self._forward_features,
         )
-
+        ##### RNN
+        self.layers = parametrization.get("rnn_layers", 1)
+        if parametrization.get('cell_type'):
+            cell = nn.LSTM
+        else:
+            cell = nn.GRU
+        
+        self.cell = cell(self.odd_shape[0], parametrization.get("neurons_layers", 64), batch_first=True,
+                        num_layers=self.layers,
+                        dropout=parametrization.get("rnn_dropout", 0.1))
+        ####
         for i in range(1, parametrization.get("num_fc_layers", 1) + 1):
-            fc = self.create_fc_block(fc, i, self.odd_shape[0])
+            fc = self.create_fc_block(fc, i, parametrization.get("neurons_layers", 64))
 
         # Final Layer
         self.fc = nn.Sequential(*fc)
@@ -150,7 +160,7 @@ class Net(nn.Module):
             nn.Linear(
                 parametrization.get(
                     "fc_weights_layer_" + str(parametrization.get("num_fc_layers", 0)),
-                    self.odd_shape[0],
+                    parametrization.get("neurons_layers", 64),
                 ),
                 classes,
             )
@@ -293,8 +303,12 @@ class Net(nn.Module):
         out = self.quant(x)
         out = self._forward_features(out)
         out = out.mean([2, 3])
+        cell_out, self.hidden = self.cell(out)
         if self.parametrization.get("num_fc_layers") > 0:
-            out = self.fc(out)
+            if self.params.get('cell_type'):
+                out = self.fc(self.hidden[0][self.layers - 1])     
+            else:
+                out = self.fc(self.hidden[self.layers - 1]) 
         out = self.classifier(out)
         out = self.dequant(out)
         return out
@@ -378,6 +392,17 @@ def search_space():
                 parameter_type=ParameterType.FLOAT,
             ))
 
+
+    ##### RNN BLOCKS ######################################################################
+    params.append(RangeParameter(name="rnn_layers", parameter_type=ParameterType.INT,
+                            lower=1, upper=5))
+    params.append(RangeParameter(name="neurons_layers", parameter_type=ParameterType.INT,
+                        lower=8, upper=512))
+    params.append(RangeParameter(name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5))
+    params.append(RangeParameter(name="cell_type", parameter_type=ParameterType.INT, lower =0, upper=1))
+    #######################################################################################
+
+    ### FC BLOCKS ########################################################################
     params.append(RangeParameter(
         name="num_fc_layers", lower=0, upper=2, parameter_type=ParameterType.INT
     ))
@@ -389,6 +414,7 @@ def search_space():
         params.append(RangeParameter(
             name="drop_fc_" + str(i + 1), lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
         ))
+    
     ########################################################################
     params.append(RangeParameter(
         name="learning_rate",
@@ -556,6 +582,71 @@ def change_max_len(config):
             config['max_len'] = config['max_len'] - 10
     return config
 
+
+def change_layers(config):
+    n_layers = config['rnn_layers']
+    if n_layers == 5:
+        config['rnn_layers'] = config['rnn_layers'] - 1
+    elif n_layers == 1:
+        config['rnn_layers'] = config['rnn_layers'] + 1
+    else:
+        if random() < 0.5:
+            config['rnn_layers'] = config['rnn_layers'] + 1
+        else:
+            config['rnn_layers'] = config['rnn_layers'] - 1
+    return config
+    
+
+def change_n_neurons(config):
+    n_neurons = config['neurons_layers']
+    if n_neurons > 512:
+        config['neurons_layers'] = config['neurons_layers'] - 32
+    elif n_neurons < 33:
+        config['neurons_layers'] = config['neurons_layers'] + 32
+    else:
+        if random() < 0.5:
+            config['neurons_layers'] = config['neurons_layers'] + 32
+        else:
+            config['neurons_layers'] = config['neurons_layers'] - 32
+    return config
+
+
+def change_dropout(config):
+    dropout = config['rnn_dropout']
+    if dropout == 0.5:
+        config['rnn_dropout'] = config['rnn_dropout'] - 0.05
+    elif dropout < 0.1:
+        config['rnn_dropout'] = config['rnn_dropout'] + 0.05
+    else:
+        if random() < 0.5:
+            config['rnn_dropout'] = config['rnn_dropout'] + 0.05
+        else:
+            config['rnn_dropout'] = config['rnn_dropout'] - 0.05
+    return config
+
+
+def change_fc(config):
+    fc = config['fc_layers']
+    if fc == 1:
+        config['fc_layers'] = config['fc_layers'] - 1
+    elif fc == 0:
+        config['fc_layers'] = config['fc_layers'] + 1
+    return config
+
+
+def change_fc_neurons(config):
+    n_neurons = config['neurons_fc_layer_1']
+    if n_neurons > 128:
+        config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] - 5
+    elif n_neurons < 10:
+        config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] + 5
+    else:
+        if random() < 0.5:
+            config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] + 5
+        else:
+            config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] - 5
+    return config
+
 operations = {
             "num_fc_layers": num_fc_layers,
             "num_conv_blocks": num_conv_blocks,
@@ -565,8 +656,11 @@ operations = {
             "downsampling_rate": downsampling_rate,
             "num_fc_weights": num_fc_weights,
             "num_conv_layers": num_conv_layers,
-            "change_max_len": change_max_len
-        }
+            "change_max_len": change_max_len,
+            "change_layers": change_layers,
+            "change_n_neurons": change_n_neurons,
+            "change_dropout": change_dropout,
+                }
 
 
 
