@@ -23,7 +23,7 @@ from pandas import read_csv
 from torch import Size, load
 
 from .utils_data import get_shape_from_dataloader
-
+from functools import partial
 # TODO: add raytune for distributing machine learning
 # TODO: refactorize main
 # TODO: change SobolMCSampler to NormalIIDSampler to avoid problems with
@@ -209,6 +209,11 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
+        if exp.optimization_config.objective.metrics[0].splitter:
+            exp.optimization_config.objective.metrics[0].collate_fn = partial(
+                exp.optimization_config.objective.metrics[0].collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
+        exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
+                                collate_fn=exp.optimization_config.objective.metrics[0].collate_fn.collate_fn)
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
         print(input_shape, exp.arms_by_name[new_arm[1]].parameters)
