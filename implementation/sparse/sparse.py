@@ -21,7 +21,7 @@ from .heir import clean_models_return_pareto
 from random import choice
 from pandas import read_csv
 from torch import Size, load
-
+from copy import copy
 from .utils_data import get_shape_from_dataloader
 from functools import partial
 # TODO: add raytune for distributing machine learning
@@ -153,7 +153,8 @@ def sparse(
             debug,
             net,
             morpher_ops,
-            botorch
+            botorch,
+            collate_fn
         )
 
 
@@ -198,7 +199,8 @@ def develop_morphisms(
     debug,
     net,
     morpher_ops,
-    model
+    model,
+    collate_fn
 ):
     morpher = Morpher(operations=morpher_ops)
     morpher.retrieve_best_configurations(exp, pareto_arms)
@@ -209,11 +211,12 @@ def develop_morphisms(
         # TODO: new configuration should be passed through acquisiton
         # function not random with chocie -> use model predict
         new_arm = choice(list(new_configs))
+        collate_fn_p = copy(collate_fn)
         if exp.optimization_config.objective.metrics[0].splitter:
-            exp.optimization_config.objective.metrics[0].collate_fn = partial(
-                exp.optimization_config.objective.metrics[0].collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
+            collate_fn_p = partial(
+                collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
         exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
-                                collate_fn=exp.optimization_config.objective.metrics[0].collate_fn.collate_fn)
+                                collate_fn=collate_fn_p)
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
         print(input_shape, exp.arms_by_name[new_arm[1]].parameters)

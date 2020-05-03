@@ -146,7 +146,7 @@ class Net(nn.Module):
         else:
             cell = nn.GRU
         
-        self.cell = cell(self.odd_shape[0], parametrization.get("neurons_layers", 64), batch_first=True,
+        self.cell = cell(self.odd_shape[-1], parametrization.get("neurons_layers", 64), batch_first=True,
                         num_layers=self.layers,
                         dropout=parametrization.get("rnn_dropout", 0.1))
         ####
@@ -300,17 +300,19 @@ class Net(nn.Module):
         Global forward pass for both the convolution blocks and the fully
         connected layers.
         """
-        out = self.quant(x)
+        # out = self.quant(x)
+        out = x
         out = self._forward_features(out)
-        out = out.mean([2, 3])
+        out = out.mean(3)
         cell_out, self.hidden = self.cell(out)
+        if self.parametrization.get('cell_type'):
+            out = self.hidden[0][self.layers - 1]
+        else:
+            out = self.hidden[self.layers - 1]
         if self.parametrization.get("num_fc_layers") > 0:
-            if self.params.get('cell_type'):
-                out = self.fc(self.hidden[0][self.layers - 1])     
-            else:
-                out = self.fc(self.hidden[self.layers - 1]) 
+            out = self.fc(out)
         out = self.classifier(out)
-        out = self.dequant(out)
+        # out = self.dequant(out)
         return out
 
     def fuse_model(self):

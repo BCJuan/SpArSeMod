@@ -67,10 +67,10 @@ class AccuracyMetric(Metric):
         """
         Trains the network and evaluates its performance on the test set
         """
-
+        collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
+            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
+        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         print("input_shape", input_shape)
         net_i = self.net(
@@ -140,9 +140,10 @@ class WeightMetric(Metric):
         """
         Builds the network and evaluates how many parameters does it have
         """
+        collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
+            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
+        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
@@ -192,10 +193,10 @@ class FeatureMapMetric(Metric):
         """
         Builds the network and evaluates how many parameters does it have
         """
-
+        collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
+            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
+        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
@@ -243,10 +244,10 @@ class LatencyMetric(Metric):
         """
         Returns in miliseconds
         """
-
+        collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            self.collate_fn = partial(self.collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=self.collate_fn)
+            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
+        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape

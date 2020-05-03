@@ -4,12 +4,13 @@ from sparse.utils_data import configuration, bool_converter # str_to_list
 from sparse.sparse import sparse
 from load_data import (
     prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost, split_pad_n_pack,
-    split_arrange_pad_n_pack
+    split_arrange_pad_n_pack, insample_pad_n_pack
 )
 from torch import nn as nn
 
-#from architectures.rnn import search_space, Net, operations
-from architectures.cnn2d_cost import search_space, Net, operations
+from architectures.rnn import search_space, Net, operations
+# from architectures.cnn2d_cost import search_space, Net, operations
+# from architectures.cnn2d_plus_rnn_cost import search_space, Net, operations
 
 if __name__ == "__main__":
 
@@ -24,9 +25,10 @@ if __name__ == "__main__":
 
     datasets, n_classes = prepare_cost()
     search_space = search_space()
-    # quant_params = {nn.LSTM, nn.Linear, nn.GRU}
-    quant_params = None
-    collate_fn = split_arrange_pad_n_pack
+    # quant_params = {nn.LSTM, nn.Linear, nn.GRU, nn.Conv2d}
+    # quant_params = None
+    quant_params = {nn.LSTM, nn.Linear, nn.GRU}
+    collate_fn = insample_pad_n_pack
     sparse(
         r1=int(args["R1"]),
         r2=int(args["R2"]),
