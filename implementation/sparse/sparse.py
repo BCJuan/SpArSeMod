@@ -259,16 +259,15 @@ def model_loop(model, batch_size, experiment, debug):
 
 
 def run_trial(experiment, trial, debug):
-    if debug:
+
+    try:
         new_data = experiment._fetch_trial_data(trial.index)
         experiment.trials[trial.index].mark_completed()
-    else:
-        try:
-            new_data = experiment._fetch_trial_data(trial.index)
-            experiment.trials[trial.index].mark_completed()
-        except (RuntimeError, IndexError) as e:
-            experiment.trials[trial.index].mark_failed()
-            new_data = Data()
+    except (RuntimeError, IndexError) as e:
+        experiment.trials[trial.index].mark_failed()
+        new_data = Data()
+        if debug:
+            print(e)
     return experiment, trial, new_data
 
 

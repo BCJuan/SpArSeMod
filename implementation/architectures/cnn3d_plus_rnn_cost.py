@@ -30,7 +30,7 @@ def search_space(config=CONFIGURATION):
                             lower=1, upper=config['max_conv_blocks']))
 
     for i in range(1, config['max_conv_blocks'] + 1):
-        params.append(RangeParameter(name="conv_block" + str(i) + "_num_layers", parameter_type=ParameterType.INT,
+        params.append(RangeParameter(name="conv_block_" + str(i) + "_num_layers", parameter_type=ParameterType.INT,
                             lower=1, upper=config['max_conv_layer_block']))        
         for j in range(1, config['max_conv_layer_block'] + 1):
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_type", parameter_type=ParameterType.INT,
@@ -38,13 +38,13 @@ def search_space(config=CONFIGURATION):
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_channels", parameter_type=ParameterType.INT,
                                          lower=5, upper=100))
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_filtersize", parameter_type=ParameterType.INT,
-                                         lower=2, upper=10))
-            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_stride", parameter_type=ParameterType.INT,
-                                         lower=1, upper=3))
-            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_groups", parameter_type=ParameterType.INT,
-                                        lower=0, upper=1))    
-            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_dilation", parameter_type=ParameterType.INT,
-                                        lower=1, upper=3)) 
+                                         lower=2, upper=5))
+            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_stride", parameter_type=ParameterType.INT,
+            #                              lower=1, upper=3))
+            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_groups", parameter_type=ParameterType.INT,
+            #                             lower=0, upper=1))    
+            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_dilation", parameter_type=ParameterType.INT,
+            #                             lower=1, upper=2)) 
         params.append(RangeParameter(
         name="drop_" + str(i), lower=0.1, upper=0.8, parameter_type=ParameterType.FLOAT
         ))
@@ -320,9 +320,9 @@ operations = {
             "layer_type": layer_type,
             "num_conv_filters": num_conv_filters,
             "kernel_size": kernel_size,
-            "stride_change": stride_change,
-            "groups_change": groups_change, 
-            "dilation_change": dilation_change,
+            # "stride_change": stride_change,
+            # "groups_change": groups_change, 
+            # "dilation_change": dilation_change,
             "down_rate_change": down_rate_change, 
             "drop_rate_change": drop_rate_change,
             "num_fc_weights": num_fc_weights,
@@ -360,6 +360,7 @@ class Net(nn.Module):
         self.input_shape = input_shape
 
         channels = self.input_shape[0]
+
         self.parametrization = parametrization
         # COnvolution blocks
         conv_blocks = []
@@ -414,16 +415,14 @@ class Net(nn.Module):
     def create_conv_block(self, j, channels):
         conv = []
         for i in range(
-            1, self.parametrization.get("conv_block" + str(j) + "_num_layers", 1) + 1
+            1, self.parametrization.get("conv_block_" + str(j) + "_num_layers") + 1
         ):
             conv_type = self.parametrization.get(
                 "block_" + str(j) + "_conv_" + str(i) + "_type", 0
             )
 
             if i == 1 and j != 1:
-                index_l = self.parametrization.get(
-                    "conv_block_" + str(j - 1) + "_num_layers", 1
-                )
+                index_l = self.parametrization.get("conv_block_" + str(j - 1) + "_num_layers")
                 index_b = j - 1
             else:
                 index_l = i - 1
@@ -437,43 +436,31 @@ class Net(nn.Module):
             else:
                 conv_l = nn.ConvTranspose3d
 
-            if self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) == 0:
-                groups = in_channels
-                factor = abs(ceil(in_channels/self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels", 6)))
-                out_channels = int(factor*in_channels)
-            else:
-                groups = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) 
-                out_channels = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels", 6)
-
-            conv.append(conv_l(
+            # if self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) == 0:
+            #     groups = in_channels
+            #     factor = abs(ceil(in_channels/self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels", 6)))
+            #     out_channels = int(factor*in_channels)
+            # else:
+            #     groups = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) 
+            #     out_channels = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels")
+            out_channels = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels")
+            conv.append(nn.Conv3d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=self.parametrization.get(
-                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize", 3
-                ),
-                stride=self.parametrization.get(
-                    "block_" + str(j) + "_conv_" + str(i) + "_stride", 1
-                ), 
-                groups=groups, 
-                dilation=self.parametrization.get(
-                    "block_" + str(j) + "_conv_" + str(i) + "_dilation", 1
-                ),                         
+                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize"),
+                # stride=self.parametrization.get(
+                #     "block_" + str(j) + "_conv_" + str(i) + "_stride", 1
+                # ), 
+                # groups=1, 
+                # dilation=self.parametrization.get(
+                #     "block_" + str(j) + "_conv_" + str(i) + "_dilation", 1
+                # ),                         
             ))
             conv.append(nn.BatchNorm3d(out_channels))
-            conv.append(nn.ReLU(inplace=False))
-        conv.append(
-            nn.MaxPool3d(
-                (
-                    self.parametrization.get(
-                        "down_" + str(j)
-                    ),
-                    self.parametrization.get(
-                        "down_" + str(j)
-                    ),
-                )
-            )
-        )
-        conv.append(nn.Dropout(self.parametrization.get("drop_" + str(j), 0.2)))
+            conv.append(nn.ReLU())
+        conv.append(nn.MaxPool3d(self.parametrization.get("down_" + str(j))))
+        conv.append(nn.Dropout(self.parametrization.get("drop_" + str(j))))
         return nn.Sequential(*conv)
 
     def _get_conv_output(self, bs, shape, feature_function):
@@ -526,7 +513,7 @@ class Net(nn.Module):
         # out = self.quant(x)
         out = x
         out = self._forward_features(out)
-        out = out.mean(3)
+        out = out.mean([2, 3])
         cell_out, self.hidden = self.cell(out)
         if self.parametrization.get('cell_type'):
             out = self.hidden[0][self.layers - 1]
