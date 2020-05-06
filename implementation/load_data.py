@@ -1,7 +1,7 @@
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, DataLoader, Dataset
-from torch import unsqueeze, cat, tensor, int64, stack, Tensor, unsqueeze, FloatTensor, float32, long as tlong, ones, stack
+from torch import unsqueeze, cat, tensor, int64, stack, Tensor, FloatTensor, float32, long as tlong, ones
 from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
@@ -72,6 +72,27 @@ def split_arrange_pad_n_pack(data, max_len):
             new_t_labels.append(lab)
     return stack(new_t_seqs), tensor(new_t_labels)
 
+def split_arrange_pad_n_pack_3d(data, max_len):
+    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
+    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq)//max_len))
+            for i in range(n_seqs):
+                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
+                img_sequence = unsqueeze(img_sequence, 0)
+                new_t_seqs.append(img_sequence)
+                new_t_labels.append(lab)
+        else:
+            len_diff = max_len - len(seq)
+            padding = ones((len_diff, 8, 8))*255
+            seq = tensor(seq).view(-1, 8, 8)
+            final_seq = cat((seq, padding), 0)
+            final_seq = unsqueeze(final_seq, 0)
+            new_t_seqs.append(final_seq)
+            new_t_labels.append(lab)
+    return stack(new_t_seqs), tensor(new_t_labels)
 
 def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
     name_subfolder = path.join(folder, subfolder)

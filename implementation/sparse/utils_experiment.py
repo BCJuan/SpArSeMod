@@ -72,7 +72,6 @@ class AccuracyMetric(Metric):
             collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
         self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
         input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
-        print("input_shape", input_shape)
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
