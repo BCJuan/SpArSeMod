@@ -200,7 +200,7 @@ def get_NEI(
         X_pending=X_pending,
         prune_baseline=kwargs.get("prune_baseline", True),
         mc_samples=kwargs.get("mc_samples", 512),
-        qmc=False, #kwargs.get("qmc", True),
+        qmc=kwargs.get("qmc", True),
         seed=torch.randint(1, 10000, (1,)).item(),
     )
 

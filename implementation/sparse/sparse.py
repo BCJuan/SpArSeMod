@@ -219,7 +219,7 @@ def develop_morphisms(
                                 collate_fn=collate_fn_p)
         input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
                                   exp.arms_by_name[new_arm[1]].parameters)
-        print(input_shape, exp.arms_by_name[new_arm[1]].parameters)
+
         old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
         exp.optimization_config.objective.metrics[0].old_net = old_net
         trial = (

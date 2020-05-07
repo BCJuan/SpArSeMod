@@ -33,4 +33,4 @@ a partial.
 
 ## Problems 
 
-+ Remeber problems of samping with IID and SOBOl https://github.com/pytorch/botorch/issues/245 in `bo/factory.py` and in `get_NEI` funcvtion in `botorch_defaults`. put `False ` in `qmc`
++ Remeber problems of samping with IID and SOBOl https://github.com/pytorch/botorch/issues/245 in `bo/factory.py` and in `get_NEI` funcvtion in `botorch_defaults`. put `False ` in `qmc`. Also in `botorch utils.py`, in the libray, if you are sampling from a big space, change Sobol sampler in `prune inferior poins` by a normal iid
