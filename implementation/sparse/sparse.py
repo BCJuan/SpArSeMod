@@ -11,7 +11,7 @@ from .utils_experiment import (
 )
 from ax.core.observation import ObservationFeatures
 from ax.modelbridge.factory import get_sobol
-from .bo.factory import get_botorch
+from ax.modelbridge.factory import get_botorch
 from tqdm import tqdm
 from ax import Arm
 from os import path, mkdir

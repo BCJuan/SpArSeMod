@@ -22,7 +22,7 @@ from botorch.sampling.samplers import MCSampler
 from botorch.models.gpytorch import BatchedMultiOutputGPyTorchModel
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.models.utils import validate_input_scaling
-from gpytorch.kernels import ProductStructureKernel
+from gpytorch.kernels import ProductKernel
 from .arc_kernel import ArcKernel
 
 #
@@ -83,7 +83,7 @@ class FixedNoiseGP(BatchedMultiOutputGPyTorchModel, ExactGP):
         self.mean_module = ConstantMean(batch_shape=self._aug_batch_shape)
         # MOD####
         base_kernel = MaternKernel(nu=2.5)
-        self.covar_module = ScaleKernel(
+        self.covar_module = ProductKernel(ScaleKernel(
             ArcKernel(
                 base_kernel,
                 angle_prior=GammaPrior(0.5, 1),
@@ -93,7 +93,7 @@ class FixedNoiseGP(BatchedMultiOutputGPyTorchModel, ExactGP):
             ),
             outputscale_prior=GammaPrior(2.0, 0.15),
             batch_shape=self._aug_batch_shape,
-        )
+        ))
 
         ######
         if outcome_transform is not None:
