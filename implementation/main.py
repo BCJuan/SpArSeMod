@@ -4,7 +4,8 @@ from sparse.utils_data import configuration, bool_converter # str_to_list
 from sparse.sparse import sparse
 from load_data import (
     prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost, split_pad_n_pack,
-    split_arrange_pad_n_pack, insample_pad_n_pack, split_arrange_pad_n_pack_3d
+    split_arrange_pad_n_pack, insample_pad_n_pack, split_arrange_pad_n_pack_3d,
+    insample_arrange_pad_n_pack_3d
 )
 from torch import nn as nn
 
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     # quant_params = {nn.LSTM, nn.Linear, nn.GRU}
     quant_params = {nn.LSTM, nn.Linear, nn.GRU, nn.Conv3d, nn.ConvTranspose3d, nn.BatchNorm3d, nn.MaxPool3d, nn.ReLU}
     # collate_fn = insample_pad_n_pack
-    collate_fn = split_arrange_pad_n_pack_3d
+    collate_fn = insample_arrange_pad_n_pack_3d
     sparse(
         r1=int(args["R1"]),
         r2=int(args["R2"]),

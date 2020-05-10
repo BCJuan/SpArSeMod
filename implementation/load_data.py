@@ -31,27 +31,6 @@ def split_pad_n_pack(data, max_len):
     return pack_padded_data, tensor(new_t_labels)
 
 
-def insample_pad_n_pack(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            step = int(floor(len(seq)//max_len))
-            new_seq = []
-            for i in range(max_len):
-                new_seq.append(seq[step*i, :])
-            new_t_seqs.append(stack(new_seq))
-            new_t_labels.append(lab)
-        else:
-            new_t_seqs.append(seq)
-            new_t_labels.append(lab)
-    lengths = [len(seq) for seq in new_t_seqs]
-    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
-    return pack_padded_data, tensor(new_t_labels)
-
-
 def split_arrange_pad_n_pack(data, max_len):
     t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
     labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
@@ -93,6 +72,52 @@ def split_arrange_pad_n_pack_3d(data, max_len):
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
 
+    return stack(new_t_seqs), tensor(new_t_labels)
+
+
+def insample_pad_n_pack(data, max_len):
+    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
+    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            step = int(floor(len(seq)//max_len))
+            new_seq = []
+            for i in range(max_len):
+                new_seq.append(seq[step*i, :])
+            new_t_seqs.append(stack(new_seq))
+            new_t_labels.append(lab)
+        else:
+            new_t_seqs.append(seq)
+            new_t_labels.append(lab)
+    lengths = [len(seq) for seq in new_t_seqs]
+    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
+    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
+    return pack_padded_data, tensor(new_t_labels)
+
+def insample_arrange_pad_n_pack_3d(data, max_len):
+    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
+    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            step = int(floor(len(seq)//max_len))
+            new_seq = []
+            for i in range(max_len):
+                img_sequence = tensor(seq[step*i, :]).view(8, 8)
+                new_seq.append(img_sequence)
+            new_seq = unsqueeze(stack(new_seq), 0)
+            new_t_seqs.append(new_seq)
+            new_t_labels.append(lab)
+        else:
+            len_diff = max_len - len(seq)
+            padding = ones((len_diff, 8, 8))*255
+            seq = tensor(seq).view(-1, 8, 8)
+            final_seq = cat((seq, padding), 0)
+            final_seq = unsqueeze(final_seq, 0)
+            new_t_seqs.append(final_seq)
+            new_t_labels.append(lab)
+    
     return stack(new_t_seqs), tensor(new_t_labels)
 
 def read_n_save_cost(folder="./data/data_cost", subfolder="files"):

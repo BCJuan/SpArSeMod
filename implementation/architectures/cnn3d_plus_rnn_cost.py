@@ -381,10 +381,13 @@ class Net(nn.Module):
             cell = nn.LSTM
         else:
             cell = nn.GRU
-        
+        if self.layers > 1:
+            dropout = parametrization.get("rnn_dropout", 0.1)
+        else:
+            dropout = 0
         self.cell = cell(self.odd_shape[-1], parametrization.get("neurons_layers", 64), batch_first=True,
                         num_layers=self.layers,
-                        dropout=parametrization.get("rnn_dropout", 0.1))
+                        dropout= dropout)
         ####
         for i in range(1, parametrization.get("num_fc_layers", 1) + 1):
             fc = self.create_fc_block(fc, i, parametrization.get("neurons_layers", 64))

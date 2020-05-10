@@ -116,12 +116,12 @@ class Trainer(object):
                 running_corrects = 0
 
                 # Iterate over data.
-                for inputs, labels in tqdm(self.dataloader[phase],
-                                            total=len(
-                                                self.dataloader[phase])):
-                # for index, (inputs, labels) in enumerate(
-                #     self.dataloader[phase], start=1
-                # ):
+                # for inputs, labels in tqdm(self.dataloader[phase],
+                #                             total=len(
+                #                                 self.dataloader[phase])):
+                for index, (inputs, labels) in enumerate(
+                    self.dataloader[phase], start=1
+                ):
 
                     inputs = inputs.to(self.devicy)
                     labels = labels.to(self.devicy)
@@ -157,8 +157,7 @@ class Trainer(object):
                 if phase == "val" and epoch_acc > best_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(model.state_dict())
-                print("acc", epoch_acc)
-                print("loss", running_loss/self.datasizes[phase])
+
         # load best model weights
         model.load_state_dict(best_model_wts)
         save(model.state_dict(), "./models/" + str(name) + ".pth")
