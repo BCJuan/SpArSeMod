@@ -95,7 +95,7 @@ class AccuracyMetric(Metric):
             net_i.to("cpu")
             net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
         else:
-            raise NotImplementedError("Quantization scheme not implemented")
+            pass
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
         save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result

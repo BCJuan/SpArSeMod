@@ -161,24 +161,29 @@ def build_cost(folder="./data/data_cost/files/"):
     return X, y, extra
 
 
-def divide_cost(X, y, extra):
+def divide_cost(X, y, extra, test_subjects=None):
     X_train, X_val, X_test = [], [], []
     y_train, y_val, y_test = [], [], []
     extra_train, extra_val, extra_test = {}, {}, {}
     subjects = arange(1, 32)
-    train_subjects = random.choice(subjects, size=25, replace=False)
-    val_subjects = random.choice(train_subjects, size=5, replace=False)
-    train_subjects = [i for i in train_subjects if i not in val_subjects]
+    if test_subjects:
+        train_subjects = [i for i in subjects if i not in test_subjects]
+        val_subjects = test_subjects
+    else:
+        train_subjects = random.choice(subjects, size=25, replace=False)
+        val_subjects = random.choice(train_subjects, size=5, replace=False)
+        test_subjects = [i for i in range(1,32) if i not in train_subjects]
+        train_subjects = [i for i in train_subjects if i not in val_subjects]
     for i, (seq, label, meta) in enumerate(zip(X, y, extra)):
         if extra[meta]['subject'] in train_subjects:
             X_train.append(seq)
             y_train.append(label)
             extra_train[len(X_train)] = extra[meta]
-        elif extra[meta]['subject'] in val_subjects:
+        if extra[meta]['subject'] in val_subjects:
             X_val.append(seq)
             y_val.append(label)
             extra_val[len(X_train)] = extra[meta]
-        else:
+        if extra[meta]['subject'] in test_subjects:
             X_test.append(seq)
             y_test.append(label)
             extra_test[len(X_train)] = extra[meta]
@@ -210,11 +215,11 @@ class CostDataset(Dataset):
         return sample
 
 
-def prepare_cost(folder="./data/data_cost/files/"):
+def prepare_cost(folder="./data/data_cost/files/", test_subjects=None):
     # turns y labels into numbers; # generate dataset according to y labels stratification
     # scaling, o ne hot encoding
     X, y, extra = build_cost()
-    X_t, y_t, _, X_v, y_v, _, X_ts, y_ts, _ = divide_cost(X, y, extra)
+    X_t, y_t, _, X_v, y_v, _, X_ts, y_ts, _ = divide_cost(X, y, extra, test_subjects=test_subjects)
     X_t, X_ts, scaler = scale_X(X_t, X_ts)
     X_v = [scaler.transform(seq) for seq in X_v]
     t_set = CostDataset(X_t, y_t)
