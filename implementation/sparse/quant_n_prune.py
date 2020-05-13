@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from torch.nn import Conv2d, Linear, LSTM, GRU
+from torch.nn import Conv2d, Linear, LSTM, GRU, Conv3d
 from torch.nn.utils import prune
 
 # TODO: add pruning for LSTM
@@ -8,6 +8,8 @@ from torch.nn.utils import prune
 def modules_to_prune(net):
     modules = []
     for name, module in net.named_modules():
+        if isinstance(module, Conv3d):
+            modules.append((module, "weight"))
         if isinstance(module, Conv2d):
             modules.append((module, "weight"))
         if isinstance(module, Linear):

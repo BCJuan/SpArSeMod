@@ -192,12 +192,7 @@ class Trainer(object):
                 # move data to proper dtype and device
                 inputs = inputs.to(device="cpu")
                 labels = labels.to(device="cpu")
-                try:
-                    outputs = net(inputs)
-                except RuntimeError:
-                    continue
-                # loss = self.criterion(outputs, labels)
-                # print(outputs.shape)
+                outputs = net(inputs)
                 _, predicted = maxim(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()

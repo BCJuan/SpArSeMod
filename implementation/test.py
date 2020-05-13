@@ -9,7 +9,7 @@ from numpy import zeros, save, mean as npmean, asarray
 from sparse.utils_data import get_shape_from_dataloader
 import copy
 from functools import partial
-
+from tqdm import tqdm
 
 class ModelTester(object):
 
@@ -44,7 +44,7 @@ class ModelTester(object):
     def leave_one_out(self):
         n_subjects = 32
         results = []
-        for i in range(1, n_subjects):
+        for i in tqdm(range(1, n_subjects)):
             datasets, n_classes = prepare_cost(test_subjects=[i])
             params = self.arm_parameters()
             net = copy.copy(self.net)
@@ -62,4 +62,4 @@ class ModelTester(object):
             AccMetric.old_net = old_net
             acc = AccMetric.train_evaluate(str(self.arm) + "_test_result")
             results.append(acc)
-        save(asarray(results), str(self.arm) + "_test_result.npy")
+        save(str(self.arm) + "_test_result.npy", asarray(results))
