@@ -2,7 +2,7 @@ from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 from torch import unsqueeze, cat, tensor, int64, stack, Tensor, FloatTensor, float32, long as tlong, ones
-from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor
+from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor, mean as npmean, std as npstd
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
 from itertools import product
@@ -190,11 +190,20 @@ def divide_cost(X, y, extra, test_subjects=None):
     return X_train, y_train, extra_train, X_val, y_val, extra_val, X_test, y_test, extra_test
 
 
-def scale_X(X_train, X_test):
-    scaler = StandardScaler()
-    scaler.fit(vstack(X_train))
-    X_train_esc = [scaler.transform(i).tolist() for i in X_train]
-    X_test_esc = [scaler.transform(i).tolist() for i in X_test]
+def scale_X(X_train, X_test, image=False):
+    
+    if image:
+        mean = npmean(vstack(X_train).reshape(-1, 8, 8), axis = 0)
+        std = npstd(vstack(X_train).reshape(-1, 8, 8), axis = 0)
+        print(mean.shape)
+        X_train_esc = [(asarray(i).reshape(-1, 8, 8) - mean)/std for i in X_train]
+        X_test_esc = [(asarray(i).reshape(-1, 8, 8) - mean)/std for i in X_test]
+        scaler = [mean, std]
+    else:
+        scaler = StandardScaler()
+        scaler.fit(vstack(X_train))
+        X_train_esc = [scaler.transform(i).tolist() for i in X_train]
+        X_test_esc = [scaler.transform(i).tolist() for i in X_test]
     return X_train_esc, X_test_esc, scaler
 
 class CostDataset(Dataset):
@@ -215,13 +224,17 @@ class CostDataset(Dataset):
         return sample
 
 
-def prepare_cost(folder="./data/data_cost/files/", test_subjects=None):
+
+def prepare_cost(folder="./data/data_cost/files/", test_subjects=None, image=False):
     # turns y labels into numbers; # generate dataset according to y labels stratification
     # scaling, o ne hot encoding
     X, y, extra = build_cost()
     X_t, y_t, _, X_v, y_v, _, X_ts, y_ts, _ = divide_cost(X, y, extra, test_subjects=test_subjects)
-    X_t, X_ts, scaler = scale_X(X_t, X_ts)
-    X_v = [scaler.transform(seq) for seq in X_v]
+    X_t, X_ts, scaler = scale_X(X_t, X_ts, image=image)
+    if image:
+        X_v = [(asarray(seq).reshape(-1, 8, 8) - scaler[0])/scaler[1] for seq in X_v]
+    else:
+        X_v = [scaler.transform(seq) for seq in X_v]
     t_set = CostDataset(X_t, y_t)
     v_set = CostDataset(X_v, y_v)
     ts_set = CostDataset(X_ts, y_ts)
