@@ -104,6 +104,11 @@ B.~Lu, J.~Yang, L.~Y. Chen, and S.~Ren, ``{Automating deep neural network model
   selection for edge inference},'' {\em Proc. - 2019 IEEE 1st Int. Conf. Cogn.
   Mach. Intell. CogMI 2019}, pp.~184--193, 2019.
 
+\bibitem{Pham2018}
+H.~Pham, M.~Y. Guan, B.~Zoph, Q.~V. Le, and J.~Dean, ``{Efficient Neural
+  Architecture Search via parameter Sharing},'' {\em 35th Int. Conf. Mach.
+  Learn. ICML 2018}, vol.~9, pp.~6522--6531, 2018.
+
 \bibitem{Jung2014}
 M.~M. Jung, R.~Poppe, M.~Poel, and D.~K. Heylen, ``{Touching the void -
   introducing CoST: Corpus of social touch},'' {\em ICMI 2014 - Proc. 2014 Int.

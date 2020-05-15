@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.10)  15 MAY 2020 12:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.10)  15 MAY 2020 16:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -230,7 +230,19 @@ Already applied: [0000/00/00] Old fixltx2e package on input line 53.
 )
 \@dblbotnum=\count188
 \c@dblbotnumber=\count189
-) (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
+) (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\@emptytoks=\toks16
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
 \l__kernel_color_stack_int=\count190
 \l__pdf_internal_box=\box47
@@ -238,24 +250,24 @@ File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
 (./sparse.aux)
 \openout1 = `sparse.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
 \AtBeginShipoutBox=\box48
-Package hyperref Info: Link coloring OFF on input line 15.
+Package hyperref Info: Link coloring OFF on input line 16.
  (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
 
@@ -267,9 +279,9 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count191
 )
-LaTeX Info: Redefining \ref on input line 15.
-LaTeX Info: Redefining \pageref on input line 15.
-LaTeX Info: Redefining \nameref on input line 15.
+LaTeX Info: Redefining \ref on input line 16.
+LaTeX Info: Redefining \pageref on input line 16.
+LaTeX Info: Redefining \nameref on input line 16.
 
 (./sparse.out) (./sparse.out)
 \@outlinefile=\write3
@@ -283,12 +295,12 @@ LaTeX Info: Redefining \nameref on input line 15.
 \scratchbox=\box49
 \nofMPsegments=\count193
 \nofMParguments=\count194
-\everyMPshowfont=\toks16
+\everyMPshowfont=\toks17
 \MPscratchCnt=\count195
 \MPscratchDim=\dimen145
 \MPnumerator=\count196
 \makeMPintoPDFobject=\count197
-\everyMPtoPDFconversion=\toks17
+\everyMPtoPDFconversion=\toks18
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -298,14 +310,19 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 17.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 17.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 17.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 18.
 
-Overfull \hbox (41.82008pt too wide) in paragraph at lines 17--17
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 18.
+
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+Overfull \hbox (41.82008pt too wide) in paragraph at lines 18--18
  [][] 
  []
 
@@ -315,91 +332,83 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
  [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
-]
-
-LaTeX Warning: Citation `Pham2018' on page 2 undefined on input line 36.
-
-[2]
-<images/search_space_original.png, id=143, 377.9721pt x 542.025pt>
+] [2]
+<images/search_space_original.png, id=144, 377.9721pt x 542.025pt>
 File: images/search_space_original.png Graphic file (type png)
 <use images/search_space_original.png>
 Package pdftex.def Info: images/search_space_original.png  used on input line 6
-2.
+5.
 (pdftex.def)             Requested size: 154.69933pt x 221.84296pt.
-<images/search_procedure.png, id=150, 489.9906pt x 273.9033pt>
-File: images/search_procedure.png Graphic file (type png)
-<use images/search_procedure.png>
-Package pdftex.def Info: images/search_procedure.png  used on input line 72.
-(pdftex.def)             Requested size: 198.89865pt x 111.18098pt.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 73.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 73.
 
 Underfull \vbox (badness 3942) has occurred while \output is active []
 
- [3 <./images/search_space_original.png>]
-Underfull \hbox (badness 5077) in paragraph at lines 84--84
+<images/search_procedure.png, id=151, 489.9906pt x 273.9033pt>
+File: images/search_procedure.png Graphic file (type png)
+<use images/search_procedure.png>
+Package pdftex.def Info: images/search_procedure.png  used on input line 74.
+(pdftex.def)             Requested size: 198.89865pt x 111.18098pt.
+<images/rnn_search_space.png, id=152, 420.6114pt x 395.3169pt>
+File: images/rnn_search_space.png Graphic file (type png)
+<use images/rnn_search_space.png>
+Package pdftex.def Info: images/rnn_search_space.png  used on input line 83.
+(pdftex.def)             Requested size: 198.89865pt x 186.93298pt.
+ [3 <./images/search_space_original.png> <./images/search_procedure.png>]
+Underfull \hbox (badness 5077) in paragraph at lines 92--92
 []\OT1/cmr/bx/n/12 Sparse Ex-ten-sion and CoST
  []
 
-<images/rnn_search_space.png, id=164, 420.6114pt x 395.3169pt>
-File: images/rnn_search_space.png Graphic file (type png)
-<use images/rnn_search_space.png>
-Package pdftex.def Info: images/rnn_search_space.png  used on input line 91.
-(pdftex.def)             Requested size: 198.89865pt x 186.93298pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [4 <./images/search_procedure.png> <./images/rnn_search_space.png>]
-<images/Cost_sample.png, id=185, 867.24pt x 433.62pt>
+<images/Cost_sample.png, id=176, 867.24pt x 433.62pt>
 File: images/Cost_sample.png Graphic file (type png)
 <use images/Cost_sample.png>
-Package pdftex.def Info: images/Cost_sample.png  used on input line 105.
+Package pdftex.def Info: images/Cost_sample.png  used on input line 104.
 (pdftex.def)             Requested size: 221.0pt x 110.49554pt.
-
-Underfull \hbox (badness 2326) in paragraph at lines 137--137
+[4 <./images/rnn_search_space.png> <./images/Cost_sample.png>]
+Underfull \hbox (badness 2326) in paragraph at lines 136--136
 []\OT1/cmr/bx/n/12 Kernel Anal-y-sis and La-tency
  []
 
-<images/rnn_latency.png, id=198, 650.43pt x 433.62pt>
+
+Package amsfonts Warning: Obsolete command \Bbb; \mathbb should be used instead
+ on input line 138.
+
+<images/rnn_latency.png, id=205, 650.43pt x 433.62pt>
 File: images/rnn_latency.png Graphic file (type png)
 <use images/rnn_latency.png>
-Package pdftex.def Info: images/rnn_latency.png  used on input line 163.
+Package pdftex.def Info: images/rnn_latency.png  used on input line 180.
 (pdftex.def)             Requested size: 214.37027pt x 142.90977pt.
-[5 <./images/Cost_sample.png>]
-<images/pareto_cifar2.png, id=217, 722.7pt x 433.62pt>
+[5 <./images/rnn_latency.png>]
+<images/pareto_cifar2.png, id=225, 722.7pt x 433.62pt>
 File: images/pareto_cifar2.png Graphic file (type png)
 <use images/pareto_cifar2.png>
-Package pdftex.def Info: images/pareto_cifar2.png  used on input line 177.
+Package pdftex.def Info: images/pareto_cifar2.png  used on input line 194.
 (pdftex.def)             Requested size: 216.95807pt x 130.17302pt.
-<images/evolution_cifar2.png, id=218, 722.7pt x 433.62pt>
+<images/evolution_cifar2.png, id=226, 722.7pt x 433.62pt>
 File: images/evolution_cifar2.png Graphic file (type png)
 <use images/evolution_cifar2.png>
-Package pdftex.def Info: images/evolution_cifar2.png  used on input line 178.
+Package pdftex.def Info: images/evolution_cifar2.png  used on input line 195.
 (pdftex.def)             Requested size: 216.95807pt x 130.17302pt.
 
-Overfull \hbox (12.75618pt too wide) in paragraph at lines 190--205
+Overfull \hbox (12.75618pt too wide) in paragraph at lines 207--222
  [] 
  []
 
-[6 <./images/rnn_latency.png>]
-<images/matern_vs_arc.png, id=239, 722.7pt x 433.62pt>
+<images/matern_vs_arc.png, id=238, 722.7pt x 433.62pt>
 File: images/matern_vs_arc.png Graphic file (type png)
 <use images/matern_vs_arc.png>
-Package pdftex.def Info: images/matern_vs_arc.png  used on input line 223.
+Package pdftex.def Info: images/matern_vs_arc.png  used on input line 240.
 (pdftex.def)             Requested size: 216.95807pt x 130.17302pt.
-<images/arc_qq.png, id=240, 722.7pt x 433.62pt>
+<images/arc_qq.png, id=239, 722.7pt x 433.62pt>
 File: images/arc_qq.png Graphic file (type png)
 <use images/arc_qq.png>
-Package pdftex.def Info: images/arc_qq.png  used on input line 224.
+Package pdftex.def Info: images/arc_qq.png  used on input line 241.
 (pdftex.def)             Requested size: 216.95807pt x 130.17302pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 230--230
+Underfull \hbox (badness 10000) in paragraph at lines 247--247
 []\OT1/cmr/bx/n/14.4 Conclusions and fur-ther
  []
 
-(./sparse.bbl [7 <./images/pareto_cifar2.png> <./images/evolution_cifar2.png>]
+(./sparse.bbl [6] [7 <./images/pareto_cifar2.png> <./images/evolution_cifar2.pn
+g> <./images/matern_vs_arc.png> <./images/arc_qq.png>]
 Underfull \hbox (badness 1845) in paragraph at lines 12--15
 \OT1/cmr/m/n/10 Scal-able Im-age Recog-ni-tion,'' \OT1/cmr/m/it/10 Proc. IEEE
  []
@@ -461,7 +470,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 70--72
 Tensor /
  []
 
-[8 <./images/matern_vs_arc.png> <./images/arc_qq.png>]
+
 Underfull \hbox (badness 1107) in paragraph at lines 82--85
 \OT1/cmr/m/n/10 P. N. What-mough, ``SpArSe: Sparse Ar-
  []
@@ -476,7 +485,7 @@ Underfull \hbox (badness 1152) in paragraph at lines 87--91
 \OT1/cmr/m/n/10 objective op-ti-miza-tion frame-work for deep
  []
 
-
+[8]
 Underfull \hbox (badness 1655) in paragraph at lines 98--101
 \OT1/cmr/m/n/10 li-gence: On-demand deep learn-ing model
  []
@@ -492,76 +501,76 @@ Underfull \hbox (badness 10000) in paragraph at lines 98--101
  []
 
 
-Underfull \hbox (badness 1264) in paragraph at lines 108--111
+Underfull \hbox (badness 1264) in paragraph at lines 113--116
 \OT1/cmr/m/n/10 Heylen, ``Touch-ing the void - in-tro-duc-ing
  []
 
 
-Underfull \hbox (badness 1210) in paragraph at lines 143--145
+Underfull \hbox (badness 1210) in paragraph at lines 148--150
 []\OT1/cmr/m/n/10 X. Chu, B. Zhang, R. Xu, and H. Ma,
  []
 
 
-Underfull \hbox (badness 1394) in paragraph at lines 166--169
+Underfull \hbox (badness 1394) in paragraph at lines 171--174
 []\OT1/cmr/m/n/10 B. Shahri-ari, Z. Wang, M. W. Hoff-man,
  []
 
 [9]
-Underfull \hbox (badness 4120) in paragraph at lines 206--209
+Underfull \hbox (badness 4120) in paragraph at lines 211--214
 []\OT1/cmr/m/n/10 M. Ba-lan-dat, B. Kar-rer, D. R. Jiang,
  []
 
 
-Underfull \hbox (badness 3029) in paragraph at lines 206--209
+Underfull \hbox (badness 3029) in paragraph at lines 211--214
 \OT1/cmr/m/n/10 S. Daulton, B. Letham, A. G. Wil-son,
  []
 
 
-Underfull \hbox (badness 3128) in paragraph at lines 211--215
+Underfull \hbox (badness 3128) in paragraph at lines 216--220
 \OT1/cmr/m/it/10 ral Inf. Pro-cess. Syst.\OT1/cmr/m/n/10 , vol. 2018-Decem,
  []
 
 )
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 235.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 252.
  [10
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 235.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 252.
  (./sparse.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 235.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 235.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 252.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 252.
 Package rerunfilecheck Info: File `sparse.out' has not changed.
 (rerunfilecheck)             Checksum: AC418862F7FC94AD78D691CABA7C57A1;805.
-
-
-LaTeX Warning: There were undefined references.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 235.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 252.
  ) 
 Here is how much of TeX's memory you used:
- 6116 strings out of 481239
- 93980 string characters out of 5920377
- 372005 words of memory out of 5000000
- 21188 multiletter control sequences out of 15000+600000
- 537442 words of font info for 41 fonts, out of 8000000 for 9000
+ 6640 strings out of 481239
+ 99542 string characters out of 5920377
+ 375628 words of memory out of 5000000
+ 21687 multiletter control sequences out of 15000+600000
+ 541669 words of font info for 60 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 34i,9n,29p,1673b,442s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 34i,9n,31p,1673b,440s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc}</usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/tex
 mf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dis
-t/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/font
-s/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1
-/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
-/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/c
-mr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pf
-b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/shar
-e/texmf/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on sparse.pdf (10 pages, 531593 bytes).
+t/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/font
+s/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type
+1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.p
+fb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr
+/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texmf/fonts/type1/p
+ublic/cm-super/sfrm1000.pfb>
+Output written on sparse.pdf (10 pages, 562014 bytes).
 PDF statistics:
- 338 PDF objects out of 1000 (max. 8388607)
- 292 compressed objects within 3 object streams
- 80 named destinations out of 1000 (max. 500000)
+ 357 PDF objects out of 1000 (max. 8388607)
+ 306 compressed objects within 4 object streams
+ 82 named destinations out of 1000 (max. 500000)
  150 words of extra memory for PDF output out of 10000 (max. 10000000)
 
