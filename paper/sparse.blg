@@ -1,0 +1,87 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: sparse.aux
+The style file: ieeetr.bst
+Database file #1: AEN42_ML_PHD_STUDIES.bib
+Repeated entry---line 601 of file AEN42_ML_PHD_STUDIES.bib
+ : @article{Cai2019f
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 710 of file AEN42_ML_PHD_STUDIES.bib
+ : @article{Cai2019f
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 908 of file AEN42_ML_PHD_STUDIES.bib
+ : @article{Elsken2019b
+ :                     ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 955 of file AEN42_ML_PHD_STUDIES.bib
+ : @article{Frankle2019
+ :                     ,
+I'm skipping whatever remains of this entry
+Database file #2: extra.bib
+Warning--I didn't find a database entry for "Pham2018"
+Warning--empty journal in Bergstra2012
+Warning--empty journal in Zoph2016
+Warning--empty journal in Frazier2018
+Warning--empty journal in Swersky2014
+Warning--empty journal in Han2015
+Warning--empty booktitle in Cun:1990:OBD:109230.109298
+Warning--empty journal in Jacob2017
+Warning--empty journal in Howard2017
+Warning--empty journal in Rotem2018
+Warning--empty journal in Elsken2018
+Warning--empty journal in Fedorov2019
+Warning--empty journal in Cai2019f
+Warning--empty journal in Elsken2019a
+Warning--empty journal in Wang2019a
+Warning--empty journal in Zhou2019a
+Warning--empty journal in Baker2016
+Warning--empty journal in Branke2017
+Warning--empty journal in Chu2019
+Warning--empty journal in Gordon2017
+Warning--empty journal in Elsken2019b
+Warning--empty journal in Shahriari2014
+Warning--empty journal in Balandat2019
+You've used 45 entries,
+            1876 wiz_defined-function locations,
+            740 strings with 11551 characters,
+and the built_in function-call counts, 12735 in all, are:
+= -- 1205
+> -- 624
+< -- 0
++ -- 225
+- -- 180
+* -- 945
+:= -- 1830
+add.period$ -- 49
+call.type$ -- 45
+change.case$ -- 45
+chr.to.int$ -- 0
+cite$ -- 67
+duplicate$ -- 603
+empty$ -- 1134
+format.name$ -- 180
+if$ -- 3037
+int.to.chr$ -- 0
+int.to.str$ -- 45
+missing$ -- 41
+newline$ -- 142
+num.names$ -- 41
+pop$ -- 186
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 413
+stack$ -- 0
+substring$ -- 861
+swap$ -- 235
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 22
+while$ -- 135
+width$ -- 47
+write$ -- 397
+(There were 4 error messages)

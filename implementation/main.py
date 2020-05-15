@@ -10,11 +10,11 @@ from load_data import (
 from torch import nn as nn
 from test import ModelTester
 
-# from architectures.rnn import search_space, Net, operations
+from architectures.rnn import search_space, Net, operations
 # from architectures.cnn2d_cost import search_space, Net, operations
 # from architectures.cnn2d_plus_rnn_cost import search_space, Net, operations
 # from architectures.cnn3d_plus_rnn_cost import search_space, Net, operations
-from architectures.cnn3d import search_space, Net, operations
+# from architectures.cnn3d import search_space, Net, operations
 
 if __name__ == "__main__":
 
@@ -22,14 +22,14 @@ if __name__ == "__main__":
     filterwarnings(action="ignore", module=r"torch.quantization")
     filterwarnings(action="ignore", category=UserWarning)
 
-    datasets, n_classes = prepare_cost(image=True)
+    datasets, n_classes = prepare_cost(image=False)
     search_space = search_space()
     # quant_params = {nn.LSTM, nn.Linear, nn.GRU, nn.Conv2d}
-    quant_params = None
-    # quant_params = {nn.LSTM, nn.Linear, nn.GRU}
+    # quant_params = None
+    quant_params = {nn.LSTM, nn.Linear, nn.GRU}
     # quant_params = {nn.LSTM, nn.Linear, nn.GRU, nn.Conv3d, nn.ConvTranspose3d, nn.BatchNorm3d, nn.MaxPool3d, nn.ReLU}
     # collate_fn = split_arrange_pad_n_pack
-    collate_fn = split_arrange_pad_n_pack_3d
+    collate_fn = insample_pad_n_pack
     
     if bool_converter(configuration("DEFAULT")['TRAIN']):
         args = configuration("TRAIN")
