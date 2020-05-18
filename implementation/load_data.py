@@ -1,7 +1,7 @@
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, DataLoader, Dataset
-from torch import unsqueeze, cat, tensor, int64, stack, Tensor, FloatTensor, float32, long as tlong, ones
+from torch import unsqueeze, cat, tensor, int64, stack, Tensor, FloatTensor, float32, long as tlong, ones, zeros
 from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor, mean as npmean, std as npstd
 from os import listdir, path, mkdir, rmdir
 from pandas import read_csv
@@ -40,12 +40,14 @@ def split_arrange_pad_n_pack(data, max_len):
             n_seqs = int(floor(len(seq)//max_len))
             for i in range(n_seqs):
                 img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
+                img_sequence = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis = 0)
                 new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
         else:
             len_diff = max_len - len(seq)
-            padding = ones((len_diff, 8, 8))*255
+            padding = zeros((len_diff, 8, 8))
             seq = tensor(seq).view(-1, 8, 8)
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis = 0)
             final_seq = cat((seq, padding), 0) 
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
@@ -59,14 +61,16 @@ def split_arrange_pad_n_pack_3d(data, max_len):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq)//max_len))
             for i in range(n_seqs):
-                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
+                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).reshape(-1, 8, 8)
+                img_sequence = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis = 0)
                 img_sequence = unsqueeze(img_sequence, 0)
                 new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
         else:
             len_diff = max_len - len(seq)
-            padding = ones((len_diff, 8, 8))*255
+            padding = zeros((len_diff, 8, 8))
             seq = tensor(seq).view(-1, 8, 8)
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis = 0)
             final_seq = cat((seq, padding), 0)
             final_seq = unsqueeze(final_seq, 0)
             new_t_seqs.append(final_seq)
