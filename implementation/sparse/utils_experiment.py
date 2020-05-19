@@ -86,14 +86,24 @@ class AccuracyMetric(Metric):
         if self.quant_scheme == 'post':
             net_i.to("cpu")
             net_i.eval()
-            net_i.fuse_model()
             net_i.qconfig = get_default_qconfig("fbgemm")
+            net_i.fuse_model()
             prepare(net_i, inplace=True)
             _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
             convert(net_i, inplace=True)
         elif self.quant_scheme == 'dynamic':
             net_i.to("cpu")
             net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
+        elif self.quant_scheme == 'both': 
+            net_i.to("cpu")
+            net_i.eval()
+            net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
+            net_i.qconfig = get_default_qconfig("fbgemm")
+            net_i.fuse_model()
+            prepare(net_i, inplace=True)
+            _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
+            convert(net_i, inplace=True)
+            
         else:
             pass
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)

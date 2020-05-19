@@ -1,6 +1,6 @@
 from ax.core.parameter import RangeParameter, ParameterType, ChoiceParameter
 from ax import SearchSpace
-from torch import nn, rand
+from torch import nn, rand, mean as torchmean
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
 from random import choice, random, randint
@@ -131,8 +131,7 @@ class Net(nn.Module):
         for j in range(1, parametrization.get("num_conv_blocks", 1) + 1):
             conv_blocks.append(self.create_conv_block(j, channels))
         self.conv_blocks = nn.Sequential(*conv_blocks)
-        # fully connected blocks
-        fc = []
+
         # Main branch
         self.n_size, self.odd_shape = self._get_conv_output(
             self.parametrization.get("batch_size", 4),
@@ -150,24 +149,20 @@ class Net(nn.Module):
                         num_layers=self.layers,
                         dropout=parametrization.get("rnn_dropout", 0.1))
         ####
-        for i in range(1, parametrization.get("num_fc_layers", 1) + 1):
-            fc = self.create_fc_block(fc, i, parametrization.get("neurons_layers", 64))
 
         # Final Layer
-        self.fc = nn.Sequential(*fc)
-        classifier = []
-        classifier.append(
-            nn.Linear(
+        
+        self.classifier = nn.Linear(
                 parametrization.get(
                     "fc_weights_layer_" + str(parametrization.get("num_fc_layers", 0)),
                     parametrization.get("neurons_layers", 64),
                 ),
                 classes,
             )
-        )
-        self.classifier = nn.Sequential(*classifier)
         self.quant = QuantStub()
         self.dequant = DeQuantStub()
+        self.quant1 = QuantStub()
+        self.dequant1 = DeQuantStub()
 
     def create_fc_block(self, fc, i, n_size):
         linear = LinearReLU(
@@ -300,19 +295,19 @@ class Net(nn.Module):
         Global forward pass for both the convolution blocks and the fully
         connected layers.
         """
-        # out = self.quant(x)
-        out = x
-        out = self._forward_features(out)
-        out = out.mean(3)
-        cell_out, self.hidden = self.cell(out)
+        q1 = self.quant(x)
+        q2 = self._forward_features(q1)
+        f = self.dequant(q2)
+        f1 = torchmean(f, dim=3)
         if self.parametrization.get('cell_type'):
-            out = self.hidden[0][self.layers - 1]
+            cell_out, (self.hidden, c) = self.cell(f1)
+            f2 = self.hidden[self.layers - 1]
         else:
-            out = self.hidden[self.layers - 1]
-        if self.parametrization.get("num_fc_layers") > 0:
-            out = self.fc(out)
-        out = self.classifier(out)
-        # out = self.dequant(out)
+            cell_out, self.hidden = self.cell(f1)
+            f2 = self.hidden[self.layers - 1]
+        q4 = self.quant1(f2)
+        q5 = self.classifier(q4)
+        out = self.dequant1(q5)
         return out
 
     def fuse_model(self):
@@ -402,21 +397,9 @@ def search_space():
                         lower=8, upper=512))
     params.append(RangeParameter(name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5))
     params.append(RangeParameter(name="cell_type", parameter_type=ParameterType.INT, lower =0, upper=1))
+
     #######################################################################################
 
-    ### FC BLOCKS ########################################################################
-    params.append(RangeParameter(
-        name="num_fc_layers", lower=0, upper=2, parameter_type=ParameterType.INT
-    ))
-
-    for i in range(max_fc_layers):
-        params.append(RangeParameter(
-            name="fc_weights_layer_" + str(i + 1), lower=10, upper=200, parameter_type=ParameterType.INT
-        ))
-        params.append(RangeParameter(
-            name="drop_fc_" + str(i + 1), lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
-        ))
-    
     ########################################################################
     params.append(RangeParameter(
         name="learning_rate",
