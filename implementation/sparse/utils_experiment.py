@@ -11,12 +11,11 @@ from os import path
 from .model import Trainer
 from numpy import array, prod, max as maxim, log
 from torch import randn, save, load, qint8
-from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig, quantize_dynamic
 import copy
 from functools import partial
 
 from .utils_data import get_shape_from_dataloader
-
+from .quant_n_prune import quant
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
 
@@ -83,29 +82,7 @@ class AccuracyMetric(Metric):
             self.reload,
             self.old_net,
         )
-        if self.quant_scheme == 'post':
-            net_i.to("cpu")
-            net_i.eval()
-            net_i.qconfig = get_default_qconfig("fbgemm")
-            net_i.fuse_model()
-            prepare(net_i, inplace=True)
-            _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
-            convert(net_i, inplace=True)
-        elif self.quant_scheme == 'dynamic':
-            net_i.to("cpu")
-            net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
-        elif self.quant_scheme == 'both': 
-            net_i.to("cpu")
-            net_i.eval()
-            net_i = quantize_dynamic(net_i, self.quant_params, dtype=qint8)
-            net_i.qconfig = get_default_qconfig("fbgemm")
-            net_i.fuse_model()
-            prepare(net_i, inplace=True)
-            _, net_i = self.trainer.evaluate(net_i, quant_mode=True)
-            convert(net_i, inplace=True)
-            
-        else:
-            pass
+        net_i = quant(net_i, self.quant_scheme, self.trainer.evaluate, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
         save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result

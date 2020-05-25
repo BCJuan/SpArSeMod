@@ -2,8 +2,9 @@
 
 from torch.nn import Conv2d, Linear, LSTM, GRU, Conv3d
 from torch.nn.utils import prune
+from torch.quantization import get_default_qconfig, prepare, convert, default_qconfig, quantize_dynamic
+from torch import qint8
 
-# TODO: add pruning for LSTM
 # TODO: add pruning to bias
 def modules_to_prune(net):
     modules = []
@@ -30,3 +31,29 @@ def prune_net(net, threshold):
     for module, name in parameters:
         prune.remove(module, name)
     return net
+
+
+def quant(net_i, scheme, eval_func, quant_params=None):
+    if scheme == 'post':
+        net_i.to("cpu")
+        net_i.eval()
+        net_i.qconfig = get_default_qconfig("fbgemm")
+        net_i.fuse_model()
+        prepare(net_i, inplace=True)
+        _, net_i = eval_func(net_i, quant_mode=True)
+        convert(net_i, inplace=True)
+    elif scheme == 'dynamic':
+        net_i.to("cpu")
+        net_i = quantize_dynamic(net_i, quant_params, dtype=qint8)
+    elif scheme == 'both': 
+        net_i.to("cpu")
+        net_i.eval()
+        net_i = quantize_dynamic(net_i, quant_params, dtype=qint8)
+        net_i.qconfig = get_default_qconfig("fbgemm")
+        net_i.fuse_model()
+        prepare(net_i, inplace=True)
+        _, net_i = eval_func(net_i, quant_mode=True)
+        convert(net_i, inplace=True)
+    else:
+        pass
+    return net_i

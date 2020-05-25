@@ -140,10 +140,6 @@ H.~Zhou, M.~Yang, J.~Wang, and W.~Pan, ``{BayesNAS: A Bayesian Approach for
 B.~Baker, O.~Gupta, N.~Naik, and R.~Raskar, ``{Designing Neural Network
   Architectures using Reinforcement Learning},'' pp.~1--18, 2016.
 
-\bibitem{Branke2017}
-J.~Branke, ``{Evolutionary algorithms in neural network design and training},''
-  no.~September, 1995.
-
 \bibitem{Chu2019}
 X.~Chu, B.~Zhang, R.~Xu, and H.~Ma, ``{Multi-Objective Reinforced Evolution in
   Mobile Neural Architecture Search},'' 2019.

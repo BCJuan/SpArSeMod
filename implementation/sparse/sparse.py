@@ -207,40 +207,48 @@ def develop_morphisms(
     exp.optimization_config.objective.metrics[0].epochs = epochs3
     exp.optimization_config.objective.metrics[0].reload = True
     for _ in tqdm(range(r3)):
-        new_configs = morpher.apply_morphs()
-        # TODO: new configuration should be passed through acquisiton
-        # function not random with chocie -> use model predict
-        new_arm = choice(list(new_configs))
-        collate_fn_p = copy(collate_fn)
-        if exp.optimization_config.objective.metrics[0].splitter:
-            collate_fn_p = partial(
-                collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
-        exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
-                                collate_fn=collate_fn_p)
-        input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
-                                  exp.arms_by_name[new_arm[1]].parameters)
+        morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, root, name, model, data)
 
-        old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
-        exp.optimization_config.objective.metrics[0].old_net = old_net
-        trial = (
-            exp.new_trial()
-            .add_arm(
-                Arm(
-                    name=str(list(exp.data_by_trial.keys())[-1] + 1) + "_0",
-                    parameters=new_configs[new_arm],
-                )
+
+def morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, root, name, model, data):
+    new_configs = morpher.apply_morphs()
+    # TODO: new configuration should be passed through acquisiton
+    # function not random with chocie -> use model predict
+    obs_feats = [ObservationFeatures(parameters=i) for i in new_configs.values()]
+
+    new_arm = choice(list(new_configs))
+    print(new_configs[new_arm])
+    f, cov = model.predict(obs_feats)
+    print(f.shape, f)
+    collate_fn_p = copy(collate_fn)
+    if exp.optimization_config.objective.metrics[0].splitter:
+        collate_fn_p = partial(
+            collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
+    exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
+                            collate_fn=collate_fn_p)
+    input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
+                                exp.arms_by_name[new_arm[1]].parameters)
+
+    old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
+    exp.optimization_config.objective.metrics[0].old_net = old_net
+    trial = (
+        exp.new_trial()
+        .add_arm(
+            Arm(
+                name=str(list(exp.data_by_trial.keys())[-1] + 1) + "_0",
+                parameters=new_configs[new_arm],
             )
-            .run()
         )
-        exp, trial, new_data = run_trial(exp, trial, debug)
-        if not new_data.df.empty:
-            data, new_data, exp = group_attach_and_save(
-                data, new_data, exp, name, root, objectives
-            )
+        .run()
+    )
+    exp, trial, new_data = run_trial(exp, trial, debug)
+    if not new_data.df.empty:
+        data, new_data, exp = group_attach_and_save(
+            data, new_data, exp, name, root, objectives
+        )
 
-        pareto_arms = clean_models_return_pareto(data)
-        morpher.retrieve_best_configurations(exp, pareto_arms)
-
+    pareto_arms = clean_models_return_pareto(data)
+    morpher.retrieve_best_configurations(exp, pareto_arms)
 
 def model_loop(model, batch_size, experiment, debug):
     """

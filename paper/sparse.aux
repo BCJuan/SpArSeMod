@@ -98,20 +98,17 @@
 \citation{Cai2019f}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Kernel Analysis and Latency Proxy}{5}{subsection.4.2}\protected@file@percent }
 \newlabel{analysis}{{4.2}{5}{Kernel Analysis and Latency Proxy}{subsection.4.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Latency against Model Size for RNN Search Space. Model Size axis is logarithmic. }}{5}{figure.5}\protected@file@percent }
-\newlabel{fig:latency}{{5}{5}{Latency against Model Size for RNN Search Space. Model Size axis is logarithmic}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Latency against Model Size for RNN Search Space (black) and 2DCNN (blue), along regression lines (red) for each one. $R^{2}_{RNN} = 0.9490$, $R^{2}_{2DCNN} = 0.8247$. Model Size axis is logarithmic. }}{5}{figure.5}\protected@file@percent }
+\newlabel{fig:latency}{{5}{5}{Latency against Model Size for RNN Search Space (black) and 2DCNN (blue), along regression lines (red) for each one. $R^{2}_{RNN} = 0.9490$, $R^{2}_{2DCNN} = 0.8247$. Model Size axis is logarithmic}{figure.5}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5}Results}{5}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}SpArSe}{5}{subsection.5.1}\protected@file@percent }
 \citation{Albawi2018}
 \citation{Ta2015a}
 \citation{Hughes2017}
 \citation{Albawi2018}
 \citation{Jung2015}
-\citation{Fedorov2019}
-\citation{Swersky2014}
-\bibdata{AEN42_ML_PHD_STUDIES,extra}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Results for the original version of SpArSe and our modified version. Accuracy is in $\%$ and Size corresponds to the model weight in KB taking into account only weights and not code. The maximum RAM is also in KB and corresponds, in our case, to the computation specified in Section \ref  {Sparsemod}.}}{6}{table.1}\protected@file@percent }
 \newlabel{ResultsSparse}{{1}{6}{Results for the original version of SpArSe and our modified version. Accuracy is in $\%$ and Size corresponds to the model weight in KB taking into account only weights and not code. The maximum RAM is also in KB and corresponds, in our case, to the computation specified in Section \ref {Sparsemod}}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}SpArSe}{6}{subsection.5.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2}CoST}{6}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Size as proxy for latency}{6}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Arc Kernel}{6}{subsection.5.4}\protected@file@percent }
@@ -119,8 +116,9 @@
 \newlabel{fig:paretocifar2}{{6}{7}{Left: Pareto frontier for our implementation of Sparse and Cifar 10 Binary. Notice the different possibilities to choose among regarding RAM, size and performance. Each point corresponds to a specific configuration of the search space. Right: full search procedure for CIFAR-10 Binary with the modified SpArSe. The color degradation shows the progress of the search}{figure.6}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Results for the CoST dataset with hold one subject out cross validation, as in \cite  {Albawi2018} and \cite  {Jung2015}.}}{7}{table.2}\protected@file@percent }
 \newlabel{CostTable}{{2}{7}{Results for the CoST dataset with hold one subject out cross validation, as in \cite {Albawi2018} and \cite {Jung2015}}{table.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Left: evolution of performance of a CNN with variable layers in a bayesian optimization procedure with a GP based on Arc (blue) and Matern (red). Vertical bars indicate standard deviation of the different evaluations inside the same step. Right: Prediction values of the GP for each evaluation step and the real observed values (by evaluating the network)}}{7}{figure.7}\protected@file@percent }
-\newlabel{fig:arc}{{7}{7}{Left: evolution of performance of a CNN with variable layers in a bayesian optimization procedure with a GP based on Arc (blue) and Matern (red). Vertical bars indicate standard deviation of the different evaluations inside the same step. Right: Prediction values of the GP for each evaluation step and the real observed values (by evaluating the network)}{figure.7}{}}
+\citation{Fedorov2019}
+\citation{Swersky2014}
+\bibdata{AEN42_ML_PHD_STUDIES,extra}
 \bibcite{Bergstra2012}{1}
 \bibcite{Zoph2016}{2}
 \bibcite{Zoph2018}{3}
@@ -133,6 +131,7 @@
 \bibcite{Howard2017}{10}
 \bibcite{TFLite}{11}
 \bibcite{Rotem2018}{12}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusions and further work}{8}{section.6}\protected@file@percent }
 \bibcite{ARMNN}{13}
 \bibcite{TensorRT}{14}
 \bibcite{uTensor}{15}
@@ -140,7 +139,6 @@
 \bibcite{Elsken2018}{17}
 \bibcite{Fedorov2019}{18}
 \bibcite{Loni2020}{19}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusions and further work}{8}{section.6}\protected@file@percent }
 \bibcite{Cai2019f}{20}
 \bibcite{Li2018n}{21}
 \bibcite{Lu2019}{22}
@@ -148,24 +146,25 @@
 \bibcite{Jung2014}{24}
 \bibcite{Elsken2019a}{25}
 \bibcite{Wang2019a}{26}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Left: evolution of performance of a CNN with variable layers in a bayesian optimization procedure with a GP based on Arc (blue) and Matern (red). Vertical bars indicate standard deviation of the different evaluations inside the same step. Right: Prediction values of the GP for each evaluation step and the real observed values (by evaluating the network)}}{9}{figure.7}\protected@file@percent }
+\newlabel{fig:arc}{{7}{9}{Left: evolution of performance of a CNN with variable layers in a bayesian optimization procedure with a GP based on Arc (blue) and Matern (red). Vertical bars indicate standard deviation of the different evaluations inside the same step. Right: Prediction values of the GP for each evaluation step and the real observed values (by evaluating the network)}{figure.7}{}}
 \bibcite{Xie2017}{27}
 \bibcite{Stanley2002}{28}
 \bibcite{Zhou2019a}{29}
 \bibcite{Baker2016}{30}
-\bibcite{Branke2017}{31}
-\bibcite{Chu2019}{32}
-\bibcite{Gordon2017}{33}
-\bibcite{Frankle2019}{34}
-\bibcite{Elsken2019b}{35}
-\bibcite{Shahriari2016}{36}
-\bibcite{Shahriari2014}{37}
-\bibcite{Jose2013}{38}
-\bibcite{Hughes2017}{39}
-\bibcite{Jung2015}{40}
-\bibcite{Ta2015a}{41}
-\bibcite{Albawi2018}{42}
-\bibcite{Jung2017}{43}
-\bibcite{Bakshy2018a}{44}
-\bibcite{Balandat2019}{45}
-\bibcite{Gardner2018}{46}
+\bibcite{Chu2019}{31}
+\bibcite{Gordon2017}{32}
+\bibcite{Frankle2019}{33}
+\bibcite{Elsken2019b}{34}
+\bibcite{Shahriari2016}{35}
+\bibcite{Shahriari2014}{36}
+\bibcite{Jose2013}{37}
+\bibcite{Hughes2017}{38}
+\bibcite{Jung2015}{39}
+\bibcite{Ta2015a}{40}
+\bibcite{Albawi2018}{41}
+\bibcite{Jung2017}{42}
+\bibcite{Bakshy2018a}{43}
+\bibcite{Balandat2019}{44}
+\bibcite{Gardner2018}{45}
 \bibstyle{ieeetr}

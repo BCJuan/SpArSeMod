@@ -36,11 +36,14 @@ def search_space(config=CONFIGURATION):
                                          lower=5, upper=100))
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_filtersize", parameter_type=ParameterType.INT,
                                          lower=1, upper=3))
+            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_timefilter", parameter_type=ParameterType.INT,
+                                         lower=5, upper=25))
+                                         
         params.append(RangeParameter(
         name="drop_" + str(i), lower=0.1, upper=0.8, parameter_type=ParameterType.FLOAT
         ))
         params.append(RangeParameter(name='down_' + str(i), lower=1, upper=3, parameter_type=ParameterType.INT))
-
+        params.append(RangeParameter(name='down_time_' + str(i), lower=5, upper=25, parameter_type=ParameterType.INT))
     ### FC BLOCKS ########################################################################
     params.append(RangeParameter(
         name="num_fc_layers", lower=0, upper=config['max_fc_layers'], parameter_type=ParameterType.INT
@@ -75,9 +78,9 @@ def search_space(config=CONFIGURATION):
         parameter_type=ParameterType.FLOAT,
     ))
     params.append(RangeParameter(
-        name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
+        name="batch_size", lower=2, upper=256, parameter_type=ParameterType.INT
     ))
-    params.append(RangeParameter(name='max_len', lower = 25, upper=450, parameter_type=ParameterType.INT))
+    params.append(RangeParameter(name='max_len', lower = 25, upper=750, parameter_type=ParameterType.INT))
 
     search_space = SearchSpace(parameters=params)
 
@@ -150,6 +153,15 @@ def kernel_size(config):
     config["block_" + str(block) + "_conv_" + str(layer) + "_filtersize"] = new_kernel_size
     return config
 
+def timekernel_size(config):
+    """
+    Changes the kernel in a randomly chosen convolution
+    """
+    block = choice(range(1, config["num_conv_blocks"] + 1))
+    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
+    new_kernel_size = randint(5, 25)
+    config["block_" + str(block) + "_conv_" + str(layer) + "_timefilter"] = new_kernel_size
+    return config
 
 def down_rate_change(config):
     """
@@ -161,6 +173,15 @@ def down_rate_change(config):
     config['down_' + str(block)] = new_down_sample
     return config
 
+def down_time_rate_change(config):
+    """
+    Changes the downsampling rate of a randomly chosen convolution
+    of type downsampled
+    """
+    block = choice(range(1, config["num_conv_blocks"] + 1))
+    new_down_sample = randint(5,25)
+    config['down_time_' + str(block)] = new_down_sample
+    return config
 
 def drop_rate_change(config):
     """
@@ -242,11 +263,14 @@ operations = {
             "num_conv_blocks": num_conv_blocks,
             "num_conv_filters": num_conv_filters,
             "kernel_size": kernel_size,
-            "down_rate_change": down_rate_change, 
+            "timekernel_size": timekernel_size,
+            "down_rate_change": down_rate_change,
+            "down_time_rate_change": down_time_rate_change, 
             "drop_rate_change": drop_rate_change,
             "num_fc_weights": num_fc_weights,
             "num_conv_layers": num_conv_layers,
             "change_max_len": change_max_len,
+
                 }
 
 
@@ -258,8 +282,8 @@ class LinearReLU(nn.Sequential):
 
 
 class ConvBNReLU3d(nn.Sequential):
-    def __init__(self, in_planes, out_planes, kernel_size=3, stride=1, groups=1):
-        padding = (kernel_size - 1) // 2
+    def __init__(self, in_planes, out_planes, kernel_size=(20, 2, 2), stride=1, groups=1):
+        padding = tuple((k_size - 1) // 2 for k_size in kernel_size)
         super(ConvBNReLU3d, self).__init__(
             nn.Conv3d(
                 in_planes,
@@ -367,10 +391,16 @@ class Net(nn.Module):
             conv.append(ConvBNReLU3d(
                 in_planes=in_channels,
                 out_planes=out_channels,
-                kernel_size=self.parametrization.get(
-                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize"),                         
-            ))
-        conv.append(nn.AvgPool3d(self.parametrization.get("down_" + str(j))))
+                kernel_size=(self.parametrization.get(
+                    "block_" + str(j) + "_conv_" + str(i) + "_timefilter"),
+                    self.parametrization.get(
+                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize"),
+                    self.parametrization.get(
+                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize")                         
+            )))
+        conv.append(nn.AvgPool3d((self.parametrization.get("down_time_" + str(j)), 
+                                  self.parametrization.get("down_" + str(j)),
+                                  self.parametrization.get("down_" + str(j)))))
         conv.append(nn.Dropout(self.parametrization.get("drop_" + str(j))))
         return nn.Sequential(*conv)
 

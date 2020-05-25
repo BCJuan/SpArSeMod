@@ -421,9 +421,9 @@ def search_space():
         parameter_type=ParameterType.FLOAT,
     ))
     params.append(RangeParameter(
-        name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
+        name="batch_size", lower=2, upper=256, parameter_type=ParameterType.INT
     ))
-    params.append(RangeParameter(name='max_len', lower = 25, upper=450, parameter_type=ParameterType.INT))
+    params.append(RangeParameter(name='max_len', lower = 25, upper=750, parameter_type=ParameterType.INT))
 
     search_space = SearchSpace(parameters=params)
 
