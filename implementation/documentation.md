@@ -22,6 +22,7 @@
 6. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space
 7. You have to define the operations in the morpher as in `cnn.py` or `rnn.py`
 
+Morphism evaluation expects minimization, check the argmin call for all objectives. also euclidean norm is employed.
 
 ### Parameters
 

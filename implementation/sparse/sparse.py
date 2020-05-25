@@ -16,14 +16,17 @@ from tqdm import tqdm
 from ax import Arm
 from os import path, mkdir
 from ax.core.data import Data
-from .morpher import Morpher
-from .heir import clean_models_return_pareto
+from functools import partial
 from random import choice
 from pandas import read_csv
 from torch import Size, load
 from copy import copy
+from numpy import argmin, stack
+from numpy.linalg import norm
 from .utils_data import get_shape_from_dataloader
-from functools import partial
+from .morpher import Morpher
+from .heir import clean_models_return_pareto
+
 # TODO: add raytune for distributing machine learning
 # TODO: refactorize main
 # TODO: change SobolMCSampler to NormalIIDSampler to avoid problems with
@@ -44,12 +47,7 @@ def sparse(
     root,
     objectives,
     batch_size,
-    desired_n_param,
-    desired_acc,
-    desired_ram,
     morphisms,
-    begin_sobol,
-    scalarizations,
     pruning,
     datasets,
     classes,
@@ -57,7 +55,6 @@ def sparse(
     search_space,
     net,
     flops,
-    desired_latency,
     quant_scheme,
     quant_params=None,
     collate_fn=None,
@@ -105,20 +102,19 @@ def sparse(
 
 
     # 1. sobol process
-    if begin_sobol:
-        sobol = get_sobol(exp.search_space)
-        exp, data, pareto_arms, sobol = run_model(
-            r1,
-            exp,
-            sobol,
-            data,
-            name,
-            root,
-            objectives,
-            epochs1,
-            model_type="random",
-            debug=debug,
-        )
+    sobol = get_sobol(exp.search_space)
+    exp, data, pareto_arms, sobol = run_model(
+        r1,
+        exp,
+        sobol,
+        data,
+        name,
+        root,
+        objectives,
+        epochs1,
+        model_type="random",
+        debug=debug,
+    )
 
     # 2. botorch process
     exp.optimization_config.objective.metrics[0].epochs = epochs2
@@ -180,7 +176,7 @@ def run_model(
             )
             if model_type == "bo":
                 model.update(new_data, exp)
-
+    # TODO: add raise error for empty data
     pareto_arms = clean_models_return_pareto(data)
     return exp, data, pareto_arms, model
 
@@ -211,15 +207,10 @@ def develop_morphisms(
 
 
 def morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, root, name, model, data):
-    new_configs = morpher.apply_morphs()
-    # TODO: new configuration should be passed through acquisiton
-    # function not random with chocie -> use model predict
-    obs_feats = [ObservationFeatures(parameters=i) for i in new_configs.values()]
-
-    new_arm = choice(list(new_configs))
-    print(new_configs[new_arm])
-    f, cov = model.predict(obs_feats)
-    print(f.shape, f)
+    # TODO: number of morphs should be passed through params in a sparse class
+    new_configs = morpher.apply_morphs(n_morphs=20)
+    new_arm = ei_new_arm(model, new_configs)
+    
     collate_fn_p = copy(collate_fn)
     if exp.optimization_config.objective.metrics[0].splitter:
         collate_fn_p = partial(
@@ -249,6 +240,16 @@ def morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, roo
 
     pareto_arms = clean_models_return_pareto(data)
     morpher.retrieve_best_configurations(exp, pareto_arms)
+
+
+def ei_new_arm(model, new_configs):
+    # TODO: use better prediction minimum
+    obs_feats = [ObservationFeatures(parameters=i) for i in new_configs.values()]
+    f, cov = model.predict(obs_feats)
+    predicted_values = stack(list(f.values()))
+    min_pred_idx = argmin([norm(predicted_values[:, i]) for i in range(predicted_values.shape[1])])
+    new_arm = list(new_configs)[min_pred_idx]
+    return new_arm 
 
 def model_loop(model, batch_size, experiment, debug):
     """

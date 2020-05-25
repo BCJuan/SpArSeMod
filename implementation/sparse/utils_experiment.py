@@ -19,6 +19,38 @@ from .quant_n_prune import quant
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
 
+class SparseExperiment(object):
+
+    def __init__(self, root, name, objectives, epochs1, pruning, datasets, classes,
+                 search_space, net, flops, quant_scheme, quant_params=None, collate_fn=None,
+                 splitter=False):
+
+        self.root = root
+        self.name = name
+        self.objectives = objectives
+        self.epochs1 = epochs1
+        self.pruning = pruning
+        self.datasets = datasets
+        self.classes = classes
+        self.search_space = search_space
+        self.net = net
+        self.flops = flops
+        self.quant_scheme = quant_scheme
+        self.quant_params = quant_params
+        self.collate_fn = collate_fn
+        self.splitter = splitter
+
+    def create_load_experiment(self):
+        if path.exists(path.join(self.root, self.name + ".json")):
+            exp = load_data(path.join(self.root, self.name), self.objectives)
+            data = pass_data_to_exp(path.join(self.root, self.name + ".csv"))
+            exp.attach_data(data)
+        else:
+            exp = get_experiment(
+                bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn, splitter
+            )
+            data = Data()
+        return exp, data
 
 class AccuracyMetric(Metric):
     """
