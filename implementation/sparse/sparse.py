@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from .utils_experiment import (
-    get_experiment,
     MyRunner,
     WeightMetric,
     AccuracyMetric,
     FeatureMapMetric,
-    create_load_experiment,
+    SparseExperiment
     group_attach_and_save,
 )
 from ax.core.observation import ObservationFeatures
@@ -82,7 +81,7 @@ def sparse(
     """
 
     # creates or loads experiment
-    exp, data = create_load_experiment(
+    sparse_exp = SparseExperiment(
         root,
         name,
         objectives,
@@ -99,7 +98,7 @@ def sparse(
         collate_fn,
         splitter
     )
-
+    exp, data = sparse_exp.create_load_experiment()
 
     # 1. sobol process
     sobol = get_sobol(exp.search_space)
@@ -210,7 +209,7 @@ def morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, roo
     # TODO: number of morphs should be passed through params in a sparse class
     new_configs = morpher.apply_morphs(n_morphs=20)
     new_arm = ei_new_arm(model, new_configs)
-    
+
     collate_fn_p = copy(collate_fn)
     if exp.optimization_config.objective.metrics[0].splitter:
         collate_fn_p = partial(

@@ -21,14 +21,14 @@ from .flops_counter_experimental import get_model_complexity_info
 
 class SparseExperiment(object):
 
-    def __init__(self, root, name, objectives, epochs1, pruning, datasets, classes,
+    def __init__(self, root, name, objectives, epochs, pruning, datasets, classes,
                  search_space, net, flops, quant_scheme, quant_params=None, collate_fn=None,
                  splitter=False):
 
         self.root = root
         self.name = name
         self.objectives = objectives
-        self.epochs1 = epochs1
+        self.epochs = epochs
         self.pruning = pruning
         self.datasets = datasets
         self.classes = classes
@@ -46,11 +46,47 @@ class SparseExperiment(object):
             data = pass_data_to_exp(path.join(self.root, self.name + ".csv"))
             exp.attach_data(data)
         else:
-            exp = get_experiment(
-                bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn, splitter
-            )
+            exp = self.get_experiment()
             data = Data()
         return exp, data
+
+    def get_experiment(self):
+        metric_list = [
+            AccuracyMetric(
+                self.epochs,
+                name="accuracy",
+                pruning=self.pruning,
+                datasets=self.datasets,
+                classes=self.classes,
+                net=self.net,
+                quant_scheme=self.quant_scheme,
+                quant_params=self.quant_params,
+                collate_fn=self.collate_fn,
+                splitter=self.splitter
+            ),
+            WeightMetric(name="weight", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
+                         splitter=self.splitter),
+            FeatureMapMetric(self.bits, name="ram", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
+                             splitter=self.splitter),
+            LatencyMetric(name='latency', datasets=self.datasets, classes=self.classes, net=self.net, flops_capacity=self.flops,
+                          collate_fn=self.collate_fn, splitter=self.splitter)
+        ]
+        experiment = Experiment(
+            name="experiment_building_blocks", search_space=self.search_space,
+        )
+
+        if self.objectives > 1:
+            objective = MultiObjective(
+                metrics=metric_list[:self.objectives], minimize=True,
+            )
+        else:
+            objective = Objective(metric=metric_list[:self.objectives][0], minimize=True,)
+
+        optimization_config = OptimizationConfig(objective=objective,)
+        experiment.optimization_config = optimization_config
+        experiment.runner = MyRunner()
+        return experiment
+
 
 class AccuracyMetric(Metric):
     """
@@ -288,60 +324,6 @@ class MyRunner(Runner):
         return {"name": str(trial.index)}
 
 
-def get_experiment(
-    bits, epochs, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params=None,
-    collate_fn=None, splitter=False
-):
-    """
-    Main experiment function: establishes the experiment and defines
-    the configuration with the scalarization with the appropriate metrics
-
-    Args
-    ----
-    parameters:
-        the configuration for training the network
-    device:
-        device for running the experiments
-
-    Returns
-    ------
-    The experiment object
-    """
-    metric_list = [
-        AccuracyMetric(
-            epochs,
-            name="accuracy",
-            pruning=pruning,
-            datasets=datasets,
-            classes=classes,
-            net=net,
-            quant_scheme=quant_scheme,
-            quant_params=quant_params,
-            collate_fn=collate_fn,
-            splitter=splitter
-        ),
-        WeightMetric(name="weight", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn, splitter=splitter),
-        FeatureMapMetric(bits, name="ram", datasets=datasets, classes=classes, net=net, collate_fn=collate_fn, splitter=splitter),
-        LatencyMetric(name='latency', datasets=datasets, classes=classes, net=net, flops_capacity=flops, collate_fn=collate_fn, splitter=splitter)
-    ]
-    experiment = Experiment(
-        name="experiment_building_blocks", search_space=search_space,
-    )
-
-    if objectives > 1:
-        objective = MultiObjective(
-            metrics=metric_list[:objectives], minimize=True,
-        )
-    else:
-        objective = Objective(metric=metric_list[:objectives][0], minimize=True,)
-
-    optimization_config = OptimizationConfig(objective=objective,)
-
-    experiment.optimization_config = optimization_config
-    experiment.runner = MyRunner()
-    return experiment
-
-
 def group_attach_and_save(data, new_data, exp, name, root, objectives):
     data, new_data = update_data(data, new_data)
     exp.attach_data(new_data)
@@ -379,27 +361,3 @@ def pass_data_to_exp(csv):
     df = read_csv(csv, index_col=0)
     return Data(df=df)
 
-
-def create_load_experiment(
-    root, name, objectives, bits, epochs1, pruning, datasets, classes, search_space, net, flops, quant_scheme,
-    quant_params=None, collate_fn=None, splitter=False
-):
-    """
-    Creates or loads an experiment where all the data and trials 
-    are going to be stored.
-
-    It also controls the metrics and running the trials
-
-    Args
-    ----
-    """
-    if path.exists(path.join(root, name + ".json")):
-        exp = load_data(path.join(root, name), objectives)
-        data = pass_data_to_exp(path.join(root, name + ".csv"))
-        exp.attach_data(data)
-    else:
-        exp = get_experiment(
-            bits, epochs1, objectives, pruning, datasets, classes, search_space, net, flops, quant_scheme, quant_params, collate_fn, splitter
-        )
-        data = Data()
-    return exp, data
