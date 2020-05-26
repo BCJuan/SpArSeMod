@@ -33,14 +33,14 @@ def prune_net(net, threshold):
     return net
 
 
-def quant(net_i, scheme, eval_func, quant_params=None):
+def quant(net_i, scheme, trainer, quant_params=None):
     if scheme == 'post':
         net_i.to("cpu")
         net_i.eval()
         net_i.qconfig = get_default_qconfig("fbgemm")
         net_i.fuse_model()
         prepare(net_i, inplace=True)
-        _, net_i = eval_func(net_i, quant_mode=True)
+        _, net_i = trainer.evaluate(net_i, quant_mode=True)
         convert(net_i, inplace=True)
     elif scheme == 'dynamic':
         net_i.to("cpu")
@@ -52,7 +52,7 @@ def quant(net_i, scheme, eval_func, quant_params=None):
         net_i.qconfig = get_default_qconfig("fbgemm")
         net_i.fuse_model()
         prepare(net_i, inplace=True)
-        _, net_i = eval_func(net_i, quant_mode=True)
+        _, net_i = trainer.evaluate(net_i, quant_mode=True)
         convert(net_i, inplace=True)
     else:
         pass

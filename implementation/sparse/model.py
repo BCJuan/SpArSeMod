@@ -186,9 +186,9 @@ class Trainer(object):
         cnt = 0
         net.eval()
         with no_grad():
-            # for inputs, labels in tqdm(data_loader,
-            #                            total=len(data_loader)):
-            for inputs, labels in data_loader:
+            for inputs, labels in tqdm(data_loader,
+                                       total=len(data_loader)):
+            # for inputs, labels in data_loader:
                 # move data to proper dtype and device
                 inputs = inputs.to(device="cpu")
                 labels = labels.to(device="cpu")

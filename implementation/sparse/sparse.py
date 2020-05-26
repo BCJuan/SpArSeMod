@@ -5,10 +5,12 @@ from .utils_experiment import (
     WeightMetric,
     AccuracyMetric,
     FeatureMapMetric,
+    LatencyMetric,
     SparseExperiment
-    group_attach_and_save,
 )
 from ax.core.observation import ObservationFeatures
+from ax.storage.metric_registry import register_metric
+from ax.storage.runner_registry import register_runner
 from ax.modelbridge.factory import get_sobol
 from ax.modelbridge.factory import get_botorch
 from tqdm import tqdm
@@ -18,7 +20,7 @@ from ax.core.data import Data
 from functools import partial
 from random import choice
 from pandas import read_csv
-from torch import Size, load
+from torch import Size, load, save
 from copy import copy
 from numpy import argmin, stack
 from numpy.linalg import norm
@@ -33,212 +35,136 @@ from .heir import clean_models_return_pareto
 # TODO: convert full/main process in a class with properties such as name, root, epochs and so
 # and methods such as run model
 
+class Sparse(object):
 
-def sparse(
-    r1,
-    r2,
-    r3,
-    bits,
-    epochs1,
-    epochs2,
-    epochs3,
-    name,
-    root,
-    objectives,
-    batch_size,
-    morphisms,
-    pruning,
-    datasets,
-    classes,
-    debug,
-    search_space,
-    net,
-    flops,
-    quant_scheme,
-    quant_params=None,
-    collate_fn=None,
-    splitter=False,
-    morpher_ops=None
-):
-    """
-    Main function for running the random evaluation points and
-    the points extracted from the gaussian process.
+    def __init__(self, **kwargs):
+        allowed_keys = {'r1', 'r2', 'r3', 'epochs1', 'epochs2', 'epochs3', 'name', 'root', 'objectives', 'batch_size',
+                        'morphisms', 'pruning', 'datasets', 'classes', 'debug', 'search_space', 'net', 'flops', 'quant_scheme',
+                        'quant_params', 'collate_fn', 'splitter', 'morpher_ops'}
 
-    Args
-    ----
-    n_rounds (int):
-        number of optimization rounds
-    n_random_round (int):
-        numnber of random points to evaluate at each global round
-    n_batches_round (int):
-        number of GP rounds to evaluate and generate new points at each
-        global round
-    batch_size (int):
-        batch size for the guassian process evaluation
-    bits (int):
-        number of bits to compute the neural network size
+        self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
 
-    """
+    def run_sparse(self):
+        sparse_exp = SparseExperiment(self.epochs1, **self.__dict__)
+        
+        self.exp, self.data = sparse_exp.create_load_experiment()
 
-    # creates or loads experiment
-    sparse_exp = SparseExperiment(
-        root,
-        name,
-        objectives,
-        bits,
-        epochs1,
-        pruning,
-        datasets,
-        classes,
-        search_space,
-        net,
-        flops,
-        quant_scheme,
-        quant_params,
-        collate_fn,
-        splitter
-    )
-    exp, data = sparse_exp.create_load_experiment()
+        sobol = get_sobol(self.exp.search_space)
+        sobol = self.run_model(self.r1, sobol, self.epochs1, model_type="random")
 
-    # 1. sobol process
-    sobol = get_sobol(exp.search_space)
-    exp, data, pareto_arms, sobol = run_model(
-        r1,
-        exp,
-        sobol,
-        data,
-        name,
-        root,
-        objectives,
-        epochs1,
-        model_type="random",
-        debug=debug,
-    )
+        self.exp.optimization_config.objective.metrics[0].epochs = self.epochs2
+        botorch = get_botorch(experiment=self.exp, data=self.data)
+        botorch = self.run_model(self.r2, botorch, self.epochs2, model_type="bo")
 
-    # 2. botorch process
-    exp.optimization_config.objective.metrics[0].epochs = epochs2
-    botorch = get_botorch(experiment=exp, data=data)
-    exp, data, pareto_arms, botorch = run_model(
-        r2,
-        exp,
-        botorch,
-        data,
-        name,
-        root,
-        objectives,
-        epochs2,
-        model_type="bo",
-        debug=debug,
-    )
+        if self.morphisms:
+            self.pareto_arms = clean_models_return_pareto(self.data)
+            self.develop_morphisms(botorch)
 
-    # 3. morphisms
-    if morphisms:
-        pareto_arms = clean_models_return_pareto(data)
-        develop_morphisms(
-            r3,
-            exp,
-            pareto_arms,
-            data,
-            name,
-            root,
-            objectives,
-            epochs3,
-            datasets,
-            classes,
-            debug,
-            net,
-            morpher_ops,
-            botorch,
-            collate_fn
+    def run_model(self, r, model, epochs, model_type):
+        for _ in tqdm(range(r)):
+            self.pareto_arms = clean_models_return_pareto(self.data)
+            model, new_data = self.model_loop(model)
+
+            if not new_data.df.empty:
+                new_data = self.group_attach_and_save(new_data)
+                if model_type == "bo":
+                    model.update(new_data, self.exp)
+        # TODO: add raise error for empty data
+        self.pareto_arms = clean_models_return_pareto(self.data)
+        return model
+
+    def model_loop(self, model):
+        """
+        Makes a loop of random generation and fetching
+        """
+        if self.batch_size > 1:
+            n = self.batch_size
+            trial = self.exp.new_batch_trial(generator_run=model.gen(n=n)).run()
+        else:
+            n = 1
+            trial = self.exp.new_trial(generator_run=model.gen(n=n)).run()
+
+        trial, new_data = self.run_trial(trial)
+        return model, new_data
+
+    def run_trial(self, trial):
+        try:
+            new_data = self.exp._fetch_trial_data(trial.index)
+            self.exp.trials[trial.index].mark_completed()
+        except (RuntimeError, IndexError) as e:
+            self.exp.trials[trial.index].mark_failed()
+            new_data = Data()
+            if self.debug:
+                print(e)
+        return trial, new_data
+
+    def group_attach_and_save(self, new_data):
+        new_data = self.update_data(new_data)
+        self.exp.attach_data(new_data)
+        self.save_data()
+        return new_data
+
+
+    def update_data(self, new_data):
+        self.data = Data.from_multiple_data(data=[self.data, new_data]) if new_data else self.data
+        return new_data
+
+    def save_data(self):
+        """
+        FUnction for saving data, experiment and runner
+        """
+        self.data.df.to_csv(path.join(self.root, self.name + ".csv"))
+        metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
+        for i in range(self.objectives):
+            register_metric(metrics[i])
+        register_runner(MyRunner)
+        save(self.exp, path.join(self.root, self.name + ".json"))
+
+
+    def develop_morphisms(self, model):
+        self.morpher = Morpher(operations=self.morpher_ops)
+        self.morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
+        self.exp.optimization_config.objective.metrics[0].epochs = self.epochs3
+        self.exp.optimization_config.objective.metrics[0].reload = True
+        for _ in tqdm(range(self.r3)):
+            self.morphism_loop(model)
+
+
+    def morphism_loop(self, model):
+        morpher = Morpher(self.morpher_ops)
+        morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
+        # TODO: number of morphs should be passed through params in a sparse class
+        new_configs = morpher.apply_morphs(n_morphs=20)
+        new_arm = ei_new_arm(model, new_configs)
+
+        collate_fn_p = copy(self.collate_fn)
+        if self.exp.optimization_config.objective.metrics[0].splitter:
+            collate_fn_p = partial(
+                collate_fn_p, max_len=self.exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
+        self.exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(self.exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
+                                collate_fn=collate_fn_p)
+        input_shape = get_shape_from_dataloader(self.exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
+                                    self.exp.arms_by_name[new_arm[1]].parameters)
+
+        old_net = reload_net(self.exp, new_arm[1], self.classes, input_shape, self.net)
+        self.exp.optimization_config.objective.metrics[0].old_net = old_net
+        trial = (
+            self.exp.new_trial()
+            .add_arm(
+                Arm(
+                    name=str(list(self.exp.data_by_trial.keys())[-1] + 1) + "_0",
+                    parameters=new_configs[new_arm],
+                )
+            )
+            .run()
         )
-
-
-def run_model(
-    r,
-    exp,
-    model,
-    data,
-    name,
-    root,
-    objectives,
-    epochs,
-    model_type,
-    debug,
-):
-    for _ in tqdm(range(r)):
-        pareto_arms = clean_models_return_pareto(data)
-        exp, model, new_data = model_loop(model, 1, exp, debug)
-
+        trial, new_data = self.run_trial(trial)
         if not new_data.df.empty:
-            data, new_data, exp = group_attach_and_save(
-                data, new_data, exp, name, root, objectives
-            )
-            if model_type == "bo":
-                model.update(new_data, exp)
-    # TODO: add raise error for empty data
-    pareto_arms = clean_models_return_pareto(data)
-    return exp, data, pareto_arms, model
+            new_data = self.group_attach_and_save(new_data)
 
-
-def develop_morphisms(
-    r3,
-    exp,
-    pareto_arms,
-    data,
-    name,
-    root,
-    objectives,
-    epochs3,
-    datasets,
-    classes,
-    debug,
-    net,
-    morpher_ops,
-    model,
-    collate_fn
-):
-    morpher = Morpher(operations=morpher_ops)
-    morpher.retrieve_best_configurations(exp, pareto_arms)
-    exp.optimization_config.objective.metrics[0].epochs = epochs3
-    exp.optimization_config.objective.metrics[0].reload = True
-    for _ in tqdm(range(r3)):
-        morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, root, name, model, data)
-
-
-def morphism_loop(morpher, exp, collate_fn, classes, net, debug, objectives, root, name, model, data):
-    # TODO: number of morphs should be passed through params in a sparse class
-    new_configs = morpher.apply_morphs(n_morphs=20)
-    new_arm = ei_new_arm(model, new_configs)
-
-    collate_fn_p = copy(collate_fn)
-    if exp.optimization_config.objective.metrics[0].splitter:
-        collate_fn_p = partial(
-            collate_fn, max_len=exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
-    exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
-                            collate_fn=collate_fn_p)
-    input_shape = get_shape_from_dataloader(exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
-                                exp.arms_by_name[new_arm[1]].parameters)
-
-    old_net = reload_net(exp, new_arm[1], classes, input_shape, net)
-    exp.optimization_config.objective.metrics[0].old_net = old_net
-    trial = (
-        exp.new_trial()
-        .add_arm(
-            Arm(
-                name=str(list(exp.data_by_trial.keys())[-1] + 1) + "_0",
-                parameters=new_configs[new_arm],
-            )
-        )
-        .run()
-    )
-    exp, trial, new_data = run_trial(exp, trial, debug)
-    if not new_data.df.empty:
-        data, new_data, exp = group_attach_and_save(
-            data, new_data, exp, name, root, objectives
-        )
-
-    pareto_arms = clean_models_return_pareto(data)
-    morpher.retrieve_best_configurations(exp, pareto_arms)
+        self.pareto_arms = clean_models_return_pareto(self.data)
+        self.morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
+        model.update(new_data, self.exp)
 
 
 def ei_new_arm(model, new_configs):
@@ -249,34 +175,6 @@ def ei_new_arm(model, new_configs):
     min_pred_idx = argmin([norm(predicted_values[:, i]) for i in range(predicted_values.shape[1])])
     new_arm = list(new_configs)[min_pred_idx]
     return new_arm 
-
-def model_loop(model, batch_size, experiment, debug):
-    """
-    Makes a loop of random generation and fetching
-    """
-    if batch_size > 1:
-        n = batch_size
-        trial = experiment.new_batch_trial(generator_run=model.gen(n=n)).run()
-    else:
-        n = 1
-        trial = experiment.new_trial(generator_run=model.gen(n=n)).run()
-
-    experiment, trial, new_data = run_trial(experiment, trial, debug)
-
-    return experiment, model, new_data
-
-
-def run_trial(experiment, trial, debug):
-
-    try:
-        new_data = experiment._fetch_trial_data(trial.index)
-        experiment.trials[trial.index].mark_completed()
-    except (RuntimeError, IndexError) as e:
-        experiment.trials[trial.index].mark_failed()
-        new_data = Data()
-        if debug:
-            print(e)
-    return experiment, trial, new_data
 
 
 # TODO: delete hardcoded model folder name, loook in other parts of python

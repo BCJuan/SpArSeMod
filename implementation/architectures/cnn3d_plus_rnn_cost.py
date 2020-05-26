@@ -3,6 +3,7 @@ from random import random, choice, randint
 from torch import nn as nn, rand as rand
 from torch.autograd import Variable
 from numpy import ceil
+from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 # TODO: include batch norm and try to make it static 
 # TODO: if not, build it for dynamic
 
@@ -33,23 +34,17 @@ def search_space(config=CONFIGURATION):
         params.append(RangeParameter(name="conv_block_" + str(i) + "_num_layers", parameter_type=ParameterType.INT,
                             lower=1, upper=config['max_conv_layer_block']))        
         for j in range(1, config['max_conv_layer_block'] + 1):
-            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_type", parameter_type=ParameterType.INT,
-                                    lower=0, upper=1))
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_channels", parameter_type=ParameterType.INT,
                                          lower=5, upper=100))
             params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_filtersize", parameter_type=ParameterType.INT,
                                          lower=2, upper=5))
-            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_stride", parameter_type=ParameterType.INT,
-            #                              lower=1, upper=3))
-            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_groups", parameter_type=ParameterType.INT,
-            #                             lower=0, upper=1))    
-            # params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_dilation", parameter_type=ParameterType.INT,
-            #                             lower=1, upper=2)) 
+            params.append(RangeParameter(name="block_" + str(i) + "_conv_" + str(j) + "_timefilter", parameter_type=ParameterType.INT,
+                                         lower=5, upper=25))
         params.append(RangeParameter(
         name="drop_" + str(i), lower=0.1, upper=0.8, parameter_type=ParameterType.FLOAT
         ))
         params.append(RangeParameter(name='down_' + str(i), lower=1, upper=4, parameter_type=ParameterType.INT))
-
+        params.append(RangeParameter(name='down_time_' + str(i), lower=5, upper=25, parameter_type=ParameterType.INT))
     ### RNN BLOCK ########################################################################
     params.append(RangeParameter(name="rnn_layers", parameter_type=ParameterType.INT,
                             lower=1, upper=config['max_rnn_layers']))
@@ -94,7 +89,7 @@ def search_space(config=CONFIGURATION):
     params.append(RangeParameter(
         name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
     ))
-    params.append(RangeParameter(name='max_len', lower = 25, upper=450, parameter_type=ParameterType.INT))
+    params.append(RangeParameter(name='max_len', lower = 25, upper=750, parameter_type=ParameterType.INT))
 
     search_space = SearchSpace(parameters=params)
 
@@ -115,6 +110,26 @@ def num_fc_layers(config):
             config["num_fc_layers"] = config["num_fc_layers"] + 1
     return config
 
+def timekernel_size(config):
+    """
+    Changes the kernel in a randomly chosen convolution
+    """
+    block = choice(range(1, config["num_conv_blocks"] + 1))
+    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
+    new_kernel_size = randint(5, 25)
+    config["block_" + str(block) + "_conv_" + str(layer) + "_timefilter"] = new_kernel_size
+    return config
+
+def down_time_rate_change(config):
+    """
+    Changes the downsampling rate of a randomly chosen convolution
+    of type downsampled
+    """
+    block = choice(range(1, config["num_conv_blocks"] + 1))
+    new_down_sample = randint(5,25)
+    config['down_time_' + str(block)] = new_down_sample
+    return config
+
 
 def num_conv_blocks(config):
     """
@@ -130,19 +145,6 @@ def num_conv_blocks(config):
         else:
             config["num_conv_blocks"] = config["num_conv_blocks"] + 1
 
-    return config
-
-
-def layer_type(config):
-    """
-    Changes the layer type of a randomly picked con volution layer
-    """
-    block = choice(range(1, config["num_conv_blocks"] + 1))
-    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
-    if config["block_" + str(block) + "_conv_" + str(layer) + "_type"] == 1:
-        config["block_" + str(block) + "_conv_" + str(layer) + "_type"] = 0
-    else:
-        config["block_" + str(block) + "_conv_" + str(layer) + "_type"] = 1
     return config
 
 
@@ -166,40 +168,6 @@ def kernel_size(config):
     new_kernel_size = randint(2, 5)
     config["block_" + str(block) + "_conv_" + str(layer) + "_filtersize"] = new_kernel_size
     return config
-
-
-def stride_change(config):
-    """
-    Changes the kernel in a randomly chosen convolution
-    """
-    block = choice(range(1, config["num_conv_blocks"] + 1))
-    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
-    new_stride_size = randint(1, 4)
-    config["block_" + str(block) + "_conv_" + str(layer) + "_stride"] = new_stride_size
-    return config
-
-
-def groups_change(config):
-    """
-    Changes the kernel in a randomly chosen convolution
-    """
-    block = choice(range(1, config["num_conv_blocks"] + 1))
-    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
-    new_groups = choice([0, 1, 2])
-    config["block_" + str(block) + "_conv_" + str(layer) + "_groups"] = new_groups
-    return config
-
-
-def dilation_change(config):
-    """
-    Changes the kernel in a randomly chosen convolution
-    """
-    block = choice(range(1, config["num_conv_blocks"] + 1))
-    layer = choice(range(1, config["conv_block_" + str(block) + "_num_layers"] + 1))
-    new_dilation = randint(1, 4)
-    config["block_" + str(block) + "_conv_" + str(layer) + "_dilation"] = new_dilation
-    return config
-
 
 def down_rate_change(config):
     """
@@ -317,14 +285,12 @@ def change_dropout(config):
 operations = {
             "num_fc_layers": num_fc_layers,
             "num_conv_blocks": num_conv_blocks,
-            "layer_type": layer_type,
             "num_conv_filters": num_conv_filters,
             "kernel_size": kernel_size,
-            # "stride_change": stride_change,
-            # "groups_change": groups_change, 
-            # "dilation_change": dilation_change,
             "down_rate_change": down_rate_change, 
             "drop_rate_change": drop_rate_change,
+            "timekernel_size": timekernel_size,
+            "down_time_rate_change": down_time_rate_change, 
             "num_fc_weights": num_fc_weights,
             "num_conv_layers": num_conv_layers,
             "change_max_len": change_max_len,
@@ -332,6 +298,30 @@ operations = {
             "change_n_neurons": change_n_neurons,
             "change_dropout": change_dropout,
                 }
+
+class LinearReLU(nn.Sequential):
+    def __init__(self, in_neurons, out_neurons):
+        super(LinearReLU, self).__init__(
+            nn.Linear(in_neurons, out_neurons), nn.ReLU(inplace=False)
+        )
+
+
+class ConvBNReLU3d(nn.Sequential):
+    def __init__(self, in_planes, out_planes, kernel_size=(20, 2, 2), stride=1, groups=1):
+        padding = tuple((k_size - 1) // 2 for k_size in kernel_size)
+        super(ConvBNReLU3d, self).__init__(
+            nn.Conv3d(
+                in_planes,
+                out_planes,
+                kernel_size,
+                stride,
+                padding,
+                groups=groups,
+                bias=True,
+            ),
+            nn.BatchNorm3d(out_planes, momentum=0.1),
+            nn.ReLU(inplace=False),
+        )
 
 class Net(nn.Module):
     """
@@ -405,9 +395,13 @@ class Net(nn.Module):
             )
         )
         self.classifier = nn.Sequential(*classifier)
+        self.quant1 = QuantStub()
+        self.dequant1 = DeQuantStub()
+        self.quant2 = QuantStub()
+        self.dequant2 = DeQuantStub()
 
     def create_fc_block(self, fc, i, n_size):
-        linear = nn.Linear(
+        linear = LinearReLU(
             self.parametrization.get("fc_weights_layer_" + str(i - 1), n_size),
             self.parametrization.get("fc_weights_layer_" + str(i)),
         )
@@ -420,9 +414,6 @@ class Net(nn.Module):
         for i in range(
             1, self.parametrization.get("conv_block_" + str(j) + "_num_layers") + 1
         ):
-            conv_type = self.parametrization.get(
-                "block_" + str(j) + "_conv_" + str(i) + "_type", 0
-            )
 
             if i == 1 and j != 1:
                 index_l = self.parametrization.get("conv_block_" + str(j - 1) + "_num_layers")
@@ -434,35 +425,21 @@ class Net(nn.Module):
             in_channels = self.parametrization.get(
                 "block_" + str(index_b) + "_conv_" + str(index_l) + "_channels", channels
             )
-            if conv_type == 0:
-                conv_l = nn.Conv3d
-            else:
-                conv_l = nn.ConvTranspose3d
 
-            # if self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) == 0:
-            #     groups = in_channels
-            #     factor = abs(ceil(in_channels/self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels", 6)))
-            #     out_channels = int(factor*in_channels)
-            # else:
-            #     groups = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_groups", 1) 
-            #     out_channels = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels")
             out_channels = self.parametrization.get("block_" + str(j) + "_conv_" + str(i) + "_channels")
-            conv.append(nn.Conv3d(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=self.parametrization.get(
+            conv.append(ConvBNReLU3d(
+                in_planes=in_channels,
+                out_planes=out_channels,
+                kernel_size=(self.parametrization.get(
+                    "block_" + str(j) + "_conv_" + str(i) + "_timefilter"),
+                    self.parametrization.get(
                     "block_" + str(j) + "_conv_" + str(i) + "_filtersize"),
-                # stride=self.parametrization.get(
-                #     "block_" + str(j) + "_conv_" + str(i) + "_stride", 1
-                # ), 
-                # groups=1, 
-                # dilation=self.parametrization.get(
-                #     "block_" + str(j) + "_conv_" + str(i) + "_dilation", 1
-                # ),                         
-            ))
-            conv.append(nn.BatchNorm3d(out_channels))
-            conv.append(nn.ReLU())
-        conv.append(nn.MaxPool3d(self.parametrization.get("down_" + str(j))))
+                    self.parametrization.get(
+                    "block_" + str(j) + "_conv_" + str(i) + "_filtersize")                         
+            )))
+        conv.append(nn.AvgPool3d((self.parametrization.get("down_time_" + str(j)), 
+                                  self.parametrization.get("down_" + str(j)),
+                                  self.parametrization.get("down_" + str(j)))))
         conv.append(nn.Dropout(self.parametrization.get("drop_" + str(j))))
         return nn.Sequential(*conv)
 
@@ -513,17 +490,25 @@ class Net(nn.Module):
         Global forward pass for both the convolution blocks and the fully
         connected layers.
         """
-        # out = self.quant(x)
-        out = x
+        out = self.quant1(x)
         out = self._forward_features(out)
         out = out.mean([2, 3])
+        out = self.dequant1(out)
         cell_out, self.hidden = self.cell(out)
         if self.parametrization.get('cell_type'):
             out = self.hidden[0][self.layers - 1]
         else:
             out = self.hidden[self.layers - 1]
+        out = self.quant2(out)
         if self.parametrization.get("num_fc_layers") > 0:
             out = self.fc(out)
         out = self.classifier(out)
-        # out = self.dequant(out)
+        out = self.dequant2(out)
         return out
+
+    def fuse_model(self):
+        for m in self.modules():
+            if type(m) == ConvBNReLU3d:
+                fuse_modules(m, ["0", "1", "2"], inplace=True)
+            if type(m) == LinearReLU:
+                fuse_modules(m, ["0", "1"], inplace=True)

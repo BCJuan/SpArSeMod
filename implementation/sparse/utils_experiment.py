@@ -21,24 +21,11 @@ from .flops_counter_experimental import get_model_complexity_info
 
 class SparseExperiment(object):
 
-    def __init__(self, root, name, objectives, epochs, pruning, datasets, classes,
-                 search_space, net, flops, quant_scheme, quant_params=None, collate_fn=None,
-                 splitter=False):
-
-        self.root = root
-        self.name = name
-        self.objectives = objectives
+    def __init__(self, epochs, **kwargs):
+        allowed_keys = {'root', 'name', 'objectives', 'epochs', 'pruning', 'datasets', 'classes',
+                        'search_space', 'net', 'flops', 'quant_scheme', 'quant_params', 'collate_fn', 'splitter'}
+        self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
         self.epochs = epochs
-        self.pruning = pruning
-        self.datasets = datasets
-        self.classes = classes
-        self.search_space = search_space
-        self.net = net
-        self.flops = flops
-        self.quant_scheme = quant_scheme
-        self.quant_params = quant_params
-        self.collate_fn = collate_fn
-        self.splitter = splitter
 
     def create_load_experiment(self):
         if path.exists(path.join(self.root, self.name + ".json")):
@@ -66,7 +53,7 @@ class SparseExperiment(object):
             ),
             WeightMetric(name="weight", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
                          splitter=self.splitter),
-            FeatureMapMetric(self.bits, name="ram", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
+            FeatureMapMetric(name="ram", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
                              splitter=self.splitter),
             LatencyMetric(name='latency', datasets=self.datasets, classes=self.classes, net=self.net, flops_capacity=self.flops,
                           collate_fn=self.collate_fn, splitter=self.splitter)
@@ -150,7 +137,7 @@ class AccuracyMetric(Metric):
             self.reload,
             self.old_net,
         )
-        net_i = quant(net_i, self.quant_scheme, self.trainer.evaluate, self.quant_params)
+        net_i = quant(net_i, self.quant_scheme, self.trainer, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
         save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result
@@ -213,9 +200,8 @@ class FeatureMapMetric(Metric):
     Class for the weight metric
     """
 
-    def __init__(self, bits, name, datasets, classes, net, collate_fn, splitter):
+    def __init__(self, name, datasets, classes, net, collate_fn, splitter):
         super().__init__(name, lower_is_better=True)
-        self.bits = bits
         # TODO: maximum limit is nowadays hardcoded as 10**8, change to
         # variable
         self.top = log(10 ** 8)
@@ -322,30 +308,6 @@ class MyRunner(Runner):
 
     def run(self, trial):
         return {"name": str(trial.index)}
-
-
-def group_attach_and_save(data, new_data, exp, name, root, objectives):
-    data, new_data = update_data(data, new_data)
-    exp.attach_data(new_data)
-    save_data(exp, data, name, root, objectives)
-    return data, new_data, exp
-
-
-def update_data(data, new_data):
-    data = Data.from_multiple_data(data=[data, new_data]) if new_data else data
-    return data, new_data
-
-
-def save_data(exp, data, name=None, root=None, n_obj=None):
-    """
-    FUnction for saving data, experiment and runner
-    """
-    data.df.to_csv(path.join(root, name + ".csv"))
-    metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
-    for i in range(n_obj):
-        register_metric(metrics[i])
-    register_runner(MyRunner)
-    save(exp, path.join(root, name + ".json"))
 
 
 def load_data(name, n_obj=None):

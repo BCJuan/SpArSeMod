@@ -144,12 +144,18 @@ class Net(nn.Module):
             cell = nn.LSTM
         else:
             cell = nn.GRU
-        
+        if self.layers > 1:
+            dropout = parametrization.get("rnn_dropout", 0.1)
+        else:
+            dropout = 0
         self.cell = cell(self.odd_shape[-1], parametrization.get("neurons_layers", 64), batch_first=True,
                         num_layers=self.layers,
                         dropout=parametrization.get("rnn_dropout", 0.1))
         ####
-
+        fc = []
+        for i in range(1, parametrization.get("num_fc_layers", 1) + 1):
+            fc = self.create_fc_block(fc, i, parametrization.get("neurons_layers", 64))
+        self.fc = nn.Sequential(*fc)
         # Final Layer
         
         self.classifier = nn.Linear(
@@ -179,7 +185,7 @@ class Net(nn.Module):
             1, self.parametrization.get("conv_" + str(j) + "_num_layers", 1) + 1
         ):
             conv_type = self.parametrization.get(
-                "conv_" + str(j) + "_layer_" + str(i) + "_type", "Conv2D"
+                "conv_" + str(j) + "_layer_" + str(i) + "_type", 0
             )
 
             if i == 1 and j != 1:
@@ -194,7 +200,7 @@ class Net(nn.Module):
             in_channels = self.parametrization.get(
                 "conv_" + str(index_b) + "_layer_" + str(index_l) + "_filters", channels
             )
-            if conv_type == "SeparableConv2D":
+            if conv_type == 2:
                 conv_layer = DepthwiseSeparableConv(
                     in_channels,
                     self.parametrization.get(
@@ -204,7 +210,7 @@ class Net(nn.Module):
                         "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
                     ),
                 )
-            elif conv_type == "DownsampledConv2D":
+            elif conv_type == 1:
                 conv_layer = DownsampleConv(
                     in_channels,
                     self.parametrization.get(
@@ -218,7 +224,7 @@ class Net(nn.Module):
                     ),
                 )
 
-            if conv_type == "Conv2D":
+            if conv_type == 0:
                 conv.append(
                     ConvBNReLU(
                         in_channels,
@@ -306,6 +312,8 @@ class Net(nn.Module):
             cell_out, self.hidden = self.cell(f1)
             f2 = self.hidden[self.layers - 1]
         q4 = self.quant1(f2)
+        if self.parametrization.get("num_fc_layers") > 0:
+            q4 = self.fc(q4)
         q5 = self.classifier(q4)
         out = self.dequant1(q5)
         return out
@@ -376,11 +384,10 @@ def search_space():
                 name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
             ))
 
-            params.append(ChoiceParameter(
+            params.append(RangeParameter(
                 name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_type",
-                parameter_type=ParameterType.STRING,
-                values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
-            ))
+                parameter_type=ParameterType.INT,
+                lower=0, upper=2))
 
             params.append(RangeParameter(
                 name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_downsample",
@@ -399,7 +406,17 @@ def search_space():
     params.append(RangeParameter(name="cell_type", parameter_type=ParameterType.INT, lower =0, upper=1))
 
     #######################################################################################
+    params.append(RangeParameter(
+        name="num_fc_layers", lower=0, upper=max_fc_layers, parameter_type=ParameterType.INT
+    ))
 
+    for i in range(max_fc_layers):
+        params.append(RangeParameter(
+            name="fc_weights_layer_" + str(i + 1), lower=10, upper=200, parameter_type=ParameterType.INT
+        ))
+        params.append(RangeParameter(
+            name="drop_fc_" + str(i + 1), lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
+        ))
     ########################################################################
     params.append(RangeParameter(
         name="learning_rate",
@@ -463,13 +480,9 @@ def layer_type(config):
     """
     block = choice(range(1, config["num_conv_blocks"] + 1))
     layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
-    types = set(config["conv_" + str(block) + "_layer_" + str(layer) + "_type"])
-    original_types = set(["Conv2D", "DownsampledConv2D", "SeparableConv2D"])
-    possible_types = list(original_types - types)
-    new_layer_type = choice(possible_types)
-    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = str(
-        new_layer_type
-    )
+    original_types = list([0, 1, 2])
+    new_layer_type = choice(original_types)
+    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = new_layer_type
     return config
 
 
