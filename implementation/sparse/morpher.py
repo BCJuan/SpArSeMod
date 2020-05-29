@@ -29,5 +29,3 @@ class Morpher(object):
                     new_configs[(str(i), config)]
                 )
         return new_configs
-
-

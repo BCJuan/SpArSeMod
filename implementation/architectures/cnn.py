@@ -574,6 +574,7 @@ def search_space():
 
     return search_space
 
+
 def num_fc_layers(config):
     """
     Changes in +-1 the number of fc layers in the main branch
@@ -701,12 +702,12 @@ def num_conv_layers(config):
 
 
 operations = {
-            "num_fc_layers": num_fc_layers,
-            "num_conv_blocks": num_conv_blocks,
-            "layer_type": layer_type,
-            "num_conv_filters": num_conv_filters,
-            "kernel_size": kernel_size,
-            "downsampling_rate": downsampling_rate,
-            "num_fc_weights": num_fc_weights,
-            "num_conv_layers": num_conv_layers,
-        }
+    "num_fc_layers": num_fc_layers,
+    "num_conv_blocks": num_conv_blocks,
+    "layer_type": layer_type,
+    "num_conv_filters": num_conv_filters,
+    "kernel_size": kernel_size,
+    "downsampling_rate": downsampling_rate,
+    "num_fc_weights": num_fc_weights,
+    "num_conv_layers": num_conv_layers,
+}

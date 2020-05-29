@@ -10,6 +10,7 @@ The only difference between cnn and cnn2d_cost is the inclusion of max len in th
 also its inclusion in the morphing process
 """
 
+
 class DownsampleConv(nn.Module):
     """
     Convolution operation with two components: downsampling convolution first
@@ -140,7 +141,7 @@ class Net(nn.Module):
         )
         ##### RNN
         self.layers = parametrization.get("rnn_layers", 1)
-        if parametrization.get('cell_type'):
+        if parametrization.get("cell_type"):
             cell = nn.LSTM
         else:
             cell = nn.GRU
@@ -148,23 +149,27 @@ class Net(nn.Module):
             dropout = parametrization.get("rnn_dropout", 0.1)
         else:
             dropout = 0
-        self.cell = cell(self.odd_shape[-1], parametrization.get("neurons_layers", 64), batch_first=True,
-                        num_layers=self.layers,
-                        dropout=parametrization.get("rnn_dropout", 0.1))
+        self.cell = cell(
+            self.odd_shape[-1],
+            parametrization.get("neurons_layers", 64),
+            batch_first=True,
+            num_layers=self.layers,
+            dropout=parametrization.get("rnn_dropout", 0.1),
+        )
         ####
         fc = []
         for i in range(1, parametrization.get("num_fc_layers", 1) + 1):
             fc = self.create_fc_block(fc, i, parametrization.get("neurons_layers", 64))
         self.fc = nn.Sequential(*fc)
         # Final Layer
-        
+
         self.classifier = nn.Linear(
-                parametrization.get(
-                    "fc_weights_layer_" + str(parametrization.get("num_fc_layers", 0)),
-                    parametrization.get("neurons_layers", 64),
-                ),
-                classes,
-            )
+            parametrization.get(
+                "fc_weights_layer_" + str(parametrization.get("num_fc_layers", 0)),
+                parametrization.get("neurons_layers", 64),
+            ),
+            classes,
+        )
         self.quant = QuantStub()
         self.dequant = DeQuantStub()
         self.quant1 = QuantStub()
@@ -305,7 +310,7 @@ class Net(nn.Module):
         q2 = self._forward_features(q1)
         f = self.dequant(q2)
         f1 = torchmean(f, dim=3)
-        if self.parametrization.get('cell_type'):
+        if self.parametrization.get("cell_type"):
             cell_out, (self.hidden, c) = self.cell(f1)
             f2 = self.hidden[self.layers - 1]
         else:
@@ -348,103 +353,180 @@ def search_space():
     max_number_of_layers_per_block = 3
     max_fc_layers = 2
     params = []
-    params.append(RangeParameter(
-        name="num_conv_blocks", lower=1, upper=max_number_of_blocks, parameter_type=ParameterType.INT
-    ))
+    params.append(
+        RangeParameter(
+            name="num_conv_blocks",
+            lower=1,
+            upper=max_number_of_blocks,
+            parameter_type=ParameterType.INT,
+        )
+    )
     for i in range(max_number_of_blocks):
-        params.append(RangeParameter(
-            name="downsample_input_depth_" + str(i + 1),
-            lower=0,
-            upper=1,
-            parameter_type=ParameterType.INT,
-        ))
-        params.append(RangeParameter(
-            name="input_downsampling_rate_" + str(i + 1),
-            lower=2,
-            upper=4,
-            parameter_type=ParameterType.INT,
-        ))
-
-        params.append(RangeParameter(
-            name="conv_" + str(i + 1) + "_num_layers", lower=1, upper=max_number_of_layers_per_block,
-            parameter_type=ParameterType.INT
-        ))
-        params.append(RangeParameter(
-        name="drop_" + str(i + 1), lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
-        ))
-        for j in range(max_number_of_layers_per_block):
-            params.append(RangeParameter(
-                name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_filters",
-                lower=1,
-                upper=100,
-                parameter_type=ParameterType.INT,
-            ))
-
-            params.append(RangeParameter(
-                name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
-            ))
-
-            params.append(RangeParameter(
-                name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_type",
-                parameter_type=ParameterType.INT,
-                lower=0, upper=2))
-
-            params.append(RangeParameter(
-                name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_downsample",
+        params.append(
+            RangeParameter(
+                name="downsample_input_depth_" + str(i + 1),
                 lower=0,
+                upper=1,
+                parameter_type=ParameterType.INT,
+            )
+        )
+        params.append(
+            RangeParameter(
+                name="input_downsampling_rate_" + str(i + 1),
+                lower=2,
+                upper=4,
+                parameter_type=ParameterType.INT,
+            )
+        )
+
+        params.append(
+            RangeParameter(
+                name="conv_" + str(i + 1) + "_num_layers",
+                lower=1,
+                upper=max_number_of_layers_per_block,
+                parameter_type=ParameterType.INT,
+            )
+        )
+        params.append(
+            RangeParameter(
+                name="drop_" + str(i + 1),
+                lower=0.1,
                 upper=0.5,
                 parameter_type=ParameterType.FLOAT,
-            ))
+            )
+        )
+        for j in range(max_number_of_layers_per_block):
+            params.append(
+                RangeParameter(
+                    name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_filters",
+                    lower=1,
+                    upper=100,
+                    parameter_type=ParameterType.INT,
+                )
+            )
 
+            params.append(
+                RangeParameter(
+                    name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_kernel",
+                    lower=2,
+                    upper=5,
+                    parameter_type=ParameterType.INT,
+                )
+            )
+
+            params.append(
+                RangeParameter(
+                    name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_type",
+                    parameter_type=ParameterType.INT,
+                    lower=0,
+                    upper=2,
+                )
+            )
+
+            params.append(
+                RangeParameter(
+                    name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_downsample",
+                    lower=0,
+                    upper=0.5,
+                    parameter_type=ParameterType.FLOAT,
+                )
+            )
 
     ##### RNN BLOCKS ######################################################################
-    params.append(RangeParameter(name="rnn_layers", parameter_type=ParameterType.INT,
-                            lower=1, upper=5))
-    params.append(RangeParameter(name="neurons_layers", parameter_type=ParameterType.INT,
-                        lower=8, upper=512))
-    params.append(RangeParameter(name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5))
-    params.append(RangeParameter(name="cell_type", parameter_type=ParameterType.INT, lower =0, upper=1))
+    params.append(
+        RangeParameter(
+            name="rnn_layers", parameter_type=ParameterType.INT, lower=1, upper=5
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="neurons_layers", parameter_type=ParameterType.INT, lower=8, upper=512
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="cell_type", parameter_type=ParameterType.INT, lower=0, upper=1
+        )
+    )
 
     #######################################################################################
-    params.append(RangeParameter(
-        name="num_fc_layers", lower=0, upper=max_fc_layers, parameter_type=ParameterType.INT
-    ))
+    params.append(
+        RangeParameter(
+            name="num_fc_layers",
+            lower=0,
+            upper=max_fc_layers,
+            parameter_type=ParameterType.INT,
+        )
+    )
 
     for i in range(max_fc_layers):
-        params.append(RangeParameter(
-            name="fc_weights_layer_" + str(i + 1), lower=10, upper=200, parameter_type=ParameterType.INT
-        ))
-        params.append(RangeParameter(
-            name="drop_fc_" + str(i + 1), lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
-        ))
+        params.append(
+            RangeParameter(
+                name="fc_weights_layer_" + str(i + 1),
+                lower=10,
+                upper=200,
+                parameter_type=ParameterType.INT,
+            )
+        )
+        params.append(
+            RangeParameter(
+                name="drop_fc_" + str(i + 1),
+                lower=0.1,
+                upper=0.5,
+                parameter_type=ParameterType.FLOAT,
+            )
+        )
     ########################################################################
-    params.append(RangeParameter(
-        name="learning_rate",
-        lower=0.0001,
-        upper=0.01,
-        parameter_type=ParameterType.FLOAT,
-    ))
-    params.append(RangeParameter(
-        name="learning_gamma", lower=0.9, upper=0.99, parameter_type=ParameterType.FLOAT
-    ))
-    params.append(RangeParameter(
-        name="learning_step", lower=1, upper=10, parameter_type=ParameterType.INT
-    ))
+    params.append(
+        RangeParameter(
+            name="learning_rate",
+            lower=0.0001,
+            upper=0.01,
+            parameter_type=ParameterType.FLOAT,
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="learning_gamma",
+            lower=0.9,
+            upper=0.99,
+            parameter_type=ParameterType.FLOAT,
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="learning_step", lower=1, upper=10, parameter_type=ParameterType.INT
+        )
+    )
     ########################################################################
-    params.append(RangeParameter(
-        name="prune_threshold",
-        lower=0.05,
-        upper=0.9,
-        parameter_type=ParameterType.FLOAT,
-    ))
-    params.append(RangeParameter(
-        name="batch_size", lower=2, upper=256, parameter_type=ParameterType.INT
-    ))
-    params.append(RangeParameter(name='max_len', lower = 25, upper=750, parameter_type=ParameterType.INT))
+    params.append(
+        RangeParameter(
+            name="prune_threshold",
+            lower=0.05,
+            upper=0.9,
+            parameter_type=ParameterType.FLOAT,
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="batch_size", lower=2, upper=256, parameter_type=ParameterType.INT
+        )
+    )
+    params.append(
+        RangeParameter(
+            name="max_len", lower=25, upper=750, parameter_type=ParameterType.INT
+        )
+    )
 
     search_space = SearchSpace(parameters=params)
 
     return search_space
+
 
 def num_fc_layers(config):
     """
@@ -567,98 +649,97 @@ def num_conv_layers(config):
             config["conv_" + str(block) + "_num_layers"] -= 1
     return config
 
+
 def change_max_len(config):
-    max_len = config['max_len']
+    max_len = config["max_len"]
     if max_len > 250:
-        config['max_len'] = config['max_len'] - 10
+        config["max_len"] = config["max_len"] - 10
     elif max_len < 50:
-        config['max_len'] = config['max_len'] + 10
+        config["max_len"] = config["max_len"] + 10
     else:
         if random() < 0.5:
-            config['max_len'] = config['max_len'] + 10
+            config["max_len"] = config["max_len"] + 10
         else:
-            config['max_len'] = config['max_len'] - 10
+            config["max_len"] = config["max_len"] - 10
     return config
 
 
 def change_layers(config):
-    n_layers = config['rnn_layers']
+    n_layers = config["rnn_layers"]
     if n_layers == 5:
-        config['rnn_layers'] = config['rnn_layers'] - 1
+        config["rnn_layers"] = config["rnn_layers"] - 1
     elif n_layers == 1:
-        config['rnn_layers'] = config['rnn_layers'] + 1
+        config["rnn_layers"] = config["rnn_layers"] + 1
     else:
         if random() < 0.5:
-            config['rnn_layers'] = config['rnn_layers'] + 1
+            config["rnn_layers"] = config["rnn_layers"] + 1
         else:
-            config['rnn_layers'] = config['rnn_layers'] - 1
+            config["rnn_layers"] = config["rnn_layers"] - 1
     return config
-    
+
 
 def change_n_neurons(config):
-    n_neurons = config['neurons_layers']
+    n_neurons = config["neurons_layers"]
     if n_neurons > 512:
-        config['neurons_layers'] = config['neurons_layers'] - 32
+        config["neurons_layers"] = config["neurons_layers"] - 32
     elif n_neurons < 33:
-        config['neurons_layers'] = config['neurons_layers'] + 32
+        config["neurons_layers"] = config["neurons_layers"] + 32
     else:
         if random() < 0.5:
-            config['neurons_layers'] = config['neurons_layers'] + 32
+            config["neurons_layers"] = config["neurons_layers"] + 32
         else:
-            config['neurons_layers'] = config['neurons_layers'] - 32
+            config["neurons_layers"] = config["neurons_layers"] - 32
     return config
 
 
 def change_dropout(config):
-    dropout = config['rnn_dropout']
+    dropout = config["rnn_dropout"]
     if dropout == 0.5:
-        config['rnn_dropout'] = config['rnn_dropout'] - 0.05
+        config["rnn_dropout"] = config["rnn_dropout"] - 0.05
     elif dropout < 0.1:
-        config['rnn_dropout'] = config['rnn_dropout'] + 0.05
+        config["rnn_dropout"] = config["rnn_dropout"] + 0.05
     else:
         if random() < 0.5:
-            config['rnn_dropout'] = config['rnn_dropout'] + 0.05
+            config["rnn_dropout"] = config["rnn_dropout"] + 0.05
         else:
-            config['rnn_dropout'] = config['rnn_dropout'] - 0.05
+            config["rnn_dropout"] = config["rnn_dropout"] - 0.05
     return config
 
 
 def change_fc(config):
-    fc = config['fc_layers']
+    fc = config["fc_layers"]
     if fc == 1:
-        config['fc_layers'] = config['fc_layers'] - 1
+        config["fc_layers"] = config["fc_layers"] - 1
     elif fc == 0:
-        config['fc_layers'] = config['fc_layers'] + 1
+        config["fc_layers"] = config["fc_layers"] + 1
     return config
 
 
 def change_fc_neurons(config):
-    n_neurons = config['neurons_fc_layer_1']
+    n_neurons = config["neurons_fc_layer_1"]
     if n_neurons > 128:
-        config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] - 5
+        config["neurons_fc_layer_1"] = config["neurons_fc_layer_1"] - 5
     elif n_neurons < 10:
-        config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] + 5
+        config["neurons_fc_layer_1"] = config["neurons_fc_layer_1"] + 5
     else:
         if random() < 0.5:
-            config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] + 5
+            config["neurons_fc_layer_1"] = config["neurons_fc_layer_1"] + 5
         else:
-            config['neurons_fc_layer_1'] = config['neurons_fc_layer_1'] - 5
+            config["neurons_fc_layer_1"] = config["neurons_fc_layer_1"] - 5
     return config
 
+
 operations = {
-            "num_fc_layers": num_fc_layers,
-            "num_conv_blocks": num_conv_blocks,
-            "layer_type": layer_type,
-            "num_conv_filters": num_conv_filters,
-            "kernel_size": kernel_size,
-            "downsampling_rate": downsampling_rate,
-            "num_fc_weights": num_fc_weights,
-            "num_conv_layers": num_conv_layers,
-            "change_max_len": change_max_len,
-            "change_layers": change_layers,
-            "change_n_neurons": change_n_neurons,
-            "change_dropout": change_dropout,
-                }
-
-
-
+    "num_fc_layers": num_fc_layers,
+    "num_conv_blocks": num_conv_blocks,
+    "layer_type": layer_type,
+    "num_conv_filters": num_conv_filters,
+    "kernel_size": kernel_size,
+    "downsampling_rate": downsampling_rate,
+    "num_fc_weights": num_fc_weights,
+    "num_conv_layers": num_conv_layers,
+    "change_max_len": change_max_len,
+    "change_layers": change_layers,
+    "change_n_neurons": change_n_neurons,
+    "change_dropout": change_dropout,
+}

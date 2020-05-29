@@ -34,7 +34,12 @@ class Trainer(object):
     def load_dataloaders(self, batch_size, collate_fn):
         self.dataloader = {
             i: DataLoader(
-                sett, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True, collate_fn=collate_fn
+                sett,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=4,
+                drop_last=True,
+                collate_fn=collate_fn,
             )
             for i, sett in zip(["train", "val", "test"], self.datasets)
         }
@@ -78,7 +83,7 @@ class Trainer(object):
         # TODO: change to reduce on plateau, is for cifar change 1000
         exp_lr_scheduler = lr_scheduler.StepLR(
             optimizer,
-            step_size=parameters.get("learning_step")*1000,
+            step_size=parameters.get("learning_step") * 1000,
             gamma=parameters.get("learning_gamma"),
         )
 
@@ -89,7 +94,7 @@ class Trainer(object):
             exp_lr_scheduler,
             name,
             epochs,
-            parameters.get("prune_threshold") 
+            parameters.get("prune_threshold"),
         )
         return net
 
@@ -150,7 +155,7 @@ class Trainer(object):
                     if phase == "train" and self.pruning:
                         model = prune_net(model, init_threshold + thres_step * cnt)
                         cnt += 1
-                    
+
                 epoch_acc = running_corrects.double() / self.datasizes[phase]
 
                 # deep copy the model
@@ -186,9 +191,8 @@ class Trainer(object):
         cnt = 0
         net.eval()
         with no_grad():
-            for inputs, labels in tqdm(data_loader,
-                                       total=len(data_loader)):
-            # for inputs, labels in data_loader:
+            for inputs, labels in tqdm(data_loader, total=len(data_loader)):
+                # for inputs, labels in data_loader:
                 # move data to proper dtype and device
                 inputs = inputs.to(device="cpu")
                 labels = labels.to(device="cpu")

@@ -11,11 +11,22 @@ import copy
 from functools import partial
 from tqdm import tqdm
 
-class ModelTester(object):
 
-    def __init__(self, root, name, arm, n_obj, epochs,
-                 pruning, quant_scheme, quant_params,
-                 collate_fn, splitter, net):
+class ModelTester(object):
+    def __init__(
+        self,
+        root,
+        name,
+        arm,
+        n_obj,
+        epochs,
+        pruning,
+        quant_scheme,
+        quant_params,
+        collate_fn,
+        splitter,
+        net,
+    ):
 
         self.root = root
         self.name = name
@@ -48,16 +59,29 @@ class ModelTester(object):
             datasets, n_classes = prepare_cost(test_subjects=[i])
             params = self.arm_parameters()
             net = copy.copy(self.net)
-            AccMetric = AccuracyMetric(self.epochs, "Accuracy Test", self.pruning, datasets,
-                                       n_classes, self.net, self.quant_scheme, self.quant_params,
-                                       self.collate_fn, self.splitter)
+            AccMetric = AccuracyMetric(
+                self.epochs,
+                "Accuracy Test",
+                self.pruning,
+                datasets,
+                n_classes,
+                self.net,
+                self.quant_scheme,
+                self.quant_params,
+                self.collate_fn,
+                self.splitter,
+            )
             AccMetric.parametrization = self.arm_parameters()
             AccMetric.reload = True
             collate_fn = copy.copy(self.collate_fn)
             if self.splitter:
-                collate_fn = partial(collate_fn, max_len=params.get('max_len'))
-            AccMetric.trainer.load_dataloaders(params.get("batch_size", 4), collate_fn=collate_fn)
-            input_shape = get_shape_from_dataloader(AccMetric.trainer.dataloader['train'], params)
+                collate_fn = partial(collate_fn, max_len=params.get("max_len"))
+            AccMetric.trainer.load_dataloaders(
+                params.get("batch_size", 4), collate_fn=collate_fn
+            )
+            input_shape = get_shape_from_dataloader(
+                AccMetric.trainer.dataloader["train"], params
+            )
             old_net = self.reload_net(params, n_classes, input_shape, net)
             AccMetric.old_net = old_net
             acc = AccMetric.train_evaluate(str(self.arm) + "_test_result")

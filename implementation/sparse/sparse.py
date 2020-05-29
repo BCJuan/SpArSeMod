@@ -6,7 +6,7 @@ from .utils_experiment import (
     AccuracyMetric,
     FeatureMapMetric,
     LatencyMetric,
-    SparseExperiment
+    SparseExperiment,
 )
 from ax.core.observation import ObservationFeatures
 from ax.storage.metric_registry import register_metric
@@ -35,18 +35,40 @@ from .heir import clean_models_return_pareto
 # TODO: convert full/main process in a class with properties such as name, root, epochs and so
 # and methods such as run model
 
-class Sparse(object):
 
+class Sparse(object):
     def __init__(self, **kwargs):
-        allowed_keys = {'r1', 'r2', 'r3', 'epochs1', 'epochs2', 'epochs3', 'name', 'root', 'objectives', 'batch_size',
-                        'morphisms', 'pruning', 'datasets', 'classes', 'debug', 'search_space', 'net', 'flops', 'quant_scheme',
-                        'quant_params', 'collate_fn', 'splitter', 'morpher_ops'}
+        allowed_keys = {
+            "r1",
+            "r2",
+            "r3",
+            "epochs1",
+            "epochs2",
+            "epochs3",
+            "name",
+            "root",
+            "objectives",
+            "batch_size",
+            "morphisms",
+            "pruning",
+            "datasets",
+            "classes",
+            "debug",
+            "search_space",
+            "net",
+            "flops",
+            "quant_scheme",
+            "quant_params",
+            "collate_fn",
+            "splitter",
+            "morpher_ops",
+        }
 
         self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
 
     def run_sparse(self):
         sparse_exp = SparseExperiment(self.epochs1, **self.__dict__)
-        
+
         self.exp, self.data = sparse_exp.create_load_experiment()
 
         sobol = get_sobol(self.exp.search_space)
@@ -104,9 +126,12 @@ class Sparse(object):
         self.save_data()
         return new_data
 
-
     def update_data(self, new_data):
-        self.data = Data.from_multiple_data(data=[self.data, new_data]) if new_data else self.data
+        self.data = (
+            Data.from_multiple_data(data=[self.data, new_data])
+            if new_data
+            else self.data
+        )
         return new_data
 
     def save_data(self):
@@ -120,7 +145,6 @@ class Sparse(object):
         register_runner(MyRunner)
         save(self.exp, path.join(self.root, self.name + ".json"))
 
-
     def develop_morphisms(self, model):
         self.morpher = Morpher(operations=self.morpher_ops)
         self.morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
@@ -128,7 +152,6 @@ class Sparse(object):
         self.exp.optimization_config.objective.metrics[0].reload = True
         for _ in tqdm(range(self.r3)):
             self.morphism_loop(model)
-
 
     def morphism_loop(self, model):
         morpher = Morpher(self.morpher_ops)
@@ -140,11 +163,19 @@ class Sparse(object):
         collate_fn_p = copy(self.collate_fn)
         if self.exp.optimization_config.objective.metrics[0].splitter:
             collate_fn_p = partial(
-                collate_fn_p, max_len=self.exp.arms_by_name[new_arm[1]].parameters.get('max_len'))
-        self.exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(self.exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4), 
-                                collate_fn=collate_fn_p)
-        input_shape = get_shape_from_dataloader(self.exp.optimization_config.objective.metrics[0].trainer.dataloader['train'],
-                                    self.exp.arms_by_name[new_arm[1]].parameters)
+                collate_fn_p,
+                max_len=self.exp.arms_by_name[new_arm[1]].parameters.get("max_len"),
+            )
+        self.exp.optimization_config.objective.metrics[0].trainer.load_dataloaders(
+            self.exp.arms_by_name[new_arm[1]].parameters.get("batch_size", 4),
+            collate_fn=collate_fn_p,
+        )
+        input_shape = get_shape_from_dataloader(
+            self.exp.optimization_config.objective.metrics[0].trainer.dataloader[
+                "train"
+            ],
+            self.exp.arms_by_name[new_arm[1]].parameters,
+        )
 
         old_net = reload_net(self.exp, new_arm[1], self.classes, input_shape, self.net)
         self.exp.optimization_config.objective.metrics[0].old_net = old_net
@@ -172,9 +203,11 @@ def ei_new_arm(model, new_configs):
     obs_feats = [ObservationFeatures(parameters=i) for i in new_configs.values()]
     f, cov = model.predict(obs_feats)
     predicted_values = stack(list(f.values()))
-    min_pred_idx = argmin([norm(predicted_values[:, i]) for i in range(predicted_values.shape[1])])
+    min_pred_idx = argmin(
+        [norm(predicted_values[:, i]) for i in range(predicted_values.shape[1])]
+    )
     new_arm = list(new_configs)[min_pred_idx]
-    return new_arm 
+    return new_arm
 
 
 # TODO: delete hardcoded model folder name, loook in other parts of python

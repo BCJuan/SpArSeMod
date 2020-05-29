@@ -16,14 +16,29 @@ from functools import partial
 
 from .utils_data import get_shape_from_dataloader
 from .quant_n_prune import quant
+
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
 
-class SparseExperiment(object):
 
+class SparseExperiment(object):
     def __init__(self, epochs, **kwargs):
-        allowed_keys = {'root', 'name', 'objectives', 'epochs', 'pruning', 'datasets', 'classes',
-                        'search_space', 'net', 'flops', 'quant_scheme', 'quant_params', 'collate_fn', 'splitter'}
+        allowed_keys = {
+            "root",
+            "name",
+            "objectives",
+            "epochs",
+            "pruning",
+            "datasets",
+            "classes",
+            "search_space",
+            "net",
+            "flops",
+            "quant_scheme",
+            "quant_params",
+            "collate_fn",
+            "splitter",
+        }
         self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
         self.epochs = epochs
 
@@ -49,27 +64,48 @@ class SparseExperiment(object):
                 quant_scheme=self.quant_scheme,
                 quant_params=self.quant_params,
                 collate_fn=self.collate_fn,
-                splitter=self.splitter
+                splitter=self.splitter,
             ),
-            WeightMetric(name="weight", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
-                         splitter=self.splitter),
-            FeatureMapMetric(name="ram", datasets=self.datasets, classes=self.classes, net=self.net, collate_fn=self.collate_fn,
-                             splitter=self.splitter),
-            LatencyMetric(name='latency', datasets=self.datasets, classes=self.classes, net=self.net, flops_capacity=self.flops,
-                          collate_fn=self.collate_fn, splitter=self.splitter)
+            WeightMetric(
+                name="weight",
+                datasets=self.datasets,
+                classes=self.classes,
+                net=self.net,
+                collate_fn=self.collate_fn,
+                splitter=self.splitter,
+            ),
+            FeatureMapMetric(
+                name="ram",
+                datasets=self.datasets,
+                classes=self.classes,
+                net=self.net,
+                collate_fn=self.collate_fn,
+                splitter=self.splitter,
+            ),
+            LatencyMetric(
+                name="latency",
+                datasets=self.datasets,
+                classes=self.classes,
+                net=self.net,
+                flops_capacity=self.flops,
+                collate_fn=self.collate_fn,
+                splitter=self.splitter,
+            ),
         ]
         experiment = Experiment(
-            name="experiment_building_blocks", search_space=self.search_space,
+            name="experiment_building_blocks", search_space=self.search_space
         )
 
         if self.objectives > 1:
             objective = MultiObjective(
-                metrics=metric_list[:self.objectives], minimize=True,
+                metrics=metric_list[: self.objectives], minimize=True
             )
         else:
-            objective = Objective(metric=metric_list[:self.objectives][0], minimize=True,)
+            objective = Objective(
+                metric=metric_list[: self.objectives][0], minimize=True
+            )
 
-        optimization_config = OptimizationConfig(objective=objective,)
+        optimization_config = OptimizationConfig(objective=objective)
         experiment.optimization_config = optimization_config
         experiment.runner = MyRunner()
         return experiment
@@ -82,8 +118,19 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(self, epochs, name, pruning, datasets, classes, net, quant_scheme, quant_params=None, collate_fn=None,
-                splitter=False):
+    def __init__(
+        self,
+        epochs,
+        name,
+        pruning,
+        datasets,
+        classes,
+        net,
+        quant_scheme,
+        quant_params=None,
+        collate_fn=None,
+        splitter=False,
+    ):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
         self.trainer = Trainer(pruning=pruning, datasets=datasets)
@@ -123,19 +170,20 @@ class AccuracyMetric(Metric):
         """
         collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
+            collate_fn = partial(
+                collate_fn, max_len=self.parametrization.get("max_len")
+            )
+        self.trainer.load_dataloaders(
+            self.parametrization.get("batch_size", 4), collate_fn=collate_fn
+        )
+        input_shape = get_shape_from_dataloader(
+            self.trainer.dataloader["train"], self.parametrization
+        )
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
         net_i = self.trainer.train(
-            net_i,
-            self.parametrization,
-            name,
-            self.epochs,
-            self.reload,
-            self.old_net,
+            net_i, self.parametrization, name, self.epochs, self.reload, self.old_net
         )
         net_i = quant(net_i, self.quant_scheme, self.trainer, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
@@ -183,9 +231,15 @@ class WeightMetric(Metric):
         """
         collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
+            collate_fn = partial(
+                collate_fn, max_len=self.parametrization.get("max_len")
+            )
+        self.trainer.load_dataloaders(
+            self.parametrization.get("batch_size", 4), collate_fn=collate_fn
+        )
+        input_shape = get_shape_from_dataloader(
+            self.trainer.dataloader["train"], self.parametrization
+        )
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
@@ -210,6 +264,7 @@ class FeatureMapMetric(Metric):
         self.trainer = Trainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
         self.splitter = splitter
+
     def fetch_trial_data(self, trial):
         """
         Function to retrieve the trials data for this metric
@@ -235,28 +290,40 @@ class FeatureMapMetric(Metric):
         """
         collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
+            collate_fn = partial(
+                collate_fn, max_len=self.parametrization.get("max_len")
+            )
+        self.trainer.load_dataloaders(
+            self.parametrization.get("batch_size", 4), collate_fn=collate_fn
+        )
+        input_shape = get_shape_from_dataloader(
+            self.trainer.dataloader["train"], self.parametrization
+        )
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
         net_i.eval()
 
-        macs, params, maxram = get_model_complexity_info(net_i, input_shape, as_strings=False,
-                                           print_per_layer_stat=False, verbose=False)
+        macs, params, maxram = get_model_complexity_info(
+            net_i,
+            input_shape,
+            as_strings=False,
+            print_per_layer_stat=False,
+            verbose=False,
+        )
         # TODO: standarize_onjective
         return log(maxram) / self.top
 
 
 class LatencyMetric(Metric):
-
-    def __init__(self, name, datasets, classes, net, flops_capacity, collate_fn, splitter):
+    def __init__(
+        self, name, datasets, classes, net, flops_capacity, collate_fn, splitter
+    ):
         super().__init__(name, lower_is_better=True)
         self.classes = classes
         self.net = net
         self.flops_capacity = flops_capacity
-        self.top = log(10**4)
+        self.top = log(10 ** 4)
         self.trainer = Trainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
         self.splitter = splitter
@@ -286,19 +353,30 @@ class LatencyMetric(Metric):
         """
         collate_fn = copy.copy(self.collate_fn)
         if self.splitter:
-            collate_fn = partial(collate_fn, max_len=self.parametrization.get('max_len'))
-        self.trainer.load_dataloaders(self.parametrization.get("batch_size", 4), collate_fn=collate_fn)
-        input_shape = get_shape_from_dataloader(self.trainer.dataloader['train'], self.parametrization)
+            collate_fn = partial(
+                collate_fn, max_len=self.parametrization.get("max_len")
+            )
+        self.trainer.load_dataloaders(
+            self.parametrization.get("batch_size", 4), collate_fn=collate_fn
+        )
+        input_shape = get_shape_from_dataloader(
+            self.trainer.dataloader["train"], self.parametrization
+        )
         net_i = self.net(
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
         # input shape can be an image CxHxW or a sequence LxF
-        macs, params, maxram = get_model_complexity_info(net_i, input_shape, as_strings=False,
-                                           print_per_layer_stat=False, verbose=False)
-        miliseconds = macs*1000/self.flops_capacity
+        macs, params, maxram = get_model_complexity_info(
+            net_i,
+            input_shape,
+            as_strings=False,
+            print_per_layer_stat=False,
+            verbose=False,
+        )
+        miliseconds = macs * 1000 / self.flops_capacity
         # TODO: is necessary this add to avoid negatives?
         # https://math.stackexchange.com/questions/1111041/showing-y%E2%89%88x-for-small-x-if-y-logx1
-        return log(miliseconds + 1)/self.top
+        return log(miliseconds + 1) / self.top
 
 
 class MyRunner(Runner):
@@ -322,4 +400,3 @@ def load_data(name, n_obj=None):
 def pass_data_to_exp(csv):
     df = read_csv(csv, index_col=0)
     return Data(df=df)
-

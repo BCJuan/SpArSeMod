@@ -1,68 +1,176 @@
+"""
+Classes and functions to be able to load all the datasets used:
+
+COST, CIFAR10, CIFAR2 and MNIST
+
+For Cost there are several functions which are intended as collates to modify the way
+data is loaded into the networks.
+"""
+
+from os import listdir, path, mkdir, rmdir
+from itertools import product
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
-from torch.utils.data import TensorDataset, DataLoader, Dataset
-from torch import unsqueeze, cat, tensor, int64, stack, Tensor, FloatTensor, float32, long as tlong, ones, zeros
-from numpy import asarray, loadtxt, zeros_like, where, vstack, unique, save, load, arange, random, floor, mean as npmean, std as npstd
-from os import listdir, path, mkdir, rmdir
+from torch.utils.data import TensorDataset, Dataset
+from torch.torch import (
+    unsqueeze,
+    cat,
+    tensor,
+    int64,
+    stack,
+    Tensor,
+    FloatTensor,
+    float32,
+    long as tlong,
+    ones,
+    zeros,
+)
+from numpy import (
+    asarray,
+    loadtxt,
+    zeros_like,
+    where,
+    vstack,
+    unique,
+    save,
+    load,
+    arange,
+    random,
+    floor,
+    mean as npmean,
+    std as npstd,
+)
+
 from pandas import read_csv
-from itertools import product
-from collections import Counter
-from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 
 
 def split_pad_n_pack(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences and serves them
+    padded and packed to the network.
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
-            n_seqs = int(floor(len(seq)//max_len))
+            n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
-                new_t_seqs.append(seq[(i*max_len):(i*max_len + max_len), :])
+                new_t_seqs.append(
+                    seq[(i * max_len): (i * max_len + max_len), :])
                 new_t_labels.append(lab)
         else:
             new_t_seqs.append(seq)
             new_t_labels.append(lab)
     lengths = [len(seq) for seq in new_t_seqs]
     padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
+    pack_padded_data = pack_padded_sequence(
+        padded_data, lengths, batch_first=True, enforce_sorted=False
+    )
     return pack_padded_data, tensor(new_t_labels)
 
 
 def split_arrange_pad_n_pack(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences. When arranging them
+    in smaller sequences also rearranges the values in them according
+    to the Cost configuration (check COst readme regarding how the values
+    are ordered). That is way there is this line
+    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
+    dimensions are now (8, 8). This is due all to the cost data configuration
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
-            n_seqs = int(floor(len(seq)//max_len))
+            n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
-                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).view(-1, 8, 8)
-                img_sequence = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis = 0)
+                img_sequence = tensor(
+                    seq[(i * max_len): (i * max_len + max_len), :]
+                ).view(-1, 8, 8)
+                img_sequence = stack(
+                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
+                )
                 new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
         else:
             len_diff = max_len - len(seq)
             padding = zeros((len_diff, 8, 8))
             seq = tensor(seq).view(-1, 8, 8)
-            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis = 0)
-            final_seq = cat((seq, padding), 0) 
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
+            final_seq = cat((seq, padding), 0)
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
     return stack(new_t_seqs), tensor(new_t_labels)
 
+
 def split_arrange_pad_n_pack_3d(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences. When arranging them
+    in smaller sequences also rearranges the values in them according
+    to the Cost configuration (check COst readme regarding how the values
+    are ordered). That is way there is this line
+    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
+    dimensions are now (8, 8). This is due all to the cost data configuration
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
-            n_seqs = int(floor(len(seq)//max_len))
+            n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
-                img_sequence = tensor(seq[(i*max_len):(i*max_len + max_len), :]).reshape(-1, 8, 8)
-                img_sequence = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis = 0)
+                img_sequence = tensor(
+                    seq[(i * max_len): (i * max_len + max_len), :]
+                ).reshape(-1, 8, 8)
+                img_sequence = stack(
+                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
+                )
                 img_sequence = unsqueeze(img_sequence, 0)
                 new_t_seqs.append(img_sequence)
                 new_t_labels.append(lab)
@@ -70,7 +178,7 @@ def split_arrange_pad_n_pack_3d(data, max_len):
             len_diff = max_len - len(seq)
             padding = zeros((len_diff, 8, 8))
             seq = tensor(seq).view(-1, 8, 8)
-            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis = 0)
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
             final_seq = cat((seq, padding), 0)
             final_seq = unsqueeze(final_seq, 0)
             new_t_seqs.append(final_seq)
@@ -80,15 +188,33 @@ def split_arrange_pad_n_pack_3d(data, max_len):
 
 
 def insample_pad_n_pack(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    """
+    Collate that insamples the sequences of the cost dataset
+    that is: takes a long sequence and picks points from inside to make
+    the final sequence to ahve length = max_len
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
-            step = int(floor(len(seq)//max_len))
+            step = int(floor(len(seq) // max_len))
             new_seq = []
             for i in range(max_len):
-                new_seq.append(seq[step*i, :])
+                new_seq.append(seq[step * i, :])
             new_t_seqs.append(stack(new_seq))
             new_t_labels.append(lab)
         else:
@@ -96,35 +222,71 @@ def insample_pad_n_pack(data, max_len):
             new_t_labels.append(lab)
     lengths = [len(seq) for seq in new_t_seqs]
     padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(padded_data, lengths, batch_first=True, enforce_sorted=False)
+    pack_padded_data = pack_padded_sequence(
+        padded_data, lengths, batch_first=True, enforce_sorted=False
+    )
     return pack_padded_data, tensor(new_t_labels)
 
+
 def insample_arrange_pad_n_pack_3d(data, max_len):
-    t_seqs = [tensor(sequence['signal'], dtype=float32) for sequence in data]
-    labels = stack([tensor(label['label'], dtype=tlong) for label in data]).squeeze()
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences. When arranging them 
+    in smaller sequences also rearranges the values in them according
+    to the Cost configuration (check COst readme regarding how the values
+    are ordered). That is way there is this line
+    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
+    dimensions are now (8, 8). This is due all to the cost data configuration
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
-            step = int(floor(len(seq)//max_len))
+            step = int(floor(len(seq) // max_len))
             new_seq = []
             for i in range(max_len):
-                img_sequence = tensor(seq[step*i, :]).view(8, 8)
+                img_sequence = tensor(seq[step * i, :]).view(8, 8)
                 new_seq.append(img_sequence)
             new_seq = unsqueeze(stack(new_seq), 0)
             new_t_seqs.append(new_seq)
             new_t_labels.append(lab)
         else:
             len_diff = max_len - len(seq)
-            padding = ones((len_diff, 8, 8))*255
+            padding = ones((len_diff, 8, 8)) * 255
             seq = tensor(seq).view(-1, 8, 8)
             final_seq = cat((seq, padding), 0)
             final_seq = unsqueeze(final_seq, 0)
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
-    
+
     return stack(new_t_seqs), tensor(new_t_labels)
 
+
 def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
+    """
+    Function used to split the original cost dataset in different sequences
+    according to subject gest and variant.
+    the files are finally saved as npy
+
+    Args
+    ----
+    folder: where the cost file is located
+    subfolder: where to save the files
+    """
     name_subfolder = path.join(folder, subfolder)
 
     if not path.exists(name_subfolder):
@@ -132,28 +294,49 @@ def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
     else:
         rmdir(name_subfolder)
         mkdir(name_subfolder)
-    
-    df = read_csv(path.join(folder, "CoST.csv"))
-    value_cols = [column for column in df.columns if 'ch' in column]
-    gestures = unique(df[' gesture'])
-    subjects = unique(df['subject'])
-    variants = unique(df[' variant'])
-    data = {}
-    total_product = product(gestures, subjects, variants)
-    for g, s, v in total_product:
-        simple_df = df[(df[' gesture'] == g) & (df['subject'] == s) & (df[' variant'] == v)].reset_index()
+
+    data_frame = read_csv(path.join(folder, "CoST.csv"))
+    value_cols = [column for column in data_frame.columns if "ch" in column]
+
+    total_product = product(unique(data_frame[" gesture"]),
+                            unique(data_frame["subject"]),
+                            unique(data_frame[" variant"]))
+    for gest, subj, vals in total_product:
+        simple_df = data_frame[
+            (data_frame[" gesture"] == gest) & (
+                data_frame["subject"] == subj) & (data_frame[" variant"] == vals)
+        ].reset_index()
         if not simple_df.empty:
             new_df = []
             counter = 0
-            for i, (index, row) in enumerate(simple_df.iterrows()):
+            for i, (_, row) in enumerate(simple_df.iterrows()):
                 new_df.append(row[value_cols].values)
-                if (i == len(simple_df) - 1) or (simple_df.loc[i + 1, ' frame'] == 1) :
-                    name = str(g) + "_" + str(s) + "_" + str(v) + "_" + str(counter)
+                if (i == len(simple_df) - 1) or (simple_df.loc[i + 1, " frame"] == 1):
+                    name = str(gest) + "_" + str(subj) + "_" + \
+                        str(vals) + "_" + str(counter)
                     save(path.join(name_subfolder, name), vstack([new_df]))
                     new_df = []
-                    counter +=1
+                    counter += 1
+
 
 def build_cost(folder="./data/data_cost/files/"):
+    """
+    Reads all the npy files produced by read_n_save_cost
+    and returns X sequences and y label per sequence
+    altogether with metadata corresponding to subject variant
+    and so
+
+    Args
+    ----
+    folder: where the files are located
+
+    Returns
+    -------
+    X: sequences
+    y: label per sequence
+    extra: data regarding subject, variant, and so (check cost)
+
+    """
     X = []
     y = []
     extra = {}
@@ -161,12 +344,40 @@ def build_cost(folder="./data/data_cost/files/"):
         X.append(load(path.join(folder, arxiv)))
         meta = arxiv.split("_")
         y.append(int(meta[0]) - 1)
-        extra[str(i)] = dict({'subject': int(meta[1]), 'variant': int(meta[2])})
+        extra[str(i)] = dict(
+            {"subject": int(meta[1]), "variant": int(meta[2])})
     return X, y, extra
 
 
-def divide_cost(X, y, extra, test_subjects=None):
-    X_train, X_val, X_test = [], [], []
+def divide_cost(x_data, y_data, extra, test_subjects=None):
+    """
+    Divides cost in training, validation and test
+    randomly divides into 20 subjects training, 5 validation
+    and 6 test
+    unless test_subjects is specified. Then only this subject is
+    passed as test, there is no validation, and all the other go to
+    training
+
+    Args
+    ----
+    x_data: sequences
+    y_data: label per sequence
+    extra: metadata corresponding to subject and so
+    test_subjects: (OPtional) the idx of test subjects
+
+    Returns
+    -------
+    x_train,
+    y_train,
+    extra_train,
+    x_val,
+    y_val,
+    extra_val,
+    x_test,
+    y_test,
+    extra_test,
+    """
+    x_train, x_val, x_test = [], [], []
     y_train, y_val, y_test = [], [], []
     extra_train, extra_val, extra_test = {}, {}, {}
     subjects = arange(1, 32)
@@ -176,75 +387,143 @@ def divide_cost(X, y, extra, test_subjects=None):
     else:
         train_subjects = random.choice(subjects, size=25, replace=False)
         val_subjects = random.choice(train_subjects, size=5, replace=False)
-        test_subjects = [i for i in range(1,32) if i not in train_subjects]
+        test_subjects = [i for i in range(1, 32) if i not in train_subjects]
         train_subjects = [i for i in train_subjects if i not in val_subjects]
-    for i, (seq, label, meta) in enumerate(zip(X, y, extra)):
-        if extra[meta]['subject'] in train_subjects:
-            X_train.append(seq)
+    for i, (seq, label, meta) in enumerate(zip(x_data, y_data, extra)):
+        if extra[meta]["subject"] in train_subjects:
+            x_train.append(seq)
             y_train.append(label)
-            extra_train[len(X_train)] = extra[meta]
-        if extra[meta]['subject'] in val_subjects:
-            X_val.append(seq)
+            extra_train[len(x_train)] = extra[meta]
+        if extra[meta]["subject"] in val_subjects:
+            x_val.append(seq)
             y_val.append(label)
-            extra_val[len(X_train)] = extra[meta]
-        if extra[meta]['subject'] in test_subjects:
-            X_test.append(seq)
+            extra_val[len(x_train)] = extra[meta]
+        if extra[meta]["subject"] in test_subjects:
+            x_test.append(seq)
             y_test.append(label)
-            extra_test[len(X_train)] = extra[meta]
-    return X_train, y_train, extra_train, X_val, y_val, extra_val, X_test, y_test, extra_test
+            extra_test[len(x_train)] = extra[meta]
+    return (
+        x_train,
+        y_train,
+        extra_train,
+        x_val,
+        y_val,
+        extra_val,
+        x_test,
+        y_test,
+        extra_test,
+    )
 
 
-def scale_X(X_train, X_test, image=False):
-    
+def scale_X(x_train, x_test, image=False):
+    """
+    Function to scale the sequences from cost
+    Depending if the image arg is activated they are scaled
+    as sequences or images
+
+    Args
+    ----
+    x_train:
+    x_test
+    image: boolean, to standardize as an image or as a sequence
+
+    Returns
+    -----
+    x_train_esc
+    x_test_esc
+    scaler: can be a Scaler object from sklearn or a list of [mean, std]
+            depending on the arg image
+    """
     if image:
-        mean = npmean(vstack(X_train).reshape(-1, 8, 8), axis = 0)
-        std = npstd(vstack(X_train).reshape(-1, 8, 8), axis = 0)
-        print(mean.shape)
-        X_train_esc = [(asarray(i).reshape(-1, 8, 8) - mean)/std for i in X_train]
-        X_test_esc = [(asarray(i).reshape(-1, 8, 8) - mean)/std for i in X_test]
+        mean = npmean(vstack(x_train).reshape(-1, 8, 8), axis=0)
+        std = npstd(vstack(x_train).reshape(-1, 8, 8), axis=0)
+        x_train_esc = [(asarray(i).reshape(-1, 8, 8) -
+                        mean) / std for i in x_train]
+        x_test_esc = [(asarray(i).reshape(-1, 8, 8) - mean) /
+                      std for i in x_test]
         scaler = [mean, std]
     else:
         scaler = StandardScaler()
-        scaler.fit(vstack(X_train))
-        X_train_esc = [scaler.transform(i).tolist() for i in X_train]
-        X_test_esc = [scaler.transform(i).tolist() for i in X_test]
-    return X_train_esc, X_test_esc, scaler
+        scaler.fit(vstack(x_train))
+        x_train_esc = [scaler.transform(i).tolist() for i in x_train]
+        x_test_esc = [scaler.transform(i).tolist() for i in x_test]
+    return x_train_esc, x_test_esc, scaler
+
 
 class CostDataset(Dataset):
+    """
+    Class to build the cost dataset
+    """
 
-    def __init__(self, X, y, transform=None):
-        self.X = X
-        self.y = y
+    def __init__(self, x_data, y_data, transform=None):
+        self.x_data = x_data
+        self.y_data = y_data
         self.transform = transform
-    
+
     def __len__(self):
-        return len(self.X)
+        return len(self.x_data)
 
     def __getitem__(self, idx):
-        sample = {'signal': self.X[idx], 'label':self.y[idx]}
+        sample = {"signal": self.x_data[idx], "label": self.y_data[idx]}
         if self.transform:
             sample = self.transform(sample)
 
         return sample
 
 
-
 def prepare_cost(folder="./data/data_cost/files/", test_subjects=None, image=False):
+    """
+    Makes the whole process of loading the cost dataset, dividing, standardizing it
+    and build it as  as separate datasets
+
+    Args
+    ----
+    folder: where the files from read_n_save_cost are placed to be read
+    test_subjects: (optional) if there are test subjects for the dataset to be slit by
+    image: wheter we arrange data as an image or a sequence
+
+    Returns
+    -------
+    t_set
+    v_set
+    ts_set
+    number of classes
+    """
+
     # turns y labels into numbers; # generate dataset according to y labels stratification
     # scaling, o ne hot encoding
-    X, y, extra = build_cost()
-    X_t, y_t, _, X_v, y_v, _, X_ts, y_ts, _ = divide_cost(X, y, extra, test_subjects=test_subjects)
-    X_t, X_ts, scaler = scale_X(X_t, X_ts, image=image)
+    x_data, y_data, extra = build_cost(folder=folder)
+    x_train, y_train, _, x_val, y_val, _, x_test, y_test, _ = divide_cost(
+        x_data, y_data, extra, test_subjects=test_subjects
+    )
+    x_train, x_test, scaler = scale_X(x_train, x_test, image=image)
     if image:
-        X_v = [(asarray(seq).reshape(-1, 8, 8) - scaler[0])/scaler[1] for seq in X_v]
+        x_val = [(asarray(seq).reshape(-1, 8, 8) - scaler[0]) / scaler[1]
+                 for seq in x_val]
     else:
-        X_v = [scaler.transform(seq) for seq in X_v]
-    t_set = CostDataset(X_t, y_t)
-    v_set = CostDataset(X_v, y_v)
-    ts_set = CostDataset(X_ts, y_ts)
+        x_val = [scaler.transform(seq) for seq in x_val]
+    t_set = CostDataset(x_train, y_train)
+    v_set = CostDataset(x_val, y_val)
+    ts_set = CostDataset(x_test, y_test)
     return [t_set, v_set, ts_set], 14
 
+
 def read_cifar2(folder="./data/data_cifar2", width=20, height=20):
+    """
+    reads, loads and mounts cifar2 dataset
+
+    Args
+    ----
+    folder: where the data for cifar 2 is placed
+    width: how to arrange sequences from cifar 2
+    height: ""
+
+    Returns
+    ----
+    train_dataset: to be further split into val and train
+    test_dataset
+
+    """
     for fil in listdir(folder):
         data = loadtxt(path.join(folder, fil), skiprows=1)
         if fil.split(".")[1] == "train":
@@ -258,22 +537,38 @@ def read_cifar2(folder="./data/data_cifar2", width=20, height=20):
             test_label = where(test_label > 0, test_label, zeros_label)
             test_data = data[:, 1:].reshape(-1, width, height)
     return (
-        TensorDataset(FloatTensor(train_data).unsqueeze(1), tensor(train_label)),
+        TensorDataset(FloatTensor(train_data).unsqueeze(1),
+                      tensor(train_label)),
         TensorDataset(FloatTensor(test_data).unsqueeze(1), tensor(test_label)),
     )
 
 
 # https://stackoverflow.com/questions/50544730/how-do-i-split-a-custom-dataset-into-training-and-test-datasets
-def sampleFromClass(ds, k):
+def sample_from_class(data_set, k):
+    """
+    function to sample data and their labels from a dataset in pytorch in
+    a stratified manner
+
+    Args
+    ----
+    data_set
+    k: the number of samples that will be accuimulated in the new slit
+
+    Returns
+    -----
+    train_dataset
+    val_dataset
+
+    """
     class_counts = {}
     train_data = []
     train_label = []
     test_data = []
     test_label = []
-    for data, label in ds:
-        c = label.item() if type(label) == Tensor else label
-        class_counts[c] = class_counts.get(c, 0) + 1
-        if class_counts[c] <= k:
+    for data, label in data_set:
+        class_i = label.item() if isinstance(label) == Tensor else label
+        class_counts[class_i] = class_counts.get(class_i, 0) + 1
+        if class_counts[class_i] <= k:
             train_data.append(data)
             train_label.append(label)
         else:
@@ -292,38 +587,76 @@ def sampleFromClass(ds, k):
 
 
 def transform_mnist():
+    "Transforms for the mnist dataset"
     return Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
 
 
 def prepare_mnist():
+    """
+    Reads mnist, samples from it a validation dataset in a stratified manner
+    and returns train, val and test dataset
+
+    Returns
+    ------
+    list of datasets
+    number of classes
+    """
     trainset = MNIST(
         root="./data/data_mnist", train=True, transform=transform_mnist(), download=True
     )
-    val_set, tr_set = sampleFromClass(trainset, 500)
+    val_set, tr_set = sample_from_class(trainset, 500)
     ts_set = MNIST(
-        root="./data/data_mnist", train=False, transform=transform_mnist(), download=True
+        root="./data/data_mnist",
+        train=False,
+        transform=transform_mnist(),
+        download=True,
     )
     return [tr_set, val_set, ts_set], len(MNIST.classes)
 
 
 def transform_cifar10():
+    "transforms for the cifar 10"
     return Compose(
         [ToTensor(), Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))]
     )
 
 
 def prepare_cifar10():
+    """
+    Reads cifar10, samples from it a validation dataset in a stratified manner
+    and returns train, val and test dataset
+
+    Returns
+    ------
+    list of datasets
+    number of classes
+    """
     trainset = CIFAR10(
-        root="./data/data_cifar10", train=True, transform=transform_cifar10(), download=True
+        root="./data/data_cifar10",
+        train=True,
+        transform=transform_cifar10(),
+        download=True,
     )
-    val_set, tr_set = sampleFromClass(trainset, 500)
+    val_set, tr_set = sample_from_class(trainset, 500)
     ts_set = CIFAR10(
-        root="./data/data_cifar10", train=False, transform=transform_cifar10(), download=True
+        root="./data/data_cifar10",
+        train=False,
+        transform=transform_cifar10(),
+        download=True,
     )
     return [tr_set, val_set, ts_set], 10
 
 
 def prepare_cifar2():
+    """
+    Reads cifar2, samples from it a validation dataset in a stratified manner
+    and returns train, val and test dataset
+
+    Returns
+    ------
+    list of datasets
+    number of classes
+    """
     tr_dt, ts_dt = read_cifar2()
-    val_set, tr_set = sampleFromClass(tr_dt, 2500)
+    val_set, tr_set = sample_from_class(tr_dt, 2500)
     return [tr_set, val_set, ts_dt], 2

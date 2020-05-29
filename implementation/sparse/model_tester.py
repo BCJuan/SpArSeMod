@@ -24,7 +24,17 @@ objectives = 1
 std_obj = False
 datasets, n_classes = prepare_cifar10()
 
-exp = get_experiment(bits, epochs, objectives, True, datasets, n_classes, search_space(), Net, 8*10**6)
+exp = get_experiment(
+    bits,
+    epochs,
+    objectives,
+    True,
+    datasets,
+    n_classes,
+    search_space(),
+    Net,
+    8 * 10 ** 6,
+)
 sobol = get_sobol(search_space=exp.search_space)
 exp.new_trial(
     sobol.gen(
@@ -35,9 +45,10 @@ exp.new_trial(
 
 trainer = Trainer(epochs)
 net = Net(exp.trials[0].arm.parameters, classes=10, datasets=datasets)
-macs, params = get_model_complexity_info(net, (3, 32, 32), as_strings=False,
-                                           print_per_layer_stat=True, verbose=True)
-scope(net, input_size=(3, 32, 32), batch_size=1, device='cpu')
+macs, params = get_model_complexity_info(
+    net, (3, 32, 32), as_strings=False, print_per_layer_stat=True, verbose=True
+)
+scope(net, input_size=(3, 32, 32), batch_size=1, device="cpu")
 inputs = randn(1, 3, 32, 32)
 macs_jit = profile_macs(net, inputs)
 print(macs_jit)
