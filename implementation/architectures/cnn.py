@@ -499,7 +499,7 @@ def search_space():
         name="learning_gamma", lower=0.9, upper=0.99, parameter_type=ParameterType.FLOAT
     )
     param52 = RangeParameter(
-        name="learning_step", lower=1, upper=10, parameter_type=ParameterType.INT
+        name="learning_step", lower=1, upper=10000, parameter_type=ParameterType.INT
     )
     ########################################################################
     param53 = RangeParameter(
@@ -522,7 +522,7 @@ def search_space():
         parameter_type=ParameterType.FLOAT,
     )
     param59 = RangeParameter(
-        name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
+        name="batch_size", lower=2, upper=128, parameter_type=ParameterType.INT
     )
     search_space = SearchSpace(
         parameters=[

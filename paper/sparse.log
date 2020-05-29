@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.10)  26 MAY 2020 10:58
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.10)  27 MAY 2020 15:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -394,12 +394,12 @@ Overfull \hbox (12.75618pt too wide) in paragraph at lines 209--227
  []
 
 [6] [7 <./images/pareto_cifar2.png> <./images/evolution_cifar2.png>]
-<images/matern_vs_arc.png, id=253, 722.7pt x 433.62pt>
+<images/matern_vs_arc.png, id=255, 722.7pt x 433.62pt>
 File: images/matern_vs_arc.png Graphic file (type png)
 <use images/matern_vs_arc.png>
 Package pdftex.def Info: images/matern_vs_arc.png  used on input line 245.
 (pdftex.def)             Requested size: 216.95807pt x 130.17302pt.
-<images/arc_qq.png, id=254, 722.7pt x 433.62pt>
+<images/arc_qq.png, id=256, 722.7pt x 433.62pt>
 File: images/arc_qq.png Graphic file (type png)
 <use images/arc_qq.png>
 Package pdftex.def Info: images/arc_qq.png  used on input line 246.
@@ -548,7 +548,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 257.
 Here is how much of TeX's memory you used:
  6640 strings out of 481239
  99569 string characters out of 5920377
- 374723 words of memory out of 5000000
+ 374807 words of memory out of 5000000
  21687 multiletter control sequences out of 15000+600000
  541669 words of font info for 60 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -569,9 +569,9 @@ e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texmf/fonts/type1/p
 ublic/cm-super/sfrm1000.pfb>
-Output written on sparse.pdf (10 pages, 567421 bytes).
+Output written on sparse.pdf (10 pages, 567782 bytes).
 PDF statistics:
- 357 PDF objects out of 1000 (max. 8388607)
+ 359 PDF objects out of 1000 (max. 8388607)
  306 compressed objects within 4 object streams
  81 named destinations out of 1000 (max. 500000)
  150 words of extra memory for PDF output out of 10000 (max. 10000000)
