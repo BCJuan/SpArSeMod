@@ -3,8 +3,6 @@ Classes and functions to be able to load all the datasets used:
 
 COST, CIFAR10, CIFAR2 and MNIST
 
-For Cost there are several functions which are intended as collates to modify the way
-data is loaded into the networks.
 """
 
 from os import listdir, path, mkdir, rmdir
@@ -13,17 +11,11 @@ from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, Dataset
 from torch.torch import (
-    unsqueeze,
-    cat,
     tensor,
     int64,
     stack,
     Tensor,
     FloatTensor,
-    float32,
-    long as tlong,
-    ones,
-    zeros,
 )
 from numpy import (
     asarray,
@@ -36,244 +28,12 @@ from numpy import (
     load,
     arange,
     random,
-    floor,
     mean as npmean,
     std as npstd,
 )
 
 from pandas import read_csv
 from sklearn.preprocessing import StandardScaler
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
-
-
-def split_pad_n_pack(data, max_len):
-    """
-    Collate that splits the sequences of the cost dataset
-    then arranges them in smaller sequences and serves them
-    padded and packed to the network.
-    To use as collate when dataloading cost and previously made a partial
-    and the max len argument is fixed
-
-    Args
-    ---
-    data: data argument that as collate needs for when called by the dataloader
-    max_len: argument to fix the maximum lenght of the subsequences
-
-    Returns
-    ------
-    pack_padded_data: each subsequence padded and packed for RNN consumption
-    new_t_labels: label for each sequence
-    """
-    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            n_seqs = int(floor(len(seq) // max_len))
-            for i in range(n_seqs):
-                new_t_seqs.append(
-                    seq[(i * max_len): (i * max_len + max_len), :])
-                new_t_labels.append(lab)
-        else:
-            new_t_seqs.append(seq)
-            new_t_labels.append(lab)
-    lengths = [len(seq) for seq in new_t_seqs]
-    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(
-        padded_data, lengths, batch_first=True, enforce_sorted=False
-    )
-    return pack_padded_data, tensor(new_t_labels)
-
-
-def split_arrange_pad_n_pack(data, max_len):
-    """
-    Collate that splits the sequences of the cost dataset
-    then arranges them in smaller sequences. When arranging them
-    in smaller sequences also rearranges the values in them according
-    to the Cost configuration (check COst readme regarding how the values
-    are ordered). That is way there is this line
-    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
-    dimensions are now (8, 8). This is due all to the cost data configuration
-    To use as collate when dataloading cost and previously made a partial
-    and the max len argument is fixed
-
-    Args
-    ---
-    data: data argument that as collate needs for when called by the dataloader
-    max_len: argument to fix the maximum lenght of the subsequences
-
-    Returns
-    ------
-    pack_padded_data: each subsequence padded and packed for RNN consumption
-    new_t_labels: label for each sequence
-    """
-    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            n_seqs = int(floor(len(seq) // max_len))
-            for i in range(n_seqs):
-                img_sequence = tensor(
-                    seq[(i * max_len): (i * max_len + max_len), :]
-                ).view(-1, 8, 8)
-                img_sequence = stack(
-                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
-                )
-                new_t_seqs.append(img_sequence)
-                new_t_labels.append(lab)
-        else:
-            len_diff = max_len - len(seq)
-            padding = zeros((len_diff, 8, 8))
-            seq = tensor(seq).view(-1, 8, 8)
-            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
-            final_seq = cat((seq, padding), 0)
-            new_t_seqs.append(final_seq)
-            new_t_labels.append(lab)
-    return stack(new_t_seqs), tensor(new_t_labels)
-
-
-def split_arrange_pad_n_pack_3d(data, max_len):
-    """
-    Collate that splits the sequences of the cost dataset
-    then arranges them in smaller sequences. When arranging them
-    in smaller sequences also rearranges the values in them according
-    to the Cost configuration (check COst readme regarding how the values
-    are ordered). That is way there is this line
-    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
-    dimensions are now (8, 8). This is due all to the cost data configuration
-    To use as collate when dataloading cost and previously made a partial
-    and the max len argument is fixed
-
-    Args
-    ---
-    data: data argument that as collate needs for when called by the dataloader
-    max_len: argument to fix the maximum lenght of the subsequences
-
-    Returns
-    ------
-    pack_padded_data: each subsequence padded and packed for RNN consumption
-    new_t_labels: label for each sequence
-    """
-    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            n_seqs = int(floor(len(seq) // max_len))
-            for i in range(n_seqs):
-                img_sequence = tensor(
-                    seq[(i * max_len): (i * max_len + max_len), :]
-                ).reshape(-1, 8, 8)
-                img_sequence = stack(
-                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
-                )
-                img_sequence = unsqueeze(img_sequence, 0)
-                new_t_seqs.append(img_sequence)
-                new_t_labels.append(lab)
-        else:
-            len_diff = max_len - len(seq)
-            padding = zeros((len_diff, 8, 8))
-            seq = tensor(seq).view(-1, 8, 8)
-            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
-            final_seq = cat((seq, padding), 0)
-            final_seq = unsqueeze(final_seq, 0)
-            new_t_seqs.append(final_seq)
-            new_t_labels.append(lab)
-
-    return stack(new_t_seqs), tensor(new_t_labels)
-
-
-def insample_pad_n_pack(data, max_len):
-    """
-    Collate that insamples the sequences of the cost dataset
-    that is: takes a long sequence and picks points from inside to make
-    the final sequence to ahve length = max_len
-    To use as collate when dataloading cost and previously made a partial
-    and the max len argument is fixed
-
-    Args
-    ---
-    data: data argument that as collate needs for when called by the dataloader
-    max_len: argument to fix the maximum lenght of the subsequences
-
-    Returns
-    ------
-    pack_padded_data: each subsequence padded and packed for RNN consumption
-    new_t_labels: label for each sequence
-    """
-    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            step = int(floor(len(seq) // max_len))
-            new_seq = []
-            for i in range(max_len):
-                new_seq.append(seq[step * i, :])
-            new_t_seqs.append(stack(new_seq))
-            new_t_labels.append(lab)
-        else:
-            new_t_seqs.append(seq)
-            new_t_labels.append(lab)
-    lengths = [len(seq) for seq in new_t_seqs]
-    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
-    pack_padded_data = pack_padded_sequence(
-        padded_data, lengths, batch_first=True, enforce_sorted=False
-    )
-    return pack_padded_data, tensor(new_t_labels)
-
-
-def insample_arrange_pad_n_pack_3d(data, max_len):
-    """
-    Collate that splits the sequences of the cost dataset
-    then arranges them in smaller sequences. When arranging them 
-    in smaller sequences also rearranges the values in them according
-    to the Cost configuration (check COst readme regarding how the values
-    are ordered). That is way there is this line
-    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
-    dimensions are now (8, 8). This is due all to the cost data configuration
-    To use as collate when dataloading cost and previously made a partial
-    and the max len argument is fixed
-
-    Args
-    ---
-    data: data argument that as collate needs for when called by the dataloader
-    max_len: argument to fix the maximum lenght of the subsequences
-
-    Returns
-    ------
-    pack_padded_data: each subsequence padded and packed for RNN consumption
-    new_t_labels: label for each sequence
-    """
-    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
-    new_t_seqs, new_t_labels = [], []
-    for seq, lab in zip(t_seqs, labels):
-        if len(seq) > max_len:
-            step = int(floor(len(seq) // max_len))
-            new_seq = []
-            for i in range(max_len):
-                img_sequence = tensor(seq[step * i, :]).view(8, 8)
-                new_seq.append(img_sequence)
-            new_seq = unsqueeze(stack(new_seq), 0)
-            new_t_seqs.append(new_seq)
-            new_t_labels.append(lab)
-        else:
-            len_diff = max_len - len(seq)
-            padding = ones((len_diff, 8, 8)) * 255
-            seq = tensor(seq).view(-1, 8, 8)
-            final_seq = cat((seq, padding), 0)
-            final_seq = unsqueeze(final_seq, 0)
-            new_t_seqs.append(final_seq)
-            new_t_labels.append(lab)
-
-    return stack(new_t_seqs), tensor(new_t_labels)
 
 
 def read_n_save_cost(folder="./data/data_cost", subfolder="files"):

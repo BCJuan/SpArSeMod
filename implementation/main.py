@@ -8,23 +8,20 @@ from load_data import (
     prepare_mnist,
     prepare_cifar2,
     prepare_cost,
-    split_pad_n_pack,
-    split_arrange_pad_n_pack,
-    insample_pad_n_pack,
-    split_arrange_pad_n_pack_3d,
-    insample_arrange_pad_n_pack_3d,
+
+
+
 )
 from torch import nn as nn
 import numpy as np
 from test import ModelTester
-
 from architectures.cnn import search_space, Net, operations
 
-# from architectures.rnn import search_space, Net, operations
-# from architectures.cnn2d_cost import search_space, Net, operations
-# from architectures.cnn2d_plus_rnn_cost import search_space, Net, operations
-# from architectures.cnn3d_plus_rnn_cost import search_space, Net, operations
-# from architectures.cnn3d import search_space, Net, operations
+# from architectures.rnn import search_space, Net, operations, insample_pad_n_pack, split_pad_n_pack
+# from architectures.cnn2d_cost import search_space, Net, operations, split_arrange_pad_n_pack
+# from architectures.cnn2d_plus_rnn_cost import search_space, Net, operations, split_arrange_pad_n_pack
+# from architectures.cnn3d_plus_rnn_cost import search_space, Net, operations, split_arrange_pad_n_pack_3d, insample_arrange_pad_n_pack_3d
+# from architectures.cnn3d import search_space, Net, operations, split_arrange_pad_n_pack_3d, insample_arrange_pad_n_pack_3d
 
 if __name__ == "__main__":
 

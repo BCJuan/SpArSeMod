@@ -10,6 +10,54 @@ The only difference between cnn and cnn2d_cost is the inclusion of max len in th
 also its inclusion in the morphing process
 """
 
+def split_arrange_pad_n_pack(data, max_len):
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences. When arranging them
+    in smaller sequences also rearranges the values in them according
+    to the Cost configuration (check COst readme regarding how the values
+    are ordered). That is way there is this line
+    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
+    dimensions are now (8, 8). This is due all to the cost data configuration
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq) // max_len))
+            for i in range(n_seqs):
+                img_sequence = tensor(
+                    seq[(i * max_len): (i * max_len + max_len), :]
+                ).view(-1, 8, 8)
+                img_sequence = stack(
+                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
+                )
+                new_t_seqs.append(img_sequence)
+                new_t_labels.append(lab)
+        else:
+            len_diff = max_len - len(seq)
+            padding = zeros((len_diff, 8, 8))
+            seq = tensor(seq).view(-1, 8, 8)
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
+            final_seq = cat((seq, padding), 0)
+            new_t_seqs.append(final_seq)
+            new_t_labels.append(lab)
+    return stack(new_t_seqs), tensor(new_t_labels)
+
 
 class DownsampleConv(nn.Module):
     """

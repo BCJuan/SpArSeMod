@@ -2,6 +2,85 @@ from ax import SearchSpace, ParameterType, RangeParameter, ChoiceParameter
 from torch.nn import LSTM, Linear, Sequential, Module, GRU
 from random import random, randint
 
+def split_pad_n_pack(data, max_len):
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences and serves them
+    padded and packed to the network.
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq) // max_len))
+            for i in range(n_seqs):
+                new_t_seqs.append(
+                    seq[(i * max_len): (i * max_len + max_len), :])
+                new_t_labels.append(lab)
+        else:
+            new_t_seqs.append(seq)
+            new_t_labels.append(lab)
+    lengths = [len(seq) for seq in new_t_seqs]
+    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
+    pack_padded_data = pack_padded_sequence(
+        padded_data, lengths, batch_first=True, enforce_sorted=False
+    )
+    return pack_padded_data, tensor(new_t_labels)
+
+def insample_pad_n_pack(data, max_len):
+    """
+    Collate that insamples the sequences of the cost dataset
+    that is: takes a long sequence and picks points from inside to make
+    the final sequence to ahve length = max_len
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong)
+                    for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            step = int(floor(len(seq) // max_len))
+            new_seq = []
+            for i in range(max_len):
+                new_seq.append(seq[step * i, :])
+            new_t_seqs.append(stack(new_seq))
+            new_t_labels.append(lab)
+        else:
+            new_t_seqs.append(seq)
+            new_t_labels.append(lab)
+    lengths = [len(seq) for seq in new_t_seqs]
+    padded_data = pad_sequence(new_t_seqs, batch_first=True, padding_value=255)
+    pack_padded_data = pack_padded_sequence(
+        padded_data, lengths, batch_first=True, enforce_sorted=False
+    )
+    return pack_padded_data, tensor(new_t_labels)
+
 
 def search_space():
     """

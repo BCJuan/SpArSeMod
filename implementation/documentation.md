@@ -16,7 +16,7 @@
     + Input shape
 
 3. Your data must be arranged in a list of `TensorDataset` or `Dataset` objects as depicted for MNIST, CIFAR10, and CIFAR2 in `load_data.py`.
-4. Depending on how your model behaves, that is, how it works with data (for example, sequences in RNNs), you can write a `collate_fn` and pass it to the search program which will use it with the dataloaders. In the case you write a collate for rnns it should end with a packed sequence object.
+4. Depending on how your model behaves, that is, how it works with data (for example, sequences in RNNs), you can write a `collate_fn` and pass it to the search program which will use it with the dataloaders. 
 5. Beware that the data shape passed to the net comes from the dataloader but without batch dimension. In the case
 
 6. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space

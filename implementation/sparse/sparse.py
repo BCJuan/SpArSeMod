@@ -195,7 +195,7 @@ class Sparse(object):
 
         self.pareto_arms = clean_models_return_pareto(self.data)
         self.morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
-        model.update(new_data, self.exp)
+        # model.update(new_data, self.exp)
 
 
 def ei_new_arm(model, new_configs):
