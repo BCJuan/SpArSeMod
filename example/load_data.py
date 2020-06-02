@@ -10,13 +10,7 @@ from itertools import product
 from torchvision.datasets import MNIST, CIFAR10
 from torchvision.transforms import Compose, Normalize, ToTensor
 from torch.utils.data import TensorDataset, Dataset
-from torch.torch import (
-    tensor,
-    int64,
-    stack,
-    Tensor,
-    FloatTensor,
-)
+from torch import tensor, int64, stack, Tensor, FloatTensor
 from numpy import (
     asarray,
     loadtxt,
@@ -58,13 +52,16 @@ def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
     data_frame = read_csv(path.join(folder, "CoST.csv"))
     value_cols = [column for column in data_frame.columns if "ch" in column]
 
-    total_product = product(unique(data_frame[" gesture"]),
-                            unique(data_frame["subject"]),
-                            unique(data_frame[" variant"]))
+    total_product = product(
+        unique(data_frame[" gesture"]),
+        unique(data_frame["subject"]),
+        unique(data_frame[" variant"]),
+    )
     for gest, subj, vals in total_product:
         simple_df = data_frame[
-            (data_frame[" gesture"] == gest) & (
-                data_frame["subject"] == subj) & (data_frame[" variant"] == vals)
+            (data_frame[" gesture"] == gest)
+            & (data_frame["subject"] == subj)
+            & (data_frame[" variant"] == vals)
         ].reset_index()
         if not simple_df.empty:
             new_df = []
@@ -72,8 +69,15 @@ def read_n_save_cost(folder="./data/data_cost", subfolder="files"):
             for i, (_, row) in enumerate(simple_df.iterrows()):
                 new_df.append(row[value_cols].values)
                 if (i == len(simple_df) - 1) or (simple_df.loc[i + 1, " frame"] == 1):
-                    name = str(gest) + "_" + str(subj) + "_" + \
-                        str(vals) + "_" + str(counter)
+                    name = (
+                        str(gest)
+                        + "_"
+                        + str(subj)
+                        + "_"
+                        + str(vals)
+                        + "_"
+                        + str(counter)
+                    )
                     save(path.join(name_subfolder, name), vstack([new_df]))
                     new_df = []
                     counter += 1
@@ -104,8 +108,7 @@ def build_cost(folder="./data/data_cost/files/"):
         X.append(load(path.join(folder, arxiv)))
         meta = arxiv.split("_")
         y.append(int(meta[0]) - 1)
-        extra[str(i)] = dict(
-            {"subject": int(meta[1]), "variant": int(meta[2])})
+        extra[str(i)] = dict({"subject": int(meta[1]), "variant": int(meta[2])})
     return X, y, extra
 
 
@@ -197,10 +200,8 @@ def scale_X(x_train, x_test, image=False):
     if image:
         mean = npmean(vstack(x_train).reshape(-1, 8, 8), axis=0)
         std = npstd(vstack(x_train).reshape(-1, 8, 8), axis=0)
-        x_train_esc = [(asarray(i).reshape(-1, 8, 8) -
-                        mean) / std for i in x_train]
-        x_test_esc = [(asarray(i).reshape(-1, 8, 8) - mean) /
-                      std for i in x_test]
+        x_train_esc = [(asarray(i).reshape(-1, 8, 8) - mean) / std for i in x_train]
+        x_test_esc = [(asarray(i).reshape(-1, 8, 8) - mean) / std for i in x_test]
         scaler = [mean, std]
     else:
         scaler = StandardScaler()
@@ -258,8 +259,9 @@ def prepare_cost(folder="./data/data_cost/files/", test_subjects=None, image=Fal
     )
     x_train, x_test, scaler = scale_X(x_train, x_test, image=image)
     if image:
-        x_val = [(asarray(seq).reshape(-1, 8, 8) - scaler[0]) / scaler[1]
-                 for seq in x_val]
+        x_val = [
+            (asarray(seq).reshape(-1, 8, 8) - scaler[0]) / scaler[1] for seq in x_val
+        ]
     else:
         x_val = [scaler.transform(seq) for seq in x_val]
     t_set = CostDataset(x_train, y_train)
@@ -297,8 +299,7 @@ def read_cifar2(folder="./data/data_cifar2", width=20, height=20):
             test_label = where(test_label > 0, test_label, zeros_label)
             test_data = data[:, 1:].reshape(-1, width, height)
     return (
-        TensorDataset(FloatTensor(train_data).unsqueeze(1),
-                      tensor(train_label)),
+        TensorDataset(FloatTensor(train_data).unsqueeze(1), tensor(train_label)),
         TensorDataset(FloatTensor(test_data).unsqueeze(1), tensor(test_label)),
     )
 
@@ -326,7 +327,7 @@ def sample_from_class(data_set, k):
     test_data = []
     test_label = []
     for data, label in data_set:
-        class_i = label.item() if isinstance(label) == Tensor else label
+        class_i = label.item() if isinstance(label, Tensor) else label
         class_counts[class_i] = class_counts.get(class_i, 0) + 1
         if class_counts[class_i] <= k:
             train_data.append(data)

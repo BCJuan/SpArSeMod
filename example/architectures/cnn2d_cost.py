@@ -1,8 +1,6 @@
 from ax.core.parameter import RangeParameter, ParameterType, ChoiceParameter
 from ax import SearchSpace
-from torch.torch import (
-    nn, rand, tensor, stack, float32, zeros, long as tlong, cat
-)
+from torch import nn, rand, tensor, stack, float32, zeros, long as tlong, cat
 from numpy import floor
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
@@ -12,6 +10,7 @@ from random import choice, random, randint
 The only difference between cnn and cnn2d_cost is the inclusion of max len in the search space in the latter case
 also its inclusion in the morphing process
 """
+
 
 def split_arrange_pad_n_pack(data, max_len):
     """
@@ -36,15 +35,14 @@ def split_arrange_pad_n_pack(data, max_len):
     new_t_labels: label for each sequence
     """
     t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
                 img_sequence = tensor(
-                    seq[(i * max_len): (i * max_len + max_len), :]
+                    seq[(i * max_len) : (i * max_len + max_len), :]
                 ).view(-1, 8, 8)
                 img_sequence = stack(
                     [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
@@ -60,6 +58,7 @@ def split_arrange_pad_n_pack(data, max_len):
             new_t_seqs.append(final_seq)
             new_t_labels.append(lab)
     return stack(new_t_seqs), tensor(new_t_labels)
+
 
 class DownsampleConv(nn.Module):
     """
@@ -225,7 +224,7 @@ class Net(nn.Module):
             1, self.parametrization.get("conv_" + str(j) + "_num_layers", 1) + 1
         ):
             conv_type = self.parametrization.get(
-                "conv_" + str(j) + "_layer_" + str(i) + "_type", "Conv2D"
+                "conv_" + str(j) + "_layer_" + str(i) + "_type", 0
             )
 
             if i == 1 and j != 1:
@@ -240,7 +239,7 @@ class Net(nn.Module):
             in_channels = self.parametrization.get(
                 "conv_" + str(index_b) + "_layer_" + str(index_l) + "_filters", channels
             )
-            if conv_type == "SeparableConv2D":
+            if conv_type == 2:
                 conv_layer = DepthwiseSeparableConv(
                     in_channels,
                     self.parametrization.get(
@@ -250,7 +249,7 @@ class Net(nn.Module):
                         "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
                     ),
                 )
-            elif conv_type == "DownsampledConv2D":
+            elif conv_type == 1:
                 conv_layer = DownsampleConv(
                     in_channels,
                     self.parametrization.get(
@@ -264,7 +263,7 @@ class Net(nn.Module):
                     ),
                 )
 
-            if conv_type == "Conv2D":
+            if conv_type == 0:
                 conv.append(
                     ConvBNReLU(
                         in_channels,
@@ -418,7 +417,7 @@ def search_space():
             RangeParameter(
                 name="drop_" + str(i + 1),
                 lower=0.1,
-                upper=0.5,
+                upper=0.9,
                 parameter_type=ParameterType.FLOAT,
             )
         )
@@ -442,10 +441,11 @@ def search_space():
             )
 
             params.append(
-                ChoiceParameter(
+                RangeParameter(
                     name="conv_" + str(i + 1) + "_layer_" + str(j + 1) + "_type",
-                    parameter_type=ParameterType.STRING,
-                    values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+                    parameter_type=ParameterType.INT,
+                    lower=0,
+                    upper=1
                 )
             )
 
@@ -562,11 +562,10 @@ def layer_type(config):
     """
     block = choice(range(1, config["num_conv_blocks"] + 1))
     layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
-    types = set(config["conv_" + str(block) + "_layer_" + str(layer) + "_type"])
-    original_types = set(["Conv2D", "DownsampledConv2D", "SeparableConv2D"])
-    possible_types = list(original_types - types)
+
+    possible_types = list([0, 1, 2])
     new_layer_type = choice(possible_types)
-    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = str(
+    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = int(
         new_layer_type
     )
     return config

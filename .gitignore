@@ -3,11 +3,13 @@ paper/images/
 paper/cogmi/
 experimentation/
 __pycache__
-implementation/data/
-implementation/models/
-implementation/results/
-implementation/__pycache__
+example/data/
+example/models/
+example/results/
+__pycache__
 implementation_inuse/
 .vscode/
 sparse.code-workspace
+paper/
+paper_rewritten/
 

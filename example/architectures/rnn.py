@@ -2,6 +2,7 @@ from ax import SearchSpace, ParameterType, RangeParameter, ChoiceParameter
 from torch.nn import LSTM, Linear, Sequential, Module, GRU
 from random import random, randint
 
+
 def split_pad_n_pack(data, max_len):
     """
     Collate that splits the sequences of the cost dataset
@@ -21,15 +22,13 @@ def split_pad_n_pack(data, max_len):
     new_t_labels: label for each sequence
     """
     t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
-                new_t_seqs.append(
-                    seq[(i * max_len): (i * max_len + max_len), :])
+                new_t_seqs.append(seq[(i * max_len) : (i * max_len + max_len), :])
                 new_t_labels.append(lab)
         else:
             new_t_seqs.append(seq)
@@ -40,6 +39,7 @@ def split_pad_n_pack(data, max_len):
         padded_data, lengths, batch_first=True, enforce_sorted=False
     )
     return pack_padded_data, tensor(new_t_labels)
+
 
 def insample_pad_n_pack(data, max_len):
     """
@@ -60,8 +60,7 @@ def insample_pad_n_pack(data, max_len):
     new_t_labels: label for each sequence
     """
     t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:

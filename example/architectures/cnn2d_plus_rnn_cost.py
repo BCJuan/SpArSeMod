@@ -10,6 +10,7 @@ The only difference between cnn and cnn2d_cost is the inclusion of max len in th
 also its inclusion in the morphing process
 """
 
+
 def split_arrange_pad_n_pack(data, max_len):
     """
     Collate that splits the sequences of the cost dataset
@@ -33,15 +34,14 @@ def split_arrange_pad_n_pack(data, max_len):
     new_t_labels: label for each sequence
     """
     t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
                 img_sequence = tensor(
-                    seq[(i * max_len): (i * max_len + max_len), :]
+                    seq[(i * max_len) : (i * max_len + max_len), :]
                 ).view(-1, 8, 8)
                 img_sequence = stack(
                     [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
@@ -397,7 +397,7 @@ def search_space():
     Search space object
 
     """
-    max_number_of_blocks = 2
+    max_number_of_blocks = 3
     max_number_of_layers_per_block = 3
     max_fc_layers = 2
     params = []
@@ -493,7 +493,7 @@ def search_space():
     )
     params.append(
         RangeParameter(
-            name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.5
+            name="rnn_dropout", parameter_type=ParameterType.FLOAT, lower=0.1, upper=0.9
         )
     )
     params.append(

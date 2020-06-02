@@ -10,6 +10,7 @@ from numpy import ceil
 
 CONFIGURATION = {"max_conv_blocks": 4, "max_conv_layer_block": 3, "max_fc_layers": 2}
 
+
 def split_arrange_pad_n_pack_3d(data, max_len):
     """
     Collate that splits the sequences of the cost dataset
@@ -33,15 +34,14 @@ def split_arrange_pad_n_pack_3d(data, max_len):
     new_t_labels: label for each sequence
     """
     t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
-    labels = stack([tensor(label["label"], dtype=tlong)
-                    for label in data]).squeeze()
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
     new_t_seqs, new_t_labels = [], []
     for seq, lab in zip(t_seqs, labels):
         if len(seq) > max_len:
             n_seqs = int(floor(len(seq) // max_len))
             for i in range(n_seqs):
                 img_sequence = tensor(
-                    seq[(i * max_len): (i * max_len + max_len), :]
+                    seq[(i * max_len) : (i * max_len + max_len), :]
                 ).reshape(-1, 8, 8)
                 img_sequence = stack(
                     [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
@@ -60,6 +60,7 @@ def split_arrange_pad_n_pack_3d(data, max_len):
             new_t_labels.append(lab)
 
     return stack(new_t_seqs), tensor(new_t_labels)
+
 
 def search_space(config=CONFIGURATION):
     """

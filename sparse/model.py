@@ -25,7 +25,7 @@ class Trainer(object):
         self.datasets = datasets
         self.dtype = ddtype
         # TODO: choose GPU with less memory
-        self.devicy = device("cuda:0" if cuda.is_available() else "cpu")
+        self.devicy = device("cuda:1" if cuda.is_available() else "cpu")
         self.datasizes = {
             i: len(sett) for i, sett in zip(["train", "val", "test"], self.datasets)
         }

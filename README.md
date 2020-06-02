@@ -6,26 +6,29 @@ Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fed
 
 # Usage
 
-1. Create a Space Search function which returns a SearchSpace object, as in `cnn.py`.
+1. Create a Space Search function which returns a SearchSpace object, as in `architechtures/cnn.py`.
     The following elements should always appear on the search space
     + Learning rate
     + Learning step (adjust for your dataset)
     + Learning gamma 
     + Prune parameter 
     + Batch size
-
-2. Create a network builder, as in `cnn.py`, which needs to accept the following parameters
+2. Create a network builder, as in `architechtures/cnn.py`, which needs to accept the following parameters
     + Parametrization: that is the dictionary coming from the search space
     + The number of classes
     + Input shape
-
 3. Your data must be arranged in a list of `TensorDataset` or `Dataset` objects as depicted for MNIST, CIFAR10, and CIFAR2 in `load_data.py`.
-
 4. Complete `config.ini`, with all the parameters (check configuration section for this)
-
 5. Build a file (example is in current `main.py`) where you call the function `Sparse` from `sparse.sparse` and pass all the config parameters.
+6. Wait until the process completes. You will have to check the results to see which has been the best network.
 
-## COnfiguration
+### Optional Usage
+
+1. Depending on how your model behaves, that is, how it works with data (for example, sequences in RNNs), you can write a `collate_fn` and pass it to the search program which will use it with the dataloaders. As detailed, for example, in 
+2. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space. Check functions in `architectures\cnn2d_cost.py` -> `split_arrange_pad_n_pack`
+
+
+## Configuration
 
 The parameters in the `config.ini`file obey the following:
 ```
@@ -98,28 +101,27 @@ arm:
 
 1. The models will be placed in the folder specified in the configuration (currently is hard coded as `models`). THink that only pareto models are saved.
 2. Results for the evaluations will be placed in the specified folder in the configuration. It consists of a `csv` where results are saved as dataframe, a `json` for the experiment and a txt for the time taken for the whole experiment.
+3. Check notebook
 
+# Installation
 
-## Optional Usage
-
-1. Depending on how your model behaves, that is, how it works with data (for example, sequences in RNNs), you can write a `collate_fn` and pass it to the search program which will use it with the dataloaders. As detailed, for example, in 
-
-2. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space. Check functions in `architectures\cnn2d_cost.py` -> `split_arrange_pad_n_pack`
-
-3. Pr
-
-## Configuration
-
-
+1. Clone this repository
+2. Install conda environment: `conda create env -f sparse.yml`
+    1. Alternatively, install packages directly from pip
+3. run `pip install .` 
+4. In example you can find a full working example to begin with.
 
 # Points to solve/improve
 
 1. Models folder should be specified in the configuration, now is hardcoded
 2. Check batch size for GP works
 3. Add configuration parameter for selecting the gpu
-4. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
+4. Add notebook for selecting best network and inspecting results
+5. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
+
 
 Improvements:
+
 
 1. Add raytune distribution
 2. Add tolerance checker as stopper

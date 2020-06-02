@@ -1,27 +1,32 @@
 # -*- coding: utf-8 -*-
-
-
+"""
+Experiment Class for sparse
+Metrics classes
+Runner class
+Helper load and save functions
+"""
+# pylint: disable=E1101, W0221, W0201
+from os import path
+import copy
+from functools import partial
 from ax import Metric, Data, Runner, Experiment, OptimizationConfig
 from ax.storage.metric_registry import register_metric
 from ax.storage.runner_registry import register_runner
 from ax.core.objective import MultiObjective, Objective
 from pandas import DataFrame, read_csv
-import pickle
-from os import path
-from .model import Trainer
-from numpy import array, prod, max as maxim, log
-from torch import randn, save, load, qint8
-import copy
-from functools import partial
-
+from numpy import log
+from torch import save, load
 from .utils_data import get_shape_from_dataloader
 from .quant_n_prune import quant
-
+from .model import Trainer
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
 
 
-class SparseExperiment(object):
+class SparseExperiment():
+    """
+    Class for the Sparse Experiment
+    """
     def __init__(self, epochs, **kwargs):
         allowed_keys = {
             "root",
@@ -39,7 +44,8 @@ class SparseExperiment(object):
             "collate_fn",
             "splitter",
         }
-        self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
+        self.__dict__.update((k, v)
+                             for k, v in kwargs.items() if k in allowed_keys)
         self.epochs = epochs
 
     def create_load_experiment(self):
@@ -118,19 +124,18 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(
-        self,
-        epochs,
-        name,
-        pruning,
-        datasets,
-        classes,
-        net,
-        quant_scheme,
-        quant_params=None,
-        collate_fn=None,
-        splitter=False,
-    ):
+    def __init__(self,
+                 epochs,
+                 name,
+                 pruning,
+                 datasets,
+                 classes,
+                 net,
+                 quant_scheme,
+                 quant_params=None,
+                 collate_fn=None,
+                 splitter=False,
+                 ):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
         self.trainer = Trainer(pruning=pruning, datasets=datasets)
@@ -185,7 +190,8 @@ class AccuracyMetric(Metric):
         net_i = self.trainer.train(
             net_i, self.parametrization, name, self.epochs, self.reload, self.old_net
         )
-        net_i = quant(net_i, self.quant_scheme, self.trainer, self.quant_params)
+        net_i = quant(net_i, self.quant_scheme,
+                      self.trainer, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
         save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
         return 1 - result
@@ -304,7 +310,7 @@ class FeatureMapMetric(Metric):
         )
         net_i.eval()
 
-        macs, params, maxram = get_model_complexity_info(
+        _, _, maxram = get_model_complexity_info(
             net_i,
             input_shape,
             as_strings=False,
@@ -316,9 +322,9 @@ class FeatureMapMetric(Metric):
 
 
 class LatencyMetric(Metric):
-    def __init__(
-        self, name, datasets, classes, net, flops_capacity, collate_fn, splitter
-    ):
+    def __init__(self, name, datasets, classes, net, flops_capacity, collate_fn,
+                 splitter
+                 ):
         super().__init__(name, lower_is_better=True)
         self.classes = classes
         self.net = net
@@ -366,7 +372,7 @@ class LatencyMetric(Metric):
             self.parametrization, classes=self.classes, input_shape=input_shape
         )
         # input shape can be an image CxHxW or a sequence LxF
-        macs, params, maxram = get_model_complexity_info(
+        macs, _, _ = get_model_complexity_info(
             net_i,
             input_shape,
             as_strings=False,
@@ -398,5 +404,5 @@ def load_data(name, n_obj=None):
 
 
 def pass_data_to_exp(csv):
-    df = read_csv(csv, index_col=0)
-    return Data(df=df)
+    dataframe = read_csv(csv, index_col=0)
+    return Data(df=dataframe)
