@@ -76,7 +76,7 @@ class DownsampleConv(nn.Module):
         padding = (kernel_size - 1) // 2
         pointwise = nn.Conv2d(nin, round(nin * (1 - downsample)), kernel_size=1, padding=padding)
         seq = [
-            nn.Conv2d(round(nin * (1 - downsample)), nout, kernel_size=kernel_size),
+            nn.Conv2d(round(nin * (1 - downsample)), nout, kernel_size=kernel_size, padding=padding),
             nn.BatchNorm2d(num_features=nout, momentum=0.1),
             nn.ReLU(inplace=False),
         ]
@@ -107,7 +107,7 @@ class DepthwiseSeparableConv(nn.Module):
         depthwise = nn.Conv2d(
             nin, nin * kernel_size, kernel_size=kernel_size, padding=padding, groups=nin)
         seq = [
-            nn.Conv2d(nin * kernel_size, nout, kernel_size=1),
+            nn.Conv2d(nin * kernel_size, nout, kernel_size=1, padding=padding),
             nn.BatchNorm2d(num_features=nout, momentum=0.1),
             nn.ReLU(inplace=False),
         ]
