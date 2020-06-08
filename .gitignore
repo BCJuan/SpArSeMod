@@ -1,13 +1,13 @@
 documents/
-sparsemod/sparsemod/examples/data/
-sparsemod/sparsemod/examples/2dcnn_cost_example/results
-sparsemod/sparsemod/examples/2dcnn_cost_example/models
-sparsemod/sparsemod/examples/2dcnn_rnn_cost_example/results
-sparsemod/sparsemod/examples/2dcnn_rnn_cost_example/models
-sparsemod/sparsemod/examples/rnn_cost_example/results
-sparsemod/sparsemod/examples/rnn_cost_example/models
-sparsemod/sparsemod/examples/2dcnn_cifar_example/results
-sparsemod/sparsemod/examples/2dcnn_cifar_example/models
+sparsemod/examples/data/
+sparsemod/examples/2dcnn_cost_example/results
+sparsemod/examples/2dcnn_cost_example/models
+sparsemod/examples/2dcnn_rnn_cost_example/results
+sparsemod/examples/2dcnn_rnn_cost_example/models
+sparsemod/examples/rnn_cost_example/results
+sparsemod/examples/rnn_cost_example/models
+sparsemod/examples/2dcnn_cifar_example/results
+sparsemod/examples/2dcnn_cifar_example/models
 
 
 sparse.code-workspace
