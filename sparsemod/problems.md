@@ -2,7 +2,7 @@
 
 Do not know how to solve, serialization problems, https://github.com/facebook/Ax/issues/214
 
-+ Sparse Experiment should inherit from
++ Sparse Experiment should inherit from experiment in sparse
 
 
 

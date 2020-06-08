@@ -11,3 +11,4 @@ sparsemod/examples/2dcnn_cifar_example/models
 
 
 sparse.code-workspace
+.vscode/
