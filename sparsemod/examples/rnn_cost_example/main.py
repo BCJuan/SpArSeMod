@@ -2,36 +2,26 @@ from warnings import filterwarnings
 from os import path, mkdir
 from time import time
 import numpy as np
-from torch import nn as nn
-from sparse.utils_data import configuration, bool_converter  # str_to_list
-from sparse.sparse import Sparse
-from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost
-from sparse.test import ModelTester
-from architectures.cnn import search_space, Net, operations
-
-# from architectures.rnn import search_space, Net, operations, insample_pad_n_pack, split_pad_n_pack
-# from architectures.cnn2d_cost import search_space, Net, operations, split_arrange_pad_n_pack
-# from architectures.cnn2d_plus_rnn_cost import search_space, Net, operations, split_arrange_pad_n_pack
-# from architectures.cnn3d_plus_rnn_cost import (
-#   search_space, Net, operations, split_arrange_pad_n_pack_3d,
-#   insample_arrange_pad_n_pack_3d
-# )
-# from architectures.cnn3d import search_space, Net, operations, split_arrange_pad_n_pack_3d, insample_arrange_pad_n_pack_3d
+from torch import nn as nn, manual_seed
+from sparsemod.sparse.utils_data import configuration, bool_converter  # str_to_list
+from sparsemod.sparse.sparse import Sparse
+from sparsemod.examples.load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost
+from sparsemod.sparse.test import ModelTester
+from rnn import search_space, Net, operations, split_pad_n_pack
 
 if __name__ == "__main__":
+
+    manual_seed(42)
+    np.random.seed(42)
 
     filterwarnings(action="ignore", category=DeprecationWarning, module=r".*")
     filterwarnings(action="ignore", module=r"torch.quantization")
     filterwarnings(action="ignore", category=UserWarning)
 
-    # datasets, n_classes = prepare_cost(image=True)
-    datasets, n_classes = prepare_cifar2()
+    datasets, n_classes = prepare_cost(folder= "../data/data_cost/files", image=False)
     search_space = search_space()
-    quant_params = None
-    # quant_params = {nn.LSTM, nn.GRU}
-    # collate_fn = split_arrange_pad_n_pack
-    # collate_fn = split_pad_n_pack
-    collate_fn = None
+    quant_params = {nn.LSTM, nn.Linear, nn.GRU}
+    collate_fn = split_pad_n_pack
 
     if bool_converter(configuration("DEFAULT")["TRAIN"]):
         args = configuration("TRAIN")

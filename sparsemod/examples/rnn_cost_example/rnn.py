@@ -1,7 +1,9 @@
 from ax import SearchSpace, ParameterType, RangeParameter, ChoiceParameter
 from torch.nn import LSTM, Linear, Sequential, Module, GRU
 from random import random, randint
-
+from torch import tensor, float32, stack, long as tlong
+from numpy import floor
+from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 
 def split_pad_n_pack(data, max_len):
     """
@@ -169,7 +171,7 @@ def search_space():
     )
     params.append(
         RangeParameter(
-            name="batch_size", lower=2, upper=8, parameter_type=ParameterType.INT
+            name="batch_size", lower=2, upper=128, parameter_type=ParameterType.INT
         )
     )
     ########################################################################

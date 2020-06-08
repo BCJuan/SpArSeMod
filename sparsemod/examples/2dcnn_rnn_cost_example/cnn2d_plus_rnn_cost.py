@@ -1,9 +1,10 @@
 from ax.core.parameter import RangeParameter, ParameterType, ChoiceParameter
 from ax import SearchSpace
-from torch import nn, rand, mean as torchmean
+from torch import nn, rand, mean as torchmean, tensor, float32, stack, long as tlong, zeros, cat
 from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
 from random import choice, random, randint
+from numpy import floor
 
 """
 The only difference between cnn and cnn2d_cost is the inclusion of max len in the search space in the latter case
