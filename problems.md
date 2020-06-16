@@ -9,3 +9,5 @@ Do not know how to solve, serialization problems, https://github.com/facebook/Ax
 + Remeber problems of samping with IID and SOBOl https://github.com/pytorch/botorch/issues/245 in `bo/factory.py` and in `get_NEI` funcvtion in `botorch_defaults`. put `False ` in `qmc`. Also in `botorch utils.py`, in the libray, if you are sampling from a big space, change Sobol sampler in `prune inferior poins` by a normal iid
 
 + torch quantized dynamic rnn has no warnings imported
+
++ When loading an experiment you will need to import the architecture

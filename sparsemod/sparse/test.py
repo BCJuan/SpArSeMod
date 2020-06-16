@@ -56,7 +56,7 @@ class ModelTester(object):
         n_subjects = 32
         results = []
         for i in tqdm(range(1, n_subjects)):
-            datasets, n_classes = prepare_cost(test_subjects=[i])
+            datasets, n_classes = prepare_cost(test_subjects=[i], folder="../data/data_cost/files/")
             params = self.arm_parameters()
             net = copy.copy(self.net)
             AccMetric = AccuracyMetric(
