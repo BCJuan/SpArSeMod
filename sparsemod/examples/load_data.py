@@ -408,7 +408,7 @@ def prepare_cifar10():
     return [tr_set, val_set, ts_set], 10
 
 
-def prepare_cifar2():
+def prepare_cifar2(folder="./data/data_cifar2", n_val=2500):
     """
     Reads cifar2, samples from it a validation dataset in a stratified manner
     and returns train, val and test dataset
@@ -418,6 +418,6 @@ def prepare_cifar2():
     list of datasets
     number of classes
     """
-    tr_dt, ts_dt = read_cifar2()
-    val_set, tr_set = sample_from_class(tr_dt, 2500)
+    tr_dt, ts_dt = read_cifar2(folder=folder)
+    val_set, tr_set = sample_from_class(tr_dt, n_val)
     return [tr_set, val_set, ts_dt], 2

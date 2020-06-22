@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="sparsemod", # Replace with your own username
-    version="0.0.1",
+    version="0.1.2",
     author="Juan Borrego Carazo",
     author_email="juan.borrego@uab.cat",
     description="Package for automatically creating performing but low sized neural networks suitable for microcontrollers.",

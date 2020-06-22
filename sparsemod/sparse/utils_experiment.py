@@ -43,6 +43,8 @@ class SparseExperiment():
             "quant_params",
             "collate_fn",
             "splitter",
+            "models_path",
+            "cuda"
         }
         self.__dict__.update((k, v)
                              for k, v in kwargs.items() if k in allowed_keys)
@@ -71,6 +73,8 @@ class SparseExperiment():
                 quant_params=self.quant_params,
                 collate_fn=self.collate_fn,
                 splitter=self.splitter,
+                models_path=self.models_path,
+                cuda=self.cuda
             ),
             WeightMetric(
                 name="weight",
@@ -135,10 +139,12 @@ class AccuracyMetric(Metric):
                  quant_params=None,
                  collate_fn=None,
                  splitter=False,
+                 models_path=None,
+                 cuda="cuda:0"
                  ):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
-        self.trainer = Trainer(pruning=pruning, datasets=datasets)
+        self.trainer = Trainer(pruning=pruning, datasets=datasets, models_path=models_path, cuda=cuda)
         self.reload = False
         self.old_net = None
         self.pruning = pruning
@@ -149,6 +155,8 @@ class AccuracyMetric(Metric):
         self.quant_params = quant_params
         self.collate_fn = collate_fn
         self.splitter = splitter
+        self.models_path = models_path
+        self.cuda = cuda
 
     def fetch_trial_data(self, trial):
         """
@@ -193,7 +201,7 @@ class AccuracyMetric(Metric):
         net_i = quant(net_i, self.quant_scheme,
                       self.trainer, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
-        save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
+        save(net_i.state_dict(), path.join(self.models_path, str(name) + "_qq" + ".pth"))
         return 1 - result
 
 

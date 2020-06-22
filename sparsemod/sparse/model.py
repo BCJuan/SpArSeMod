@@ -11,25 +11,28 @@ from typing import Dict
 from torch.optim import Adam
 from torch.optim import lr_scheduler
 import copy
-from torch import device, cuda, save, float as floatp, Size
+from torch import device, cuda as torchcuda, save, float as floatp, Size
 from torchvision.transforms import ToTensor, Normalize, Compose
 from tqdm import tqdm
+from torch.quantization import QuantStub, DeQuantStub, fuse_modules
+from os import path
 from .heir import copy_weights
 from .quant_n_prune import prune_net
-from torch.quantization import QuantStub, DeQuantStub, fuse_modules
+
 
 
 class Trainer(object):
-    def __init__(self, pruning=False, ddtype=floatp, datasets=None):
+    def __init__(self, pruning=False, ddtype=floatp, datasets=None, models_path=None, cuda="cuda:0"):
 
         self.datasets = datasets
         self.dtype = ddtype
         # TODO: choose GPU with less memory
-        self.devicy = device("cuda:0" if cuda.is_available() else "cpu")
+        self.devicy = device(cuda if torchcuda.is_available() else "cpu")
         self.datasizes = {
             i: len(sett) for i, sett in zip(["train", "val", "test"], self.datasets)
         }
         self.pruning = pruning
+        self.models_path = models_path
 
     def load_dataloaders(self, batch_size, collate_fn):
         self.dataloader = {
@@ -165,7 +168,8 @@ class Trainer(object):
 
         # load best model weights
         model.load_state_dict(best_model_wts)
-        save(model.state_dict(), "./models/" + str(name) + ".pth")
+        # TODO: be aware of problems with multibatch due to arm names
+        save(model.state_dict(), path.join(self.models_path,  str(name) + ".pth"))
         return model
 
     def evaluate(self, net: nn.Module, quant_mode: bool) -> float:

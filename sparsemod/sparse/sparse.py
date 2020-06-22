@@ -27,6 +27,7 @@ from numpy.linalg import norm
 from .utils_data import get_shape_from_dataloader
 from .morpher import Morpher
 from .heir import clean_models_return_pareto
+from .bo.factory import get_botorch as get_botorch_arc
 
 # TODO: add raytune for distributing machine learning
 # TODO: refactorize main
@@ -62,11 +63,22 @@ class Sparse(object):
             "collate_fn",
             "splitter",
             "morpher_ops",
+            "arc",
+            "cuda"
         }
 
         self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
 
+        if not path.exists(self.root):
+            mkdir(self.root)
+        
+        self.models_path = path.join(self.root, "models/")
+        if not path.exists(self.models_path):
+            mkdir(self.models_path) 
+        self.cuda = "cuda:" + self.cuda
+        
     def run_sparse(self):
+
         sparse_exp = SparseExperiment(self.epochs1, **self.__dict__)
 
         self.exp, self.data = sparse_exp.create_load_experiment()
@@ -75,16 +87,19 @@ class Sparse(object):
         sobol = self.run_model(self.r1, sobol, self.epochs1, model_type="random")
 
         self.exp.optimization_config.objective.metrics[0].epochs = self.epochs2
-        botorch = get_botorch(experiment=self.exp, data=self.data)
+        if self.arc:
+            botorch = get_botorch_arc(experiment=self.exp, data=self.data)
+        else:
+            botorch = get_botorch(experiment=self.exp, data=self.data)
         botorch = self.run_model(self.r2, botorch, self.epochs2, model_type="bo")
 
         if self.morphisms:
-            self.pareto_arms = clean_models_return_pareto(self.data)
+            self.pareto_arms = clean_models_return_pareto(self.data, self.models_path)
             self.develop_morphisms(botorch)
 
     def run_model(self, r, model, epochs, model_type):
         for _ in tqdm(range(r)):
-            self.pareto_arms = clean_models_return_pareto(self.data)
+            self.pareto_arms = clean_models_return_pareto(self.data, self.models_path)
             model, new_data = self.model_loop(model)
 
             if not new_data.df.empty:
@@ -92,7 +107,7 @@ class Sparse(object):
                 if model_type == "bo":
                     model.update(new_data, self.exp)
         # TODO: add raise error for empty data
-        self.pareto_arms = clean_models_return_pareto(self.data)
+        self.pareto_arms = clean_models_return_pareto(self.data, self.models_path)
         return model
 
     def model_loop(self, model):
@@ -177,7 +192,7 @@ class Sparse(object):
             self.exp.arms_by_name[new_arm[1]].parameters,
         )
 
-        old_net = reload_net(self.exp, new_arm[1], self.classes, input_shape, self.net)
+        old_net = reload_net(self.exp, new_arm[1], self.classes, input_shape, self.net, self.models_path)
         self.exp.optimization_config.objective.metrics[0].old_net = old_net
         trial = (
             self.exp.new_trial()
@@ -193,7 +208,7 @@ class Sparse(object):
         if not new_data.df.empty:
             new_data = self.group_attach_and_save(new_data)
 
-        self.pareto_arms = clean_models_return_pareto(self.data)
+        self.pareto_arms = clean_models_return_pareto(self.data, self.models_path)
         self.morpher.retrieve_best_configurations(self.exp, self.pareto_arms)
         # model.update(new_data, self.exp)
 
@@ -212,8 +227,9 @@ def ei_new_arm(model, new_configs):
 
 # TODO: delete hardcoded model folder name, loook in other parts of python
 # files for hardcoded folder model name
-def reload_net(exp, arm, classes, input_shape, net):
+# TODO: problems with batches in arm name
+def reload_net(exp, arm, classes, input_shape, net, models_path):
     net = net(exp.arms_by_name[arm].parameters, classes, input_shape)
-    model_filename = "./models/" + arm + ".pth"
+    model_filename = path.join(models_path, arm + ".pth")
     net.load_state_dict(load(model_filename))
     return net
