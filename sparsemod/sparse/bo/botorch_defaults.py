@@ -32,7 +32,7 @@ from torch import Tensor
 # MOD
 from .gp_regression import FixedNoiseGP
 from .fit import fit_gpytorch_model
-
+from .objective import MaxMCObjective
 #
 
 
@@ -182,8 +182,8 @@ def get_NEI(
         raise ValueError("There are no feasible observed points.")
     # construct Objective module
     if outcome_constraints is None:
-        objective = LinearMCObjective(weights=objective_weights)
-
+        # objective = LinearMCObjective(weights=objective_weights)
+        objective = MaxMCObjective(weights=objective_weights)
     else:
         obj_tf = get_objective_weights_transform(objective_weights)
         con_tfs = get_outcome_constraint_transforms(outcome_constraints)
