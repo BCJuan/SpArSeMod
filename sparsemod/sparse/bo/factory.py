@@ -8,11 +8,7 @@ from ax.core.experiment import Experiment
 from ax.core.optimization_config import OptimizationConfig
 from ax.core.search_space import SearchSpace
 from ax.core.types import TConfig
-from ax.modelbridge.registry import (
-    Cont_X_trans,
-    Models,
-    Y_trans,
-)
+from ax.modelbridge.registry import Cont_X_trans, Models, Y_trans
 from ax.modelbridge.torch import TorchModelBridge
 from ax.modelbridge.transforms.base import Transform
 from ax.models.torch.botorch import (

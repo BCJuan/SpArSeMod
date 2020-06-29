@@ -1,28 +1,47 @@
 # -*- coding: utf-8 -*-
-
+"""
+Model function to train and evaluate the models
+It is called from the metric accuracy
+"""
 from __future__ import division
-import torch.nn as nn
-from torch.autograd import Variable
-from torch import rand, no_grad, max as maxim, sum as summ
-from torch import set_grad_enabled, qint8
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
+from os import path
+import copy
 from typing import Dict
+from tqdm import tqdm
+import torch.nn as nn
+from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.optim import lr_scheduler
-import copy
-from torch import device, cuda as torchcuda, save, float as floatp, Size
-from torchvision.transforms import ToTensor, Normalize, Compose
-from tqdm import tqdm
-from torch.quantization import QuantStub, DeQuantStub, fuse_modules
-from os import path
+from torch import (
+    device,
+    cuda as torchcuda,
+    save,
+    float as floatp,
+    set_grad_enabled,
+    no_grad,
+    max as maxim,
+    sum as summ,
+)
+
 from .heir import copy_weights
 from .quant_n_prune import prune_net
 
 
+class Trainer:
+    """
+    Class for trainning and evaluating models.
+    It includes dataloaders, datasets, training
+    routine, pruning and evaluation
+    """
 
-class Trainer(object):
-    def __init__(self, pruning=False, ddtype=floatp, datasets=None, models_path=None, cuda="cuda:0"):
+    def __init__(
+        self,
+        pruning=False,
+        ddtype=floatp,
+        datasets=None,
+        models_path=None,
+        cuda="cuda:0",
+    ):
 
         self.datasets = datasets
         self.dtype = ddtype
@@ -33,8 +52,14 @@ class Trainer(object):
         }
         self.pruning = pruning
         self.models_path = models_path
+        self.dataloader = None
+        self.criterion = nn.CrossEntropyLoss()
 
     def load_dataloaders(self, batch_size, collate_fn):
+        """
+        Defines data loaders as a call to be able to define
+        collates from outside
+        """
         self.dataloader = {
             i: DataLoader(
                 sett,
@@ -81,7 +106,6 @@ class Trainer(object):
             net = copy_weights(old_net, net)
         net.to(dtype=self.dtype, device=self.devicy)  # pyre-ignore [28]
         # Define loss and optimizer
-        self.criterion = nn.CrossEntropyLoss()
         optimizer = Adam(net.parameters(), lr=parameters.get("learning_rate"))
         # TODO: change to reduce on plateau, is for cifar change 1000
         exp_lr_scheduler = lr_scheduler.StepLR(
@@ -102,7 +126,9 @@ class Trainer(object):
         return net
 
     def train_loop(self, model, optimizer, scheduler, name, epochs, threshold):
-
+        """
+        Training loop
+        """
         best_acc = 0.0
         best_model_wts = copy.deepcopy(model.state_dict())
         # pruning with steps
@@ -111,7 +137,7 @@ class Trainer(object):
         init_threshold = 0.01
         thres_step = (threshold - init_threshold) / steps
         #
-        for epoch in range(epochs):
+        for _ in range(epochs):
 
             # Each epoch has a training and validation phase
             for phase in ["train", "val"]:
@@ -127,9 +153,7 @@ class Trainer(object):
                 # for inputs, labels in tqdm(self.dataloader[phase],
                 #                             total=len(
                 #                                 self.dataloader[phase])):
-                for index, (inputs, labels) in enumerate(
-                    self.dataloader[phase], start=1
-                ):
+                for _, (inputs, labels) in enumerate(self.dataloader[phase], start=1):
 
                     inputs = inputs.to(self.devicy)
                     labels = labels.to(self.devicy)
@@ -169,7 +193,7 @@ class Trainer(object):
         # load best model weights
         model.load_state_dict(best_model_wts)
         # TODO: be aware of problems with multibatch due to arm names
-        save(model.state_dict(), path.join(self.models_path,  str(name) + ".pth"))
+        save(model.state_dict(), path.join(self.models_path, str(name) + ".pth"))
         return model
 
     def evaluate(self, net: nn.Module, quant_mode: bool) -> float:

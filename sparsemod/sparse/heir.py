@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from numpy import arange, any as npany, sum as npsum, zeros
 from os import listdir, remove, path
-from torch import Size, load
+from numpy import arange, any as npany, sum as npsum, zeros
+from torch import Size
 
 
 def is_pareto_efficient(costs, return_mask=True):
@@ -33,15 +32,17 @@ def is_pareto_efficient(costs, return_mask=True):
 
 
 def clean_models_return_pareto(data, folder):
-
+    """
+    Deletes the models which do not pertain to the pareto front
+    """
     data_use = data.df.pivot(columns="metric_name", values="mean", index="arm_name")
     pareto_mask = is_pareto_efficient(data_use.values)
     pareto_arms = data_use.index[pareto_mask].values
 
     # TODO: careful with batch in ax
-    for m in listdir(folder):
-        if not (("_").join(m.split(".")[0].split("_")[:2]) in set(pareto_arms)):
-            remove(path.join(folder, m))
+    for file_name in listdir(folder):
+        if not ("_").join(file_name.split(".")[0].split("_")[:2]) in set(pareto_arms):
+            remove(path.join(folder, file_name))
     return pareto_arms
 
 
@@ -84,4 +85,5 @@ def copy_weights(old_model, net):
 
 
 def return_shapes(weight_old, weight_new):
+    """Returns the sahpe to maintain, ie. the bigger """
     return Size([i if j > i else j for i, j in zip(weight_old.shape, weight_new.shape)])

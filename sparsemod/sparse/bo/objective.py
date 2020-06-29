@@ -44,8 +44,12 @@ class MaxMCObjective(MCAcquisitionObjective):
         if samples.shape[-1] != self.weights.shape[-1]:
             raise RuntimeError("Output shape of samples not equal to that of weights")
         num_obj = samples.shape[-1]
-        max_weighted = [torch.matmul(torch.index_select(samples, len(samples.shape)-1, torch.tensor([i])),
-                                     torch.DoubleTensor([self.weights[i]]))
-                        for i in range(num_obj)]
+        max_weighted = [
+            torch.matmul(
+                torch.index_select(samples, len(samples.shape) - 1, torch.tensor([i])),
+                torch.DoubleTensor([self.weights[i]]),
+            )
+            for i in range(num_obj)
+        ]
         max_weighted, indices = torch.max(torch.stack(max_weighted), dim=0)
         return max_weighted

@@ -40,6 +40,7 @@ class ModelTester(object):
         self.splitter = splitter
         self.net = net
         self.models_path = path.join(self.root, "models")
+
     def arm_parameters(self):
         exp = load_data(path.join(self.root, self.name), self.n_obj)
         data = pass_data_to_exp(path.join(self.root, self.name + ".csv"))
@@ -57,7 +58,9 @@ class ModelTester(object):
         n_subjects = 32
         results = []
         for i in tqdm(range(1, n_subjects)):
-            datasets, n_classes = prepare_cost(test_subjects=[i], folder="../data/data_cost/files/")
+            datasets, n_classes = prepare_cost(
+                test_subjects=[i], folder="../data/data_cost/files/"
+            )
             params = self.arm_parameters()
             net = copy.copy(self.net)
             AccMetric = AccuracyMetric(
