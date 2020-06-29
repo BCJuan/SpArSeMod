@@ -43,7 +43,8 @@ def load_experiment():
         quant_scheme=str(args["QUANT_SCHEME"]),
         quant_params=quant_params,
         collate_fn=collate_fn,
-        splitter=bool_converter(args["SPLITTER"])
+        splitter=bool_converter(args["SPLITTER"]),
+        models_path =path.join(args["ROOT"], "models")
     )
     exp, data = sparse_exp.create_load_experiment()
     return exp, data 

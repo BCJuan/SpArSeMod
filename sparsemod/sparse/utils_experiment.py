@@ -19,14 +19,16 @@ from torch import save, load
 from .utils_data import get_shape_from_dataloader
 from .quant_n_prune import quant
 from .model import Trainer
+
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
 
 
-class SparseExperiment():
+class SparseExperiment:
     """
     Class for the Sparse Experiment
     """
+
     def __init__(self, epochs, **kwargs):
         allowed_keys = {
             "root",
@@ -43,12 +45,14 @@ class SparseExperiment():
             "quant_params",
             "collate_fn",
             "splitter",
+            "models_path",
+            "cuda",
         }
-        self.__dict__.update((k, v)
-                             for k, v in kwargs.items() if k in allowed_keys)
+        self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
         self.epochs = epochs
 
     def create_load_experiment(self):
+        """ Creates the experiment or loads it from the json file"""
         if path.exists(path.join(self.root, self.name + ".json")):
             exp = load_data(path.join(self.root, self.name), self.objectives)
             data = pass_data_to_exp(path.join(self.root, self.name + ".csv"))
@@ -59,6 +63,7 @@ class SparseExperiment():
         return exp, data
 
     def get_experiment(self):
+        """ Creates the experiment defining the metrics and the configuration"""
         metric_list = [
             AccuracyMetric(
                 self.epochs,
@@ -71,6 +76,8 @@ class SparseExperiment():
                 quant_params=self.quant_params,
                 collate_fn=self.collate_fn,
                 splitter=self.splitter,
+                models_path=self.models_path,
+                cuda=self.cuda,
             ),
             WeightMetric(
                 name="weight",
@@ -124,21 +131,26 @@ class AccuracyMetric(Metric):
 
     # TODO: stringt to call specific dataset, look at the trainer class
 
-    def __init__(self,
-                 epochs,
-                 name,
-                 pruning,
-                 datasets,
-                 classes,
-                 net,
-                 quant_scheme,
-                 quant_params=None,
-                 collate_fn=None,
-                 splitter=False,
-                 ):
+    def __init__(
+        self,
+        epochs,
+        name,
+        pruning,
+        datasets,
+        classes,
+        net,
+        quant_scheme,
+        quant_params=None,
+        collate_fn=None,
+        splitter=False,
+        models_path=None,
+        cuda="cuda:0",
+    ):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
-        self.trainer = Trainer(pruning=pruning, datasets=datasets)
+        self.trainer = Trainer(
+            pruning=pruning, datasets=datasets, models_path=models_path, cuda=cuda
+        )
         self.reload = False
         self.old_net = None
         self.pruning = pruning
@@ -149,6 +161,8 @@ class AccuracyMetric(Metric):
         self.quant_params = quant_params
         self.collate_fn = collate_fn
         self.splitter = splitter
+        self.models_path = models_path
+        self.cuda = cuda
 
     def fetch_trial_data(self, trial):
         """
@@ -190,10 +204,11 @@ class AccuracyMetric(Metric):
         net_i = self.trainer.train(
             net_i, self.parametrization, name, self.epochs, self.reload, self.old_net
         )
-        net_i = quant(net_i, self.quant_scheme,
-                      self.trainer, self.quant_params)
+        net_i = quant(net_i, self.quant_scheme, self.trainer, self.quant_params)
         result, net_i = self.trainer.evaluate(net_i, quant_mode=False)
-        save(net_i.state_dict(), "./models/" + str(name) + "_qq" + ".pth")
+        save(
+            net_i.state_dict(), path.join(self.models_path, str(name) + "_qq" + ".pth")
+        )
         return 1 - result
 
 
@@ -322,9 +337,11 @@ class FeatureMapMetric(Metric):
 
 
 class LatencyMetric(Metric):
-    def __init__(self, name, datasets, classes, net, flops_capacity, collate_fn,
-                 splitter
-                 ):
+    """ IMplements latency according to the number of operations in the network"""
+
+    def __init__(
+        self, name, datasets, classes, net, flops_capacity, collate_fn, splitter
+    ):
         super().__init__(name, lower_is_better=True)
         self.classes = classes
         self.net = net
@@ -395,6 +412,7 @@ class MyRunner(Runner):
 
 
 def load_data(name, n_obj=None):
+    """ Loads the data from the experiment file json"""
     metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
     for i in range(n_obj):
         register_metric(metrics[i])
@@ -404,5 +422,7 @@ def load_data(name, n_obj=None):
 
 
 def pass_data_to_exp(csv):
+    """Loads the values from each of the evaluations to be further
+    passed to a experiment"""
     dataframe = read_csv(csv, index_col=0)
     return Data(df=dataframe)

@@ -2,30 +2,29 @@
 
 # Description
 
-Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers, given a search space, network builder and morphims operators, network optimized according to performance error, working memory, model size and latency.
+Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers, given a search space, a network builder and morphims operators, network optimized according to performance error, working memory, model size and latency.
+
+That is, this software delivers well performing networks suitable for resource constrained devices in terms of memory size and latency.
+
+Build with Pytorch and Ax.
+
 
 # Usage
 
-1. Create a Space Search function which returns a SearchSpace object, as in `architechtures/cnn.py`.
-    The following elements should always appear on the search space
-    + Learning rate
-    + Learning step (adjust for your dataset)
-    + Learning gamma 
-    + Prune parameter 
-    + Batch size
-2. Create a network builder, as in `architechtures/cnn.py`, which needs to accept the following parameters
-    + Parametrization: that is the dictionary coming from the search space
-    + The number of classes
-    + Input shape
-3. Your data must be arranged in a list of `TensorDataset` or `Dataset` objects as depicted for MNIST, CIFAR10, and CIFAR2 in `load_data.py`.
-4. Complete `config.ini`, with all the parameters (check configuration section for this)
+The folder `sparsemod/examples/` contains several separate functioning examples. Each folder is a different example and contains all the examples to run a sessions of SparseMod.
+
+To adapt to your specific problem, try to imitate one of those examples. The components needed are:
+1. Create a Space Search function which returns a SearchSpace object, as in `sparsemod/examples/cnn_cifar_example/cnn.py`.
+2. Create a network builder, as in `sparsemod/examples/cnn_cifar_example/cnn.py`, which needs to accept the following parameters
+3. Your data must be arranged in a list of `TensorDataset` or `Dataset` objects as depicted for MNIST, CIFAR10, and CIFAR2 in `sparsemod/examples/load_data.py`.
+4. Complete `config.cfg`, with all the parameters (check configuration section for this)
 5. Build a file (example is in current `main.py`) where you call the function `Sparse` from `sparse.sparse` and pass all the config parameters.
 6. Wait until the process completes. You will have to check the results to see which has been the best network.
 
 ### Optional Usage
 
 1. Depending on how your model behaves, that is, how it works with data (for example, sequences in RNNs), you can write a `collate_fn` and pass it to the search program which will use it with the dataloaders. As detailed, for example, in 
-2. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space. Check functions in `architectures\cnn2d_cost.py` -> `split_arrange_pad_n_pack`
+2. IF using sequences and making explicit a chop, the chop variable should be called `max_len` as in rnn. If not chopping, make a fixed parameter in search space. Check functions in `sparsemod/examples/cnn2d_cost.py` -> `split_arrange_pad_n_pack`
 
 
 ## Configuration
@@ -99,9 +98,9 @@ arm:
 
 ## Results
 
-1. The models will be placed in the folder specified in the configuration (currently is hard coded as `models`). THink that only pareto models are saved.
+1. The models will be placed in the folder specified in the configuration as `root`, and there, a models folder will be created, where all the models will be stored. Only pareto models are saved.
 2. Results for the evaluations will be placed in the specified folder in the configuration. It consists of a `csv` where results are saved as dataframe, a `json` for the experiment and a txt for the time taken for the whole experiment.
-3. Check notebook
+
 
 # Installation
 
@@ -113,14 +112,14 @@ arm:
 
 # Points to solve/improve
 
-1. Models folder should be specified in the configuration, now is hardcoded
-2. Check batch size for GP works
-3. Add configuration parameter for selecting the gpu
-4. Add notebook for selecting best network and inspecting results
-5. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
+The next points represent current WIP points considered as weak or defective points of the framework. 
+
+1. Check batch size for GP works
+2. Add notebook for selecting best network and inspecting results
+3. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
 
-Improvements:
+Necessary improvements for the framework:
 
 
 1. Add raytune distribution

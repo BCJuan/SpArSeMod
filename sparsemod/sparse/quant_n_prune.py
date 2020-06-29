@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
-
+"""
+Routines for quantizing and pruning
+the networks developed
+"""
 from torch.nn import Conv2d, Linear, LSTM, GRU, Conv3d
 from torch.nn.utils import prune
-from torch.quantization import (
-    get_default_qconfig,
-    prepare,
-    convert,
-    default_qconfig,
-    quantize_dynamic,
-)
+from torch.quantization import get_default_qconfig, prepare, convert, quantize_dynamic
 from torch import qint8
 
 # TODO: add pruning to bias
 def modules_to_prune(net):
+    """
+    Makes a list of the modules that should be pruned
+    """
     modules = []
-    for name, module in net.named_modules():
+    for _, module in net.named_modules():
         if isinstance(module, Conv3d):
             modules.append((module, "weight"))
         if isinstance(module, Conv2d):
             modules.append((module, "weight"))
         if isinstance(module, Linear):
             modules.append((module, "weight"))
-        if isinstance(module, LSTM) or isinstance(module, GRU):
+        if isinstance(module, (LSTM, GRU)):
             for i in range(module.num_layers):
                 modules.append((module, "weight_ih_l" + str(i)))
                 modules.append((module, "weight_hh_l" + str(i)))
@@ -30,6 +30,11 @@ def modules_to_prune(net):
 
 
 def prune_net(net, threshold):
+    """
+    Prunes the network according to the unstructured L1 method
+    and the parameters specified in __modules_to_prune__
+    """
+    # TODO: structured pruning should be added as a possibility
     parameters = modules_to_prune(net)
     prune.global_unstructured(
         parameters, pruning_method=prune.L1Unstructured, amount=threshold
@@ -40,6 +45,10 @@ def prune_net(net, threshold):
 
 
 def quant(net_i, scheme, trainer, quant_params=None):
+    """
+    Quantizes the network accoring to the different
+    possibilities post, dynamic and both
+    """
     if scheme == "post":
         net_i.to("cpu")
         net_i.eval()
