@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn as nn
 from sparsemod.utils_data import configuration, bool_converter  # str_to_list
 from sparsemod.sparse import Sparse
-from ..load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost
+from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2
 from cnn import search_space, Net, operations
 
 

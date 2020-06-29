@@ -1,13 +1,13 @@
 documents/
 examples/data/
-examples/2dcnn_cost_example/results
-examples/2dcnn_cost_example/models
-examples/2dcnn_rnn_cost_example/results
-examples/2dcnn_rnn_cost_example/models
+examples/cnn_cost_example/results
+examples/cnn_cost_example/models
+examples/cnn_rnn_cost_example/results
+examples/cnn_rnn_cost_example/models
 examples/rnn_cost_example/results
 examples/rnn_cost_example/models
-examples/2dcnn_cifar_example/results
-examples/2dcnn_cifar_example/models
+examples/cnn_cifar_example/results
+examples/cnn_cifar_example/models
 
 
 sparse.code-workspace
