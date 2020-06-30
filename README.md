@@ -102,12 +102,13 @@ The project is licensed under the GNU GLP 3.0 License
 This code has been developed by a joint collaboration of 
  <div class="row">
   <div class="column">
-    <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg"  style="width:100%" href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
-
+    <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg"  style="width:50%">
+    </a>
   </div>
   <div class="column">
     <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
-        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png" style="width:100%">
+        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png" style="width:50%">
     </a>    
   </div>
 </div> 
