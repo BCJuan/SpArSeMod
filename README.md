@@ -36,7 +36,10 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 ## Table of contents
 * [Description](#description)
 * [Installation](#installation)
-* [Setup](#setup)
+* [Usage](#sample-use-and-examples)
+* [Improvements](#improvements)
+* [Support](#support)
+* [License](#license)
 
 ## Installation
 
@@ -61,14 +64,14 @@ To adapt to your specific problem, try to imitate one of those examples. The com
 The process described is for a CNN based network and the [CIFAR 10 Binary](http://manikvarma.org/code/LDKL/download.html).
 
 
-## Results
+### Results
 
 1. The models will be placed in the folder specified in the configuration as `root`, and there, a `models` folder will be created, where all the models will be stored. Only pareto models are saved.
 2. Results for the evaluations will be placed in the specified folder in the configuration. It consists of a `csv` where results are saved as dataframe, a `json` for the experiment and a txt for the time taken for the whole experiment.
 3. In the file `examples/result_inspection.ipynb`, an example of analysing the results is exemplified.
 4. In case yo want to recover the exact structure of your chosen netwrok, you will ahve to rerun SpArse to reload the experiment and inspect the network. An example of such process is found in `examples/cnn_cost_example/read_experiment.py`
 
-## Points to solve/improve
+## Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
@@ -84,3 +87,12 @@ Necessary improvements for the framework:
 2. Add tolerance checker as stopper
 3. Solving the serialization problem when saving the experiment. The JSON files weighs so much because everything inside the metrics classes is saved inside
 
+## Support
+
+If you are having issues, please let us know.
+We have a mailing list located at: juan.borrego@uab.cat
+
+
+## License
+
+The project is licensed under the GNU GLP 3.0 License
