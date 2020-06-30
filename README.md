@@ -11,7 +11,6 @@
         <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
         <img alt="GitHub release" src="https://img.shields.io/badge/release-v0.1.2-blue">
     </a>
-    https://img.shields.io/badge/release-v0.1.2-blue
 </p>
 <h3 align="center">
 <p>Automatic Neural Network Development for Microcontrollers
