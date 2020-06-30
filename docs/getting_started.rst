@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-In this section, the exmple from `Examples <https://github.com/BCJuan/SpArSeMod/tree/reorganize/examples/cnn_cost_example>`_ is explained
+In this section, the example `cnn_cost_example` from `Examples <https://github.com/BCJuan/SpArSeMod/tree/reorganize/examples/cnn_cost_example>`_ is explained
 to see how SpArSeMod works. 
 
 This is just a tutorial showing how to use SpArSeMod, for the specifics, background theory and related,

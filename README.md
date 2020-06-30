@@ -1,6 +1,6 @@
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/logo.png" width="750"/>
+    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/logo.png" width="750"/>
     <br>
 <p>
 
@@ -28,7 +28,7 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/result_sample.png" width="500"/>
+    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/result_sample.png" width="500"/>
     <br>
 <p>
 
@@ -96,3 +96,16 @@ We have a mailing list located at: juan.borrego@uab.cat
 ## License
 
 The project is licensed under the GNU GLP 3.0 License
+
+## Acknowledgement
+
+This code has been developed by a joint collaboration of 
+
+<p align="center">
+    <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg">
+    </a>
+    <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
+        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png">
+    </a>
+</p>
