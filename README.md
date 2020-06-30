@@ -8,12 +8,14 @@
     <a href="https://github.com/BCJuan/SpArSeMod/blob/reorganize/LICENSE">
         <img alt="GitHub" src="https://img.shields.io/badge/license-GNU%20GPL%203.0-blue">
     </a>
+        <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
+        <img alt="GitHub release" src="https://img.shields.io/badge/release-v0.1.2-blue">
+    </a>
+    https://img.shields.io/badge/release-v0.1.2-blue
 </p>
 <h3 align="center">
 <p>Automatic Neural Network Development for Microcontrollers
 </h3>
-
- (EXPERIMENTAL/RESEARCH CODE (WIP))
 
 
 
