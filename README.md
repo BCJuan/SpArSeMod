@@ -28,7 +28,7 @@ Build with [PyTorch](https://pytorch.org/), [GPyTorch](https://gpytorch.ai/)  an
 
 The result obtained after running a SpArSeMoD process is the group of best networks (Pareto frontier networks):
 
-![Sample Result](https://github.com/BCJuan/SpArSeMod/blob/reorganize/sample_result.png)
+![Sample Result](https://github.com/BCJuan/SpArSeMod/blob/reorganize/result_sample.png)
 
 
 # Usage
