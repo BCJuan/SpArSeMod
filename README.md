@@ -1,6 +1,6 @@
 <p align="center">
     <br>
-    <img src="https://raw.githubusercontent.com/BCJuan/SpArSeMod/blob/reorganize/logo.png" width="400"/>
+    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/logo.png" width="400"/>
     <br>
 <p>
 
