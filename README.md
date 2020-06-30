@@ -22,9 +22,13 @@
 
 Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error , working memory (~RAM), model size (~Flash) and latency.
 
-The configuration space (or search space) of the network, that is, the components that build it up are elligible by the user: you can build up networks with CNNs, RNNs or whatever structure you like. However, you will
+The configuration space (or search space) of the network, that is, the components that build it up are elligible by the user: you can build up networks with CNNs, RNNs or whatever structure you like. However, you will have to build the network builder: the function that will specify the concrete network from a search space point. 
 
-Build with Pytorch and Ax.
+Build with [PyTorch](https://pytorch.org/), [GPyTorch](https://gpytorch.ai/)  and [Ax](https://ax.dev/).
+
+The result obtained after running a SpArSeMoD process is the group of best networks (Pareto frontier networks):
+
+![Sample Result](https://github.com/BCJuan/SpArSeMod/blob/reorganize/sample_result.png)
 
 
 # Usage
