@@ -100,12 +100,15 @@ The project is licensed under the GNU GLP 3.0 License
 ## Acknowledgement
 
 This code has been developed by a joint collaboration of 
-
-<p align="center">
+ <div class="row">
+  <div class="column">
     <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
-        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg" alt="Snow" style="width:100%">
     </a>
+  </div>
+  <div class="column">
     <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
-        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png">
-    </a>
-</p>
+        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png" alt="Snow" style="width:100%">
+    </a>    
+  </div>
+</div> 
