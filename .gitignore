@@ -1,13 +1,17 @@
 documents/
-sparsemod/examples/data/
-sparsemod/examples/2dcnn_cost_example/results
-sparsemod/examples/2dcnn_cost_example/models
-sparsemod/examples/2dcnn_rnn_cost_example/results
-sparsemod/examples/2dcnn_rnn_cost_example/models
-sparsemod/examples/rnn_cost_example/results
-sparsemod/examples/rnn_cost_example/models
-sparsemod/examples/2dcnn_cifar_example/results
-sparsemod/examples/2dcnn_cifar_example/models
+examples/data/
+examples/cnn_cost_example/results
+examples/cnn_cost_example/models
+examples/cnn_cost_example/__pycache__
+examples/cnn_rnn_cost_example/results
+examples/cnn_rnn_cost_example/models
+examples/cnn_rnn_cost_example/__pycache__
+examples/rnn_cost_example/results
+examples/rnn_cost_example/models
+xamples/rnn_cost_example/__pycache__
+examples/cnn_cifar_example/results
+examples/cnn_cifar_example/models
+examples/cnn_cifar_example/__pycache__
 
 
 sparse.code-workspace
@@ -18,3 +22,4 @@ PKG-INFO
 dependency_links.txt
 SOURCES.txt
 top_level.txt
+docs/builddir/
