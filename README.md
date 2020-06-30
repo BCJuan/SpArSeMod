@@ -4,17 +4,22 @@
     <br>
 <p>
 
-
-
+<p align="center">
+    <a href="https://github.com/BCJuan/SpArSeMod/blob/reorganize/LICENSE">
+        <img alt="GitHub" src="https://img.shields.io/badge/license-GNU%20GPL%203.0-blue">
+    </a>
+</p>
 <h3 align="center">
 <p>Automatic Neural Network Development for Microcontrollers
 </h3>
 
  (EXPERIMENTAL/RESEARCH CODE (WIP))
 
+
+
 # Description
 
-Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error (-> Accuracy), working memory (~RAM), model size (~Flash) and latency.
+Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error , working memory (~RAM), model size (~Flash) and latency.
 
 The configuration space (or search space) of the network, that is, the components that build it up are elligible by the user: you can build up networks with CNNs, RNNs or whatever structure you like. However, you will
 
