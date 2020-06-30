@@ -1,10 +1,22 @@
-# EXPERIMENTAL/RESEARCH CODE (WIP)
+<p align="center">
+    <br>
+    <img src="https://raw.githubusercontent.com/BCJuan/SpArSeMod/blob/reorganize/logo.png" width="400"/>
+    <br>
+<p>
+
+
+
+<h3 align="center">
+<p>Automatic Neural Network Development for Microcontrollers
+</h3>
+
+ (EXPERIMENTAL/RESEARCH CODE (WIP))
 
 # Description
 
-Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers, given a search space, a network builder and morphims operators, network optimized according to performance error, working memory, model size and latency.
+Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error (-> Accuracy), working memory (~RAM), model size (~Flash) and latency.
 
-That is, this software delivers well performing networks suitable for resource constrained devices in terms of memory size and latency.
+The configuration space (or search space) of the network, that is, the components that build it up are elligible by the user: you can build up networks with CNNs, RNNs or whatever structure you like. However, you will
 
 Build with Pytorch and Ax.
 
