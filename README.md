@@ -79,13 +79,16 @@ The next points represent current WIP points considered as weak or defective poi
 2. Add notebook for selecting best network and inspecting results
 3. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
+This code has a main point of smell:
+
++ The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
 
 Necessary improvements for the framework:
 
 
 1. Add raytune distribution
 2. Add tolerance checker as stopper
-3. Solving the serialization problem when saving the experiment. The JSON files weighs so much because everything inside the metrics classes is saved inside
+
 
 ## Support
 
