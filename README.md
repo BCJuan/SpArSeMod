@@ -18,7 +18,7 @@
 
 # Description
 
-Adaptation and extension of ![SpArSe](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error, working memory (~RAM), model size (~Flash) and latency.
+Adaptation and extension of ![SpArSe: Sparse Architecture Search for CNNs on Resource-Constrained Microcontrollers](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error, working memory (~RAM), model size (~Flash) and latency.
 
 The configuration space (or search space) of the network, that is, the components that build it up are elligible by the user: you can build up networks with CNNs, RNNs or whatever structure you like. However, you will have to build the network builder: the function that will specify the concrete network from a search space point. 
 
