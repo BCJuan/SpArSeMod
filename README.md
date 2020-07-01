@@ -71,20 +71,37 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
 3. In the file `examples/result_inspection.ipynb`, an example of analysing the results is exemplified.
 4. In case yo want to recover the exact structure of your chosen netwrok, you will ahve to rerun SpArse to reload the experiment and inspect the network. An example of such process is found in `examples/cnn_cost_example/read_experiment.py`
 
+
+## Todo list
+
++ [] Add tests for
+    + [x] Model building, training and testing
+        + [] Solve problem of image being smaller than needed
+    + [] Quantization and pruning
+    + [] Sobol stage
+    + [] Gaussian process based stage
+    + [] Morphisms
++ [] Complete documentation for
+    + [] Tutorial
+    + [] General description and concepts
+    + [] Load it in Readthe Docs
++ [] Include tests in 
+    + [] Travis CI
+    + [] Makefile
+        
 ## Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
-1. Check batch size for GP works
-2. Add notebook for selecting best network and inspecting results
-3. When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
+[] Check batch size for GP works
+[] Add notebook for selecting best network and inspecting results
+[] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
 This code has a main point of smell:
 
-+ The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
+[] The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
 
 Necessary improvements for the framework:
-
 
 1. Add raytune distribution
 2. Add tolerance checker as stopper
@@ -110,8 +127,13 @@ This code has been developed by a joint collaboration of
     </a>    
   </div>
   <div class="column">
-    <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
+    <a href="https://www.uab.cat/en/">
         <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg"  width="300">
+    </a>
+  </div>
+  <div class="column">
+    <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/cephis.jpg"  width="300">
     </a>
   </div>
 </div> 
