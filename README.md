@@ -1,11 +1,11 @@
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/logo.png" width="750"/>
+    <img src="https://github.com/BCJuan/SpArSeMod/blob/master/images/logo.png" width="750"/>
     <br>
 <p>
 
 <p align="center">
-    <a href="https://github.com/BCJuan/SpArSeMod/blob/reorganize/LICENSE">
+    <a href="https://github.com/BCJuan/SpArSeMod/blob/master/LICENSE">
         <img alt="GitHub" src="https://img.shields.io/badge/license-GNU%20GPL%203.0-blue">
     </a>
         <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
@@ -28,7 +28,7 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/result_sample.png" width="500"/>
+    <img src="https://github.com/BCJuan/SpArSeMod/blob/master/images/result_sample.png" width="500"/>
     <br>
 <p>
 
@@ -74,32 +74,32 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
 
 ## Todo list
 
-+ [] Add tests for
++ [ ] Add tests for
     + [x] Model building, training and testing
-        + [] Solve problem of image being smaller than needed
-    + [] Quantization and pruning
-    + [] Sobol stage
-    + [] Gaussian process based stage
-    + [] Morphisms
-+ [] Complete documentation for
-    + [] Tutorial
-    + [] General description and concepts
-    + [] Load it in Readthe Docs
-+ [] Include tests in 
-    + [] Travis CI
-    + [] Makefile
+        + [ ] Solve problem of image being smaller than needed
+    + [ ] Quantization and pruning
+    + [ ] Sobol stage
+    + [ ] Gaussian process based stage
+    + [ ] Morphisms
++ [ ] Complete documentation for
+    + [ ] Tutorial
+    + [ ] General description and concepts
+    + [ ] Load it in Readthe Docs
++ [ ] Include tests in 
+    + [ ] Travis CI
+    + [ ] Makefile
         
 ## Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
-[] Check batch size for GP works
-[] Add notebook for selecting best network and inspecting results
-[] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
+[ ] Check batch size for GP works
+[ ] Add notebook for selecting best network and inspecting results
+[ ] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
 This code has a main point of smell:
 
-[] The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
+[ ] The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
 
 Necessary improvements for the framework:
 
@@ -123,17 +123,17 @@ This code has been developed by a joint collaboration of
  <div class="row">
    <div class="column">
     <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
-        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/kostal.png" width="300">
+        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/kostal.png" width="300">
     </a>    
   </div>
   <div class="column">
     <a href="https://www.uab.cat/en/">
-        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/uab.jpeg"  width="300">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/uab.jpeg"  width="300">
     </a>
   </div>
   <div class="column">
     <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
-        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/reorganize/images/cephis.jpg"  width="300">
+        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/cephis.jpg"  width="300">
     </a>
   </div>
 </div> 
