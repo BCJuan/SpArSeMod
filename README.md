@@ -93,13 +93,13 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
-[ ] Check batch size for GP works
-[ ] Add notebook for selecting best network and inspecting results
-[ ] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
++ [ ] Check batch size for GP works
++ [ ] Add notebook for selecting best network and inspecting results
++ [ ] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
 This code has a main point of smell:
 
-[ ] The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
++ [ ] The json serializer saves almost all that is inside. Experiments end up weighing a lot, like MB-> GB. It woul be needed to extract all the structures outside the experiment to avoid this problem. This would be the worst problem in the code. 
 
 Necessary improvements for the framework:
 
