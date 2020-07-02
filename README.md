@@ -11,9 +11,10 @@
         <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
         <img alt="GitHub release" src="https://img.shields.io/badge/release-v0.1.2-blue">
     </a>
-        <a href='https://sparsemod.readthedocs.io/en/latest/?badge=latest'>
-        <img src='https://readthedocs.org/projects/sparsemod/badge/?version=latest' alt='Documentation Status' />
+        <a href='https://sparsemod.readthedocs.io/en/latest/?badge=stable'>
+        <img src='https://readthedocs.org/projects/sparsemod/badge/?version=stable' alt='Documentation Status' />
     </a>
+        <img src='https://travis-ci.com/BCJuan/SpArSeMod.svg?branch=master'>
 </p>
 <h3 align="center">
 <p>Neural Network Development for Microcontrollers
