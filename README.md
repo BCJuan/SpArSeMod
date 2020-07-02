@@ -44,7 +44,7 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 ## Installation
 
 1. Clone this repository
-2. Install conda environment: `conda create env -f sparse.yml`
+2. Install conda environment: `conda env create -n sparse -f sparse.yml`
     1. Alternatively, install packages directly from pip
 3. run `pip install .` 
 
