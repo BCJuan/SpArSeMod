@@ -10,6 +10,8 @@ Welcome to SpArSeMoD's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   install
+   theory
    getting_started
 
 
