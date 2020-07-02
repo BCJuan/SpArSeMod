@@ -11,6 +11,9 @@
         <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
         <img alt="GitHub release" src="https://img.shields.io/badge/release-v0.1.2-blue">
     </a>
+        <a href='https://sparsemod.readthedocs.io/en/latest/?badge=latest'>
+        <img src='https://readthedocs.org/projects/sparsemod/badge/?version=latest' alt='Documentation Status' />
+    </a>
 </p>
 <h3 align="center">
 <p>Neural Network Development for Microcontrollers
@@ -85,9 +88,12 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
     + [ ] Tutorial
     + [ ] General description and concepts
     + [ ] Load it in Readthe Docs
+    + [ ] install documentation
 + [ ] Include tests in 
     + [ ] Travis CI
     + [ ] Makefile
+
++ [ ] Complete `download_data`for tutorial
         
 ## Improvements
 
