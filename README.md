@@ -95,7 +95,9 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
     + [ ] Makefile
 
 + [ ] Complete `download_data`for tutorial
-        
++ [ ] REad the docs problems 
++ [ ] Travis Hooks
+
 ## Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
