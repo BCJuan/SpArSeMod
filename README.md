@@ -28,7 +28,7 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/master/images/result_sample.png" width="500"/>
+    <img src="./result_sample.png" width="500"/>
     <br>
 <p>
 
@@ -123,17 +123,17 @@ This code has been developed by a joint collaboration of
  <div class="row">
    <div class="column">
     <a href="https://github.com/BCJuan/SpArSeMod/releases/tag/">
-        <img alt="GitHub release" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/kostal.png" width="300">
+        <img alt="GitHub release" src="./images/kostal.png" width="300">
     </a>    
   </div>
   <div class="column">
     <a href="https://www.uab.cat/en/">
-        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/uab.jpeg"  width="300">
+        <img alt="GitHub" src="./images/uab.jpeg"  width="300">
     </a>
   </div>
   <div class="column">
     <a href="https://www.uab.cat/web/directory/search/entities-1345675609174.html?param1=1345674960027">
-        <img alt="GitHub" src="https://github.com/BCJuan/SpArSeMod/blob/master/images/cephis.jpg"  width="300">
+        <img alt="GitHub" src="./images/cephis.jpg"  width="300">
     </a>
   </div>
 </div> 
