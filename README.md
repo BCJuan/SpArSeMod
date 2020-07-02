@@ -1,6 +1,6 @@
 <p align="center">
     <br>
-    <img src="https://github.com/BCJuan/SpArSeMod/blob/master/images/logo.png" width="750"/>
+    <img src="./images/logo.png" width="750"/>
     <br>
 <p>
 
