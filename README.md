@@ -28,7 +28,7 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 
 <p align="center">
     <br>
-    <img src="./result_sample.png" width="500"/>
+    <img src="./images/result_sample.png" width="500"/>
     <br>
 <p>
 
