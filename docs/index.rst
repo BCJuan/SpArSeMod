@@ -21,6 +21,8 @@ This documentation describes the framework, how to get started and how to use it
 
    install
    getting_started
+   using_sparse
+   extending_sparse
 
 
 

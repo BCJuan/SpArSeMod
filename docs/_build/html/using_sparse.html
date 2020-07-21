@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using SpArSeMoD &mdash; SpArSeMoD v0.1.2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Extending Sparse" href="extending_sparse.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> SpArSeMoD
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Using SpArSeMoD</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-loading">Data Loading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conlcusions">Conlcusions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#search-space">Search Space</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#network-builder">Network Builder</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_sparse.html">Extending Sparse</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SpArSeMoD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Using SpArSeMoD</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/using_sparse.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="using-sparsemod">
+<h1>Using SpArSeMoD<a class="headerlink" href="#using-sparsemod" title="Permalink to this headline">¶</a></h1>
+<p>To use SpArSeMoD you have to build several components:</p>
+<ul class="simple">
+<li><p>Data Loading</p></li>
+<li><p>Search Space</p></li>
+<li><p>Network builder</p></li>
+<li><p>Configuration file</p></li>
+<li><p>Main call</p></li>
+<li><p>Morphisms</p></li>
+</ul>
+<p>We have seen some of them in the <a class="reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a> guide. In this section we are going to explain with a little bit of detail each of the documents.</p>
+<div class="section" id="data-loading">
+<h2>Data Loading<a class="headerlink" href="#data-loading" title="Permalink to this headline">¶</a></h2>
+<p>SpArSeMoD uses PyTorch  <code class="docutils literal notranslate"><span class="pre">TensorDataset</span></code> (although any object built upon <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> should work) and the main loading function must return a list of the training, validation and test sets, altogether with the number of classes in the dataset. For example, let’s take a look at the way we load the data from MNIST (the code can be found at `)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">prepare_mnist</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads mnist, samples from it a validation dataset in a stratified manner</span>
+<span class="sd">    and returns train, val and test dataset</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ------</span>
+<span class="sd">    list of datasets</span>
+<span class="sd">    number of classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">trainset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span>
+        <span class="n">root</span><span class="o">=</span><span class="s2">&quot;./data/data_mnist&quot;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform_mnist</span><span class="p">(),</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">val_set</span><span class="p">,</span> <span class="n">tr_set</span> <span class="o">=</span> <span class="n">sample_from_class</span><span class="p">(</span><span class="n">trainset</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+    <span class="n">ts_set</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span>
+        <span class="n">root</span><span class="o">=</span><span class="s2">&quot;./data/data_mnist&quot;</span><span class="p">,</span>
+        <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">transform_mnist</span><span class="p">(),</span>
+        <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">tr_set</span><span class="p">,</span> <span class="n">val_set</span><span class="p">,</span> <span class="n">ts_set</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">MNIST</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>First, we are loading the training set with a simple transform</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">transform_mnist</span><span class="p">():</span>
+    <span class="s2">&quot;Transforms for the mnist dataset&quot;</span>
+    <span class="k">return</span> <span class="n">Compose</span><span class="p">([</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">Normalize</span><span class="p">((</span><span class="mf">0.1307</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.3081</span><span class="p">,))])</span>
+</pre></div>
+</div>
+<p>Then, with <code class="docutils literal notranslate"><span class="pre">val_set,</span> <span class="pre">tr_set</span> <span class="pre">=</span> <span class="pre">sample_from_class(trainset,</span> <span class="pre">500)</span></code> we are splitting the training data set in a stratified manner into training and validation leaving 500 samples of each class. That is, we end up with a validation set of 500 examples of each class. The important point, however, is the type of object that it returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="p">(</span>
+        <span class="n">TensorDataset</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_label</span><span class="p">),</span>
+        <span class="n">TensorDataset</span><span class="p">(</span><span class="n">test_data</span><span class="p">,</span> <span class="n">test_label</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>And that is what SpArSeMoD uses. Finally, after obtaining the test set, we retunr what is needed for SpArSeMoD:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">return</span> <span class="p">[</span><span class="n">tr_set</span><span class="p">,</span> <span class="n">val_set</span><span class="p">,</span> <span class="n">ts_set</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">MNIST</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which would be called like: <code class="docutils literal notranslate"><span class="pre">datasets,</span> <span class="pre">classes</span> <span class="pre">=</span> <span class="pre">prepare_mnist()</span></code></p>
+<div class="section" id="conlcusions">
+<h3>Conlcusions<a class="headerlink" href="#conlcusions" title="Permalink to this headline">¶</a></h3>
+<p>So, what does SpArSeMoD need for using data:</p>
+<ul class="simple">
+<li><p>The data must be in encapsulated in a <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> object (or child of it)</p></li>
+<li><p>The loading function must return a list of the training, validation and test sets and the number of classes
+<code class="docutils literal notranslate">&#160;&#160;&#160; <span class="pre">return</span> <span class="pre">[tr_set,</span> <span class="pre">val_set,</span> <span class="pre">ts_set],</span> <span class="pre">n_classes</span></code></p></li>
+<li><p>The data is called as <code class="docutils literal notranslate"><span class="pre">datasets,</span> <span class="pre">classes</span> <span class="pre">=</span> <span class="pre">prepare_data()</span></code></p></li>
+</ul>
+<p><strong><strong><strong><strong><strong><strong><strong><strong><strong>DATA loaders</strong></strong></strong></strong></strong></strong></strong></strong></strong>**</p>
+</div>
+</div>
+<div class="section" id="search-space">
+<h2>Search Space<a class="headerlink" href="#search-space" title="Permalink to this headline">¶</a></h2>
+<p>SpArSeMoD uses a search space definition from <img alt="Ax" src="https://ax.dev/" /> in the <img alt="developed mode" src="https://ax.dev/tutorials/gpei_hartmann_developer.html" />. Hence, all parameters use the same API.</p>
+<p>To define a parmeter we just pick the type of parameter among different possibilities:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RangeParameter</span></code>: parameters with upper and lower bounds and data type fixed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ChoiceParameter</span></code>: Different possibilities like in a set</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FixedParameter</span></code></p></li>
+</ul>
+<p>Let’s see an example of <code class="docutils literal notranslate"><span class="pre">RangeParameter</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RangeParameter</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;param_name&quot;</span><span class="p">,</span>
+    <span class="n">lower</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">upper</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><em>An important point is the name that we give to the parameter: we will use it in the network builder</em></p>
+<p>One of the main problems of Ax and, in general, Gaussian Process based optimizers, is that they do not tolerate <em>ab initio</em> conditional or hierarchical parameters. Hence we must link them ourselves. For example, we may use  parameter for the number of convolutional layers, another for the number of layers at the first of them and so on.</p>
+<p>This idea is used in examples such as <img alt="Cost example" src="_images/cnn2d_cost.py" />. Let’s see how in the case of convolutions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">max_number_of_blocks</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">max_number_of_layers_per_block</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">max_fc_layers</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">RangeParameter</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;num_conv_blocks&quot;</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="n">max_number_of_blocks</span><span class="p">,</span>
+            <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_number_of_blocks</span><span class="p">):</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">RangeParameter</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;downsample_input_depth_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">RangeParameter</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_downsampling_rate_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">lower</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">upper</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">RangeParameter</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_num_layers&quot;</span><span class="p">,</span>
+                <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">upper</span><span class="o">=</span><span class="n">max_number_of_layers_per_block</span><span class="p">,</span>
+                <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">RangeParameter</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;drop_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">lower</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                <span class="n">upper</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+                <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_number_of_layers_per_block</span><span class="p">):</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">RangeParameter</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_layer_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_filters&quot;</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                    <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">RangeParameter</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_layer_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_kernel&quot;</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                    <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">RangeParameter</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_layer_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_type&quot;</span><span class="p">,</span>
+                    <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span><span class="mi">1</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">RangeParameter</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_layer_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_downsample&quot;</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                    <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+<p>As we can see we have a variable <code class="docutils literal notranslate"><span class="pre">max_number_of_blocks</span> <span class="pre">=</span> <span class="pre">2</span></code>, which defines the first loop.  Then we have subvariables for next loops <code class="docutils literal notranslate"><span class="pre">max_number_of_layers_per_block</span> <span class="pre">=</span> <span class="pre">3</span></code>. We use a first loop to define variables at this hierarchical level, such as the number of layers in that convolutional block</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_number_of_blocks</span><span class="p">):</span>
+<span class="o">...</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">RangeParameter</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_num_layers&quot;</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="n">max_number_of_layers_per_block</span><span class="p">,</span>
+            <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>and then, inside this loop, we define other sub loops such as the number of filters for each of the layers at each of the convolution bolocks.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_number_of_blocks</span><span class="p">):</span>
+<span class="o">...</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_number_of_layers_per_block</span><span class="p">):</span>
+    <span class="o">...</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">RangeParameter</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_layer_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_filters&quot;</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">parameter_type</span><span class="o">=</span><span class="n">ParameterType</span><span class="o">.</span><span class="n">INT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Finally we transform the list of parameters into a <code class="docutils literal notranslate"><span class="pre">SearchSpace</span></code> object: <code class="docutils literal notranslate"><span class="pre">search_space</span> <span class="pre">=</span> <span class="pre">SearchSpace(parameters=params)</span></code> which will be used by SpArSeMoD.</p>
+<p>Important to note is that we can also include constraints between parameters, such as a sum constraint or magnitude. See <code class="docutils literal notranslate"><span class="pre">ParameterConstraint</span></code> at <img alt="Ax" src="https://ax.dev/api/core.html?highlight=parameter#module-ax.core.parameter" />.</p>
+<p>This is a proposal for defining the search space with Ax variables. However, we can use whatever way we desire iff we use an Ax search space type parameters and object.</p>
+<div class="section" id="conclusion">
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
+<p>We need to:</p>
+<ul class="simple">
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">SearchSpace</span></code> object with Ax parameters</p></li>
+<li><p>The names used will be used by the network builder</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="network-builder">
+<h2>Network Builder<a class="headerlink" href="#network-builder" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="extending_sparse.html" class="btn btn-neutral float-right" title="Extending Sparse" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Juan Borrego-Carazo
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
