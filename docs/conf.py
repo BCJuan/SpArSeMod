@@ -55,3 +55,4 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # html_static_path = ['_static']
 
 source_suffix = ['.rst', '.md']
+master_doc = 'index'
