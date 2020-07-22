@@ -11,6 +11,166 @@ To use SpArSeMoD you have to build several components:
 
 We have seen some of them in the [Getting Started](getting_started.md) guide. In this section we are going to explain with a little bit of detail each of the documents.
 
+Apart from the main optimization procedure to inspect the resulting data, some ax `Experiment` object inspection is needed, as well as some `.csv` wrangling.
+
+## Main Call and Configuration file
+
+SpArSeMoD internals are not directly accessible and it consists mainly in a simple call with some configurational parameters. The call to SpArSeMoD is made as:
+
+```
+sparse_instance = Sparse(...)
+sparse_instance.run_sparse()
+```
+
+The `Sparse` object instantiation has a signature which corresponds to the different configuration parameters:
+
+```
+Sparse(
+    r1=int(args["R1"]),
+    r2=int(args["R2"]),
+    r3=int(args["R3"]),
+    epochs1=int(args["EPOCHS1"]),
+    epochs2=int(args["EPOCHS2"]),
+    epochs3=int(args["EPOCHS3"]),
+    name=str(args["NAME"]),
+    root=args["ROOT"],
+    objectives=int(args["OBJECTIVES"]),
+    batch_size=int(args["BATCH_SIZE"]),
+    morphisms=bool_converter(args["MORPHISMS"]),
+    pruning=bool_converter(args["PRUNING"]),
+    datasets=datasets,
+    classes=n_classes,
+    debug=bool_converter(args["DEBUG"]),
+    search_space=search_space,
+    net=Net,
+    flops=int(args["FLOPS"]),
+    quant_scheme=str(args["QUANT_SCHEME"]),
+    quant_params=quant_params,
+    collate_fn=collate_fn,
+    splitter=bool_converter(args["SPLITTER"]),
+    morpher_ops=operations)
+```
+
+Most of those parameters are defined in the configuration file, which we will see next in this section. However, some of them are defined in the main call. From the example in ![cnn_cost_example](../examples/cnn_cost_example):
+
+```
+    datasets, n_classes = prepare_cost(folder="../data/data_cost/files", image=True)
+    search_space = search_space()
+    quant_params = None
+    collate_fn = split_arrange_pad_n_pack
+```
+
+The first line is the dataset definition, defined in the further section [Data Loading](## Data Loading). It returns a list of the different sets (training, validation and test) and the number of classes. The second line returns an Ax `SearchSpace` object as defined in the section [Search Space](## Search Space). The parameter `quant_params` serves for defining the PyTorch `nn` modules that you want to quantize thorugh dynamic quantization (for example, `quant_params = [nn.Linear, nn.LSTM]`). We will review it in the configuration file description. And finally, the `collate_fn` is a variable for storing the collate fucntion, explained in [the collate section](### Collates).
+
+Those four parameters are the ones defined in the call function and not throguh the configuration file (although you could define all parameters in the main call without using a configuration file).
+
+### Configuration file
+
+The configuration file serves as a parametrization of the SpArSe procedure (see ![theory](theory.md) for more information. Next a detail of the different parameters found in the configuration file is defined:
+
+```
+[DEFAULT]
+train: BOOL 
+    Defines whether we are in train mode or not. Normal usage is train = True. See Test section for a more detailed explanation.
+
+[TRAIN] # train mode configuration
+r1: INT
+    Number of rounds in the first stage of optimization. With batch size of 1 this shouuld correspond to r1 random configurations
+r2: INT
+    Number of rounds in the second stage of optimization. Arc or Matern Kernel based Gaussian Process (GP) optimization. r2*batch configurations
+r3: INT
+    Number of rounds in the third stage. COnfigurations based in morphisms of the pareto frontier.
+epochs1: INT
+    Training epochs of each configuration at stage 1
+epochs2: INT
+    Training epochs of each configuration at stage 2
+epochs3: INT
+    Training epochs of each configuration at stage 3
+name: STRING
+    Name for the files where SpArSeMoD experiment and results are saved, both csv and json
+root: STRING
+    Folder where results are saved
+objectives: INT
+    Number of objectives included. It is incremental:
+        1: accuracy
+        2: accuracy, model size
+        3: accuracy, model size, working memory
+        4: accuracy, model size, working memory, latency
+batch_size: INT
+    Batch size for the Ax GP procedure. That means that if you define 3 as batch size, at each round  three different configurations are tested.
+debug: BOOL
+    Due to some networks created being too big for some images or feature maps, some times a `RuntimeError` occurs. For this reason, those errors are not directly raised. If you would like to inspect such errors produced, just activate this DEBUG param (will not raise them, but will print them)
+flops: INT
+    Frequency of your deployment platform. TO compute final latency in the platform.
+quant_scheme: STRING
+    PyTorch quantization scheme used. There are three possibilities activated trhough three keywords:
+        post: post training static quantization
+        dynamic: dynamic quantization
+        both: applies to some parts post training static quantization and to some dynamic. Must be defined in the network builder.
+    Check the PyTorch quantization procedure for more details
+morphisms: BOOL
+    Carry on with the third stage or not (equivalent to saying r3=0)
+pruning: BOOL
+    Use pruning during training or not.
+splitter: BOOL
+    Switch to activate `max_len` parameter if appropriate in the collate fn. Check the section ## COllates in the documentation
+```
+
+This is the minimum configuration for being able to use SpArSeMoD. The configuration file, `config.cfg` is simply called and read as:
+
+```
+from sparsemod.sparse.utils_data import configuration, bool_converter
+args = configuration("TRAIN")
+```
+
+and then the parameters used as 
+
+```
+...
+name=str(args["NAME"]),
+root=args["ROOT"],
+objectives=int(args["OBJECTIVES"]),
+batch_size=int(args["BATCH_SIZE"]),
+morphisms=bool_converter(args["MORPHISMS"]),
+...
+```
+
+#### Test configuration
+
+As you can see in the configuration file, there is a section for defining a "test" configuration. Why does this exist? The problem with neural network configuration and architecture testing is that you might want to do cross splits for testing or test the same configuration several times (not possible right now) and then test the chosen configuration in the test but at the end. 
+
+The idea of this test is the following, you optimize with you validation set and then when you have your best working configuration you test it by doing cross splits of the whole dataset and obtain a final result.
+
+Parameters are very similar to the training ones.
+```
+[TEST]
+pruning: BOOL
+    Use pruning during training or not.
+splitter: BOOL
+    Switch to activate `max_len` parameter if appropriate in the collate fn. Check the section ## COllates in the documentation
+quant_scheme: STRING
+    PyTorch quantization scheme used. There are three possibilities activated trhough three keywords:
+        post: post training static quantization
+        dynamic: dynamic quantization
+        both: applies to some parts post training static quantization and to some dynamic. Must be defined in the network builder.
+    Check the PyTorch quantization procedure for more details
+objectives: INT
+    Number of objectives included. It is incremental:
+        1: accuracy
+        2: accuracy, model size
+        3: accuracy, model size, working memory
+        4: accuracy, model size, working memory, latency
+name: STRING
+    Name for the files where SpArSeMoD experiment and results are saved, both csv and json
+root: STRING
+    Folder where results are saved
+epochs: INT
+    Number of epochs to train the model 
+arm: STRING
+    Arm number of the best configuration
+```
+
+
 ## Data Loading
 
 SpArSeMoD uses PyTorch  `TensorDataset` (although any object built upon `Dataset` should work) and the main loading function must return a list of the training, validation and test sets, altogether with the number of classes in the dataset. For example, let's take a look at the way we load the data from MNIST (the code can be found at `)
@@ -65,7 +225,66 @@ And that is what SpArSeMoD uses. Finally, after obtaining the test set, we retun
 
 which would be called like: `datasets, classes = prepare_mnist()`
 
-### Conlcusions
+### Collates 
+
+There is the possibility of modifying the input data, for example, for standardizing it, through a `collate_fn`. The idea is that you define your collate before hand and pass it to SpArSeMoD which will use it in its internally defined dataloaders.
+
+Let's take a look at the CoST collate in the example ![cnn_cost_example](../examples/cnn_cost_example):
+
+```
+def split_arrange_pad_n_pack(data, max_len):
+    """
+    Collate that splits the sequences of the cost dataset
+    then arranges them in smaller sequences. When arranging them
+    in smaller sequences also rearranges the values in them according
+    to the Cost configuration (check COst readme regarding how the values
+    are ordered). That is way there is this line
+    `[i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence]` and the fact that the 2 and 3
+    dimensions are now (8, 8). This is due all to the cost data configuration
+    To use as collate when dataloading cost and previously made a partial
+    and the max len argument is fixed
+
+    Args
+    ---
+    data: data argument that as collate needs for when called by the dataloader
+    max_len: argument to fix the maximum lenght of the subsequences
+
+    Returns
+    ------
+    pack_padded_data: each subsequence padded and packed for RNN consumption
+    new_t_labels: label for each sequence
+    """
+    t_seqs = [tensor(sequence["signal"], dtype=float32) for sequence in data]
+    labels = stack([tensor(label["label"], dtype=tlong) for label in data]).squeeze()
+    new_t_seqs, new_t_labels = [], []
+    for seq, lab in zip(t_seqs, labels):
+        if len(seq) > max_len:
+            n_seqs = int(floor(len(seq) // max_len))
+            for i in range(n_seqs):
+                img_sequence = tensor(
+                    seq[(i * max_len) : (i * max_len + max_len), :]
+                ).view(-1, 8, 8)
+                img_sequence = stack(
+                    [i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in img_sequence], axis=0
+                )
+                new_t_seqs.append(img_sequence)
+                new_t_labels.append(lab)
+        else:
+            len_diff = max_len - len(seq)
+            padding = zeros((len_diff, 8, 8))
+            seq = tensor(seq).view(-1, 8, 8)
+            seq = stack([i[[7, 6, 5, 4, 3, 2, 1, 0], :] for i in seq], axis=0)
+            final_seq = cat((seq, padding), 0)
+            new_t_seqs.append(final_seq)
+            new_t_labels.append(lab)
+    return stack(new_t_seqs), tensor(new_t_labels)
+```
+
+All in all, works as a normal `collate_fn` since it returns a batch of inputs and labels. In the current version of SpArSeMoD, there is the possibility of adding an especial parameter to the collate: `max_len`. This is parameter is intended to be used when classifying sequences. The idea is that you define in your search space a `max_len` parameter as in the ![cnn_cost_example](../examples/cnn_cost_example) and then when the collate is used it will split the sentence. The usage of this parameter is entirely optional.
+
+The collate function should be passed to SpArSeMoD as an uninstantiaed function, i.e.     `collate_fn = split_arrange_pad_n_pack`
+
+### Conclusions
 
 So, what does SpArSeMoD need for using data:
 
@@ -74,7 +293,7 @@ So, what does SpArSeMoD need for using data:
 `    return [tr_set, val_set, ts_set], n_classes`
 + The data is called as `datasets, classes = prepare_data()`
 
-******************DATA loaders********************
+
 
 ## Search Space
 
@@ -237,3 +456,11 @@ We need to:
 
 
 ## Network Builder
+
+## Morphisms
+
+## Inspecting results
+
+### .csv results
+
+### Best configuration details
