@@ -582,6 +582,7 @@ def create_conv_block(self, j, channels):
             )
         conv.append(nn.Droposearch_:space = search_space()
 
+```
 In the `forward` method, if quantization is used, you should include the `QuantStub` and `DeQuantStub` operators as specified in PyTorch quantization guidelines. For example, for only post training static quantization, we could do
 
 ```
@@ -607,7 +608,6 @@ Once you have defined your network builder, you have to import it in your `main`
 ```
 from cnn import search_space, Net, operations
 ....
-
 sparse_instance = Sparse(
     ... 
     net=Net,
