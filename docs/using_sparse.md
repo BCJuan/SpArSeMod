@@ -472,7 +472,19 @@ sparse_instance = Sparse(
     search_space=search_space,
     ...)
 ```
- 
+
+### Mandatory variables
+
+There are some variables that, due to the fact tht SpArSeMoD uses them internally, are mandatory in the search space. 
+
+The manadatory variables are:
+
++ "learning_rate"
++ "learning_gamma"
++ "learning_step"
++ "prune_threshold" (you can fix it as 1 and there will be no pruning)
++ "batch_size"
+
 
 ### Conclusion
 

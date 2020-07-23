@@ -20,6 +20,14 @@
 <p>Neural Network Development for Microcontrollers
 </h3>
 
+## Table of contents
+* [Description](#description)
+* [Installation](#installation)
+* [Usage](#sample-use-and-examples)
+* [Improvements](#improvements)
+* [Support](#support)
+* [License](#license)
+
 # Description
 
 Adaptation and extension of ![SpArSe: Sparse Architecture Search for CNNs on Resource-Constrained Microcontrollers](https://www.cs.princeton.edu/~rpa/pubs/fedorov2019sparse.pdf). The present code delivers neural networks optimized according to performance error, working memory (~RAM), model size (~Flash) and latency.
@@ -37,22 +45,14 @@ The result obtained after running a SpArSeMoD process is the group of best netwo
 <p>
 
 
-## Table of contents
-* [Description](#description)
-* [Installation](#installation)
-* [Usage](#sample-use-and-examples)
-* [Improvements](#improvements)
-* [Support](#support)
-* [License](#license)
-
-## Installation
+# Installation
 
 1. Clone this repository
 2. Install conda environment: `conda env create -n sparse -f sparse.yml`
     1. Alternatively, install packages directly from pip
 3. run `pip install .` 
 
-## Sample use and examples
+# Sample use and examples
 
 The folder `examples/` contains several separate functioning examples. Each folder is a different example and contains all the examples to run a sessions of SparseMod.
 
@@ -67,8 +67,8 @@ To adapt to your specific problem, try to imitate one of those examples. The com
 
 The process described is for a CNN based network and the [CIFAR 10 Binary](http://manikvarma.org/code/LDKL/download.html).
 
-
-### Results
+For a more and complete guide for SpArSeMoD usage, you can checkout the ![Documentation](https://sparsemod.readthedocs.io/en/latest/)
+## Results
 
 1. The models will be placed in the folder specified in the configuration as `root`, and there, a `models` folder will be created, where all the models will be stored. Only pareto models are saved.
 2. Results for the evaluations will be placed in the specified folder in the configuration. It consists of a `csv` where results are saved as dataframe, a `json` for the experiment and a txt for the time taken for the whole experiment.
@@ -76,7 +76,7 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
 4. In case yo want to recover the exact structure of your chosen netwrok, you will ahve to rerun SpArse to reload the experiment and inspect the network. An example of such process is found in `examples/cnn_cost_example/read_experiment.py`
 
 
-## Todo list
+# Todo list
 
 + [ ] Add tests for
     + [x] Model building, training and testing
@@ -98,7 +98,7 @@ The process described is for a CNN based network and the [CIFAR 10 Binary](http:
 + [ ] REad the docs problems 
 + [ ] Travis Hooks
 
-## Improvements
+# Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
@@ -116,17 +116,17 @@ Necessary improvements for the framework:
 2. Add tolerance checker as stopper
 
 
-## Support
+# Support
 
 If you are having issues, please let us know.
 We have a mailing list located at: juan.borrego@uab.cat
 
 
-## License
+# License
 
 The project is licensed under the GNU GLP 3.0 License
 
-## Acknowledgement
+# Acknowledgement
 
 This code has been developed by a joint collaboration of 
  <div class="row">
