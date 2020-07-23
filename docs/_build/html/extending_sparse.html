@@ -86,7 +86,16 @@
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="using_sparse.html">Using SpArSeMoD</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Extending Sparse</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Extending Sparse</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#changing-the-model-class">Changing the Model class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#changing-the-class">Changing the class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changing-the-training-function">Changing the training function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changing-the-training-loop">Changing the training loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changing-the-evaluation-routine">Changing the evaluation routine</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -154,6 +163,246 @@
             
   <div class="section" id="extending-sparse">
 <h1>Extending Sparse<a class="headerlink" href="#extending-sparse" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changing-the-model-class">
+<h2>Changing the Model class<a class="headerlink" href="#changing-the-model-class" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class placed in <code class="docutils literal notranslate"><span class="pre">sparsemod.model</span></code> contains the functions to train and evaluate a model.</p>
+<p>It should be easy to change it for your own routine. However, there are some points and parameters that should be fixed because Sparse uses them.</p>
+<p>If you want to change the whole <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class follow all this section and you will become acquainted of all the necessary changes and mandatory requirements.</p>
+<div class="section" id="changing-the-class">
+<h3>Changing the class<a class="headerlink" href="#changing-the-class" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class neeeds to have as mandatory:</p>
+<ul class="simple">
+<li><p>Signature</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">ddtype</span><span class="o">=</span><span class="n">floatp</span><span class="p">,</span>
+        <span class="n">datasets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">models_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cuda</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+</pre></div>
+</div>
+<p>and common definitions</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">datasets</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">ddtype</span>
+<span class="c1"># TODO: choose GPU with less memory</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">devicy</span> <span class="o">=</span> <span class="n">device</span><span class="p">(</span><span class="n">cuda</span> <span class="k">if</span> <span class="n">torchcuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">datasizes</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">i</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">sett</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sett</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">pruning</span> <span class="o">=</span> <span class="n">pruning</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">models_path</span> <span class="o">=</span> <span class="n">models_path</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">dataloader</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">self.load_dataloaders</span></code> function. This function needs to have as input arguments the batch size and the collate and it should beuild the object <code class="docutils literal notranslate"><span class="pre">self.dataloaders</span></code></p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">load_dataloaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">collate_fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines data loaders as a call to be able to define</span>
+<span class="sd">    collates from outside</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dataloader</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">i</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">sett</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sett</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Train method (explained next) and, inside, the training loop (also explained next)</p></li>
+<li><p>Evaluation method (explained next)</p></li>
+</ul>
+</div>
+<div class="section" id="changing-the-training-function">
+<h3>Changing the training function<a class="headerlink" href="#changing-the-training-function" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class has two main methods <code class="docutils literal notranslate"><span class="pre">Trainer.train</span></code> and <code class="docutils literal notranslate"><span class="pre">Trainer.evaluate</span></code>. In the <code class="docutils literal notranslate"><span class="pre">Trainer.train</span></code> we can find a call to the training loop, a network reloading, and the setting up of some training hyperparameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">reload</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">old_net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="n">state_dict</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+
+        <span class="c1"># Initialize network</span>
+        <span class="k">if</span> <span class="n">reload</span><span class="p">:</span>
+            <span class="n">net</span> <span class="o">=</span> <span class="n">copy_weights</span><span class="p">(</span><span class="n">old_net</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">devicy</span><span class="p">)</span>  <span class="c1"># pyre-ignore [28]</span>
+        <span class="c1"># Define loss and optimizer</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">))</span>
+        <span class="c1"># TODO: change to reduce on plateau, is for cifar change 1000</span>
+        <span class="n">exp_lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">StepLR</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="p">,</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_step&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_gamma&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Train Network</span>
+        <span class="n">net</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_loop</span><span class="p">(</span>
+            <span class="n">net</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="p">,</span>
+            <span class="n">exp_lr_scheduler</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prune_threshold&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">net</span>
+</pre></div>
+</div>
+<p>The main things that you have to conserve if you change this function are:</p>
+<ul class="simple">
+<li><p>The function signature</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">reload</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">old_net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="n">state_dict</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The reloading lines, used in morphisms</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize network</span>
+<span class="k">if</span> <span class="n">reload</span><span class="p">:</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="n">copy_weights</span><span class="p">(</span><span class="n">old_net</span><span class="p">,</span> <span class="n">net</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The return of the function which should be the network itself.</p></li>
+</ul>
+<p>The other parts can be arranged as you want. They are mainly:</p>
+<ul class="simple">
+<li><p>Placing the network in the <code class="docutils literal notranslate"><span class="pre">self.devicy</span></code> object</p></li>
+<li><p>Assigning some hyperaparameters</p></li>
+<li><p>And the training loop</p></li>
+</ul>
+<p>it may be the case that you want only to modify the training loop, that is only modifying the hyperparameters and the trianing loop call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># Define loss and optimizer</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">))</span>
+    <span class="c1"># TODO: change to reduce on plateau, is for cifar change 1000</span>
+    <span class="n">exp_lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">StepLR</span><span class="p">(</span>
+        <span class="n">optimizer</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_step&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="o">=</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_gamma&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Train Network</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_loop</span><span class="p">(</span>
+        <span class="n">net</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="p">,</span>
+        <span class="n">exp_lr_scheduler</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prune_threshold&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>You could substitute only this part and conserve the rest of the class. In the case that you substitute only this part in the next section we describe how to accoplate a new training loop function.</p>
+<p>In case you change this parts the key variables that come from the parametriation are</p>
+<ul class="simple">
+<li><p>‘learning_rate’</p></li>
+<li><p>‘learning_step’</p></li>
+<li><p>‘learning_gamma’</p></li>
+<li><p>‘prune_threshold’</p></li>
+</ul>
+</div>
+<div class="section" id="changing-the-training-loop">
+<h3>Changing the training loop<a class="headerlink" href="#changing-the-training-loop" title="Permalink to this headline">¶</a></h3>
+<p>The training loop mainly carries out the training of the network. However it also performs pruning. In the current training loop, pruning is made incrementally in the procedure, but in your case it could be totally you choice since the only variable coming from the parametrization is the <code class="docutils literal notranslate"><span class="pre">pruninng</span> <span class="pre">threshold</span></code>.</p>
+<p>Hence, you can change the training loop by your own. But keep in mind that this training loop performs:</p>
+<ul class="simple">
+<li><p>Training: important is that, if you have not modified the dataloaders, they are defined as a dictionary in the <code class="docutils literal notranslate"><span class="pre">Trainer.load_dataloaders</span></code> function`</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">load_dataloaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">collate_fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines data loaders as a call to be able to define</span>
+<span class="sd">    collates from outside</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dataloader</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">i</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">sett</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sett</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Pruning: pruning is carried through the boolean variable <code class="docutils literal notranslate"><span class="pre">self.pruning</span></code>.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">phase</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">prune_net</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">init_threshold</span> <span class="o">+</span> <span class="n">thres_step</span> <span class="o">*</span> <span class="n">cnt</span><span class="p">)</span>
+    <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">threshold_init</span></code>, <code class="docutils literal notranslate"><span class="pre">thres_step</span></code> and <code class="docutils literal notranslate"><span class="pre">cnt</span></code> are variables for controlling the amount of pruning at each epoch. All those variables are defined at the beginning of the training loop, and are based on the only parameter that defines the pruning: the final value for the threshold</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">init_threshold</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">thres_step</span> <span class="o">=</span> <span class="p">(</span><span class="n">threshold</span> <span class="o">-</span> <span class="n">init_threshold</span><span class="p">)</span> <span class="o">/</span> <span class="n">steps</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>Saving models: models should be saved in the <code class="docutils literal notranslate"><span class="pre">self.models_path</span></code> and using the variable <code class="docutils literal notranslate"><span class="pre">name</span></code></p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.pth&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<ol class="simple">
+<li><p>The function should return the model itself (the network)</p></li>
+</ol>
+<p>If you use some external parameters you could read the file here and use those parameters.</p>
+</div>
+<div class="section" id="changing-the-evaluation-routine">
+<h3>Changing the evaluation routine<a class="headerlink" href="#changing-the-evaluation-routine" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer.evaluate</span></code> function serves for both the evaluation of the network on the test set and for quantization purposes.  It should conserve its signature and should be using the <code class="docutils literal notranslate"><span class="pre">self.dataloaders</span></code> for choosing which set is used in each case. It should return an accuracy performane (accuracy, not error) and the network itself.</p>
+<p>Also, due to quantization procedures the inputs and labels (in the original implementation) go to the <code class="docutils literal notranslate"><span class="pre">cpu</span></code>.</p>
+<p>Hence,</p>
+<ul class="simple">
+<li><p>Signature: <code class="docutils literal notranslate"><span class="pre">net:</span> <span class="pre">nn.Module,</span> <span class="pre">quant_mode:</span> <span class="pre">bool</span></code></p></li>
+<li><p>Use of <code class="docutils literal notranslate"><span class="pre">self.dataloaders</span></code> to distinguish between calibration and evaluation modes. If you do not perform quantization you don’t need this separation. However, it is better to maintain the signature.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">quant_mode</span><span class="p">:</span>
+    <span class="n">data_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataloader</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">data_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataloader</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Also calibration does not need the full dataset, that’s why:</p>
+<div class="highlight-i notranslate"><div class="highlight"><pre><span></span>if quant_mode and cnt &gt; 2000:
+    break
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Finally, the return values <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">accuracy,</span> <span class="pre">network</span></code>. in the original implementation</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">return</span> <span class="n">correct</span> <span class="o">/</span> <span class="n">total</span><span class="p">,</span> <span class="n">net</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 
