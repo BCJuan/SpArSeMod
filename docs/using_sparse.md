@@ -284,6 +284,19 @@ All in all, works as a normal `collate_fn` since it returns a batch of inputs an
 
 The collate function should be passed to SpArSeMoD as an uninstantiaed function, i.e.     `collate_fn = split_arrange_pad_n_pack`
 
+and then in the `Sparse` instantiation
+
+```
+from cnn2d_cost import search_space, Net, operations, split_arrange_pad_n_pack
+....
+
+sparse_instance = Sparse(
+    ... 
+    collate_fn=collate_fn,
+    ...)
+```
+ 
+
 ### Conclusions
 
 So, what does SpArSeMoD need for using data:
@@ -447,6 +460,20 @@ Important to note is that we can also include constraints between parameters, su
 
 This is a proposal for defining the search space with Ax variables. However, we can use whatever way we desire iff we use an Ax search space type parameters and object.
 
+To use it, import it in the Sparse main call and add it to `Sparse`:
+
+```
+from cnn import search_space, Net, operations
+....
+search_:space = search_space()
+
+sparse_instance = Sparse(
+    ... 
+    search_space=search_space,
+    ...)
+```
+ 
+
 ### Conclusion
 
 We need to:
@@ -457,10 +484,230 @@ We need to:
 
 ## Network Builder
 
+The next element that has to be built is the network builder. It will use the parameters defined in the search space. Generally, it is like a PyTorch Module but being able to accept a configuration dictionary to build the specific network.
+
+Let's see the class signature:
+
+```
+class Net(nn.Module):
+    def __init__(self, parametrization, classes=10, input_shape=None):
+    ...
+````
+
+as see it needs to have three parameters: the dictionary containing the specific configuration, the number of classes, and the input shape.
+
+More requirements are the following. It obviously needs to have a `forward` method, and if quantization is in use, you need to have a `fuse modules` method.
+
+Regarding how it workd, it basically is a generalized network builder. For example to build the convolutional part of a network it first deines a general loop for each block:
+
+```
+...
+conv_blocks = []
+for j in range(1, parametrization.get("num_conv_blocks", 1) + 1):
+    conv_blocks.append(self.create_conv_block(j, channels))
+self.conv_blocks = nn.Sequential(*conv_blocks)
+...
+```
+where `parametrization` contains the dictionary of the configuration, and `self.create_conv_block` is a functon for building each block. In it we can see a generalized convolution builder:
+
+```
+def create_conv_block(self, j, channels):
+        conv = []
+        for i in range(
+            1, self.parametrization.get("conv_" + str(j) + "_num_layers", 1) + 1
+        ):
+            conv_type = self.parametrization.get(
+                "conv_" + str(j) + "_layer_" + str(i) + "_type", "Conv2D"
+            )
+
+            if i == 1 and j != 1:
+                index_l = self.parametrization.get(
+                    "conv_" + str(j - 1) + "_num_layers", 1
+                )
+                index_b = j - 1
+            else:
+                index_l = i - 1
+                index_b = j
+
+            in_channels = self.parametrization.get(
+                "conv_" + str(index_b) + "_layer_" + str(index_l) + "_filters", channels
+            )
+            if conv_type == "SeparableConv2D":
+                conv_layer = DepthwiseSeparableConv(
+                    in_channels,
+                    self.parametrization.get(
+                        "conv_" + str(j) + "_layer_" + str(i) + "_filters", 6
+                    ),
+                    self.parametrization.get(
+                        "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
+                    ),
+                )
+            elif conv_type == "DownsampledConv2D":
+                conv_layer = DownsampleConv(
+                    in_channels,
+                    self.parametrization.get(
+                        "conv_" + str(j) + "_layer_" + str(i) + "_filters", 6
+                    ),
+                    self.parametrization.get(
+                        "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
+                    ),
+                    self.parametrization.get(
+                        "conv_" + str(j) + "_layer_" + str(i) + "_downsample", 0
+                    ),
+                )
+
+            if conv_type == search_:space = search_space()hannels,
+                        self.parametrization.get(
+                            "conv_" + str(j) + "_layer_" + str(i) + "_filters", 6
+                        ),
+                        self.parametrization.get(
+                            "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
+                        ),
+                    )
+                )
+            else:
+                conv.append(conv_layer)
+        if self.parametrization.get("downsample_input_depth_" + str(j + 1)):
+            conv.append(
+                nn.MaxPool2d(
+                    (
+                        self.parametrization.get(
+                            "input_downsampling_rate_" + str(j + 1)
+                        ),
+                        self.parametrization.get(
+                            "input_downsampling_rate_" + str(j + 1)
+                        ),
+                    )
+                )
+            )
+        conv.append(nn.Droposearch_:space = search_space()
+
+In the `forward` method, if quantization is used, you should include the `QuantStub` and `DeQuantStub` operators as specified in PyTorch quantization guidelines. For example, for only post training static quantization, we could do
+
+```
+
+def forward(self, x):
+    """
+    Global forward pass for both the convolution blocks and the fully
+    connected layers.
+    """
+    out = self.quant(x)
+    out = self._forward_features(out)
+    out = out.mean([2, 3])
+    if self.parametrization.get("num_fc_layers") > 0:
+        out = self.fc(out)
+    out = self.classifier(out)
+    out = self.dequant(out)
+    return out
+```
+In general, regarding quantization, you can follow the pytorch quantization guidelines since the quantization procedures have been made following those procedures.
+
+Once you have defined your network builder, you have to import it in your `main` function and pass it to `Sparse`.
+
+```
+from cnn import search_space, Net, operations
+....
+
+sparse_instance = Sparse(
+    ... 
+    net=Net,
+    ...)
+```
+ 
 ## Morphisms
+
+Morphisms correspond to the third stage of the procedure. Morphisms basically consist in hard coded functions that modify the configurtion specifically. As those operations are architecture dependent they have to be defined by the user. They are linked to the parameters defined in the Search Space and then they should use the same names.
+
+ Let's see an example:
+
+```
+def kernel_size(config):
+    """
+    Changes the kernel in a randomly chosen convolution
+    """
+    block = choice(range(1, config["num_conv_blocks"] + 1))
+    layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
+    new_kernel_size = randint(2, 5)
+    config["conv_" + str(block) + "_layer_" + str(layer) + "_kernel"] = new_kernel_size
+    return config
+```
+
+Here we see the only two things that are mandatory for a morphism in SpArSeMoD, the argument must only be a dictionary containng the configurations and the retunrn must be that modified dictionary. In this latter case, we can see that the morphism detailed changes the kernel size of a random convolution layer of the network.
+
+Once you have defined your morphims, grouped them in a dictionary, as for example:
+
+```
+operations = {
+    "num_fc_layers": num_fc_layers,
+    "num_conv_blocks": num_conv_blocks,
+    "layer_type": layer_type,
+    "num_conv_filters": num_conv_filters,
+    "kernel_size": kernel_size,
+    "downsampling_rate": downsampling_rate,
+    "num_fc_weights": num_fc_weights,
+    "num_conv_layers": num_conv_layers,
+}
+```
+Then import them in the main function and add them to Sparse
+
+
+```
+from cnn import search_space, Net, operations
+....
+
+sparse_instance = Sparse(
+    ... 
+    morpher_ops=operations,
+    ...)
+```
 
 ## Inspecting results
 
+Sparse produces two files for the results, one `.csv` where the performance results of each cofigurationn are save along the arm name, and a `.json` where the experiment is saved.
+
+We will use the `.csv` to recover the values of the performance and the `.json` to recover the parameter of the best configuration.
+
 ### .csv results
 
+If you take a look at a `.csv`, you will see that the results do not resemble real values corresponding to model size, ram or ltency. That is because results are standarized internally by SpArSeMoD to be able to put all objectives in more or less the same range ([0,1]). The only performance value that can be read directly is accuracy. The others must be transformed.
+
+An example of all the procedure can be found at ![cnn_cost_example](../examples/cnn_cost_example/visualizing_results.ipynb) in the form of a jupyter notebook tutorial.
+
+
 ### Best configuration details
+
+To be able to see a configuration specific parameters the following procedure is required. 
+
+1. Reload the experiment as if you were to run SpArSe again
+
+```
+    sparse_exp = SparseExperiment(
+        name=str(args["NAME"]),
+        root=args["ROOT"],
+        objectives=int(args["OBJECTIVES"]),
+        pruning=bool_converter(args["PRUNING"]),
+        epochs=args["epochs1"],
+        datasets=datasets,
+        classes=n_classes,
+        search_space=sspace,
+        net=Net,
+        flops=int(args["FLOPS"]),
+        quant_scheme=str(args["QUANT_SCHEME"]),
+        quant_params=quant_params,
+        collate_fn=collate_fn,
+        splitter=bool_converter(args["SPLITTER"]),
+        models_path =path.join(args["ROOT"], "models")
+    )
+```
+
+2. Obtain the experiment and the data by calling the function `load_experiment`
+
+```
+    exp, data = sparse_exp.create_load_experiment()
+```
+
+3. Select the arm tht you want to inspect
+
+```
+exp.arms_by_name['779_0']
+```

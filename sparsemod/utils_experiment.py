@@ -67,7 +67,7 @@ class SparseExperiment:
         metric_list = [
             AccuracyMetric(
                 self.epochs,
-                name="accuracy",
+                name="error",
                 pruning=self.pruning,
                 datasets=self.datasets,
                 classes=self.classes,

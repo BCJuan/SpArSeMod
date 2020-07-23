@@ -3,14 +3,13 @@ from os import path, mkdir
 from time import time
 import numpy as np
 from torch import nn as nn, manual_seed
-from sparsemod.sparse.utils_data import configuration, bool_converter
-from sparsemod.sparse.utils_experiment import SparseExperiment
-from sparsemod.examples.load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost
-from sparsemod.sparse.test import ModelTester
+from sparsemod.utils_data import configuration, bool_converter
+from sparsemod.utils_experiment import SparseExperiment
+
 from cnn2d_cost import search_space, Net, operations, split_arrange_pad_n_pack
+from load_data import  prepare_cost
 
-
-def load_experiment():
+def load_experiment(data_folder="../data/data_cost/files"):
 
     manual_seed(42)
     np.random.seed(42)
@@ -19,8 +18,8 @@ def load_experiment():
     filterwarnings(action="ignore", module=r"torch.quantization")
     filterwarnings(action="ignore", category=UserWarning)
 
-    datasets, n_classes = prepare_cost(folder="../data/data_cost/files", image=True)
-    search_space = search_space()
+    datasets, n_classes = prepare_cost(folder=data_folder, image=True)
+    sspace = search_space()   
     quant_params = None
     collate_fn = split_arrange_pad_n_pack
 
@@ -37,7 +36,7 @@ def load_experiment():
         epochs=args["epochs1"],
         datasets=datasets,
         classes=n_classes,
-        search_space=search_space,
+        search_space=sspace,
         net=Net,
         flops=int(args["FLOPS"]),
         quant_scheme=str(args["QUANT_SCHEME"]),
