@@ -18,6 +18,6 @@ install:
   - conda info -a
   - conda env create -n sparse -f sparse.yml
   - conda activate sparse
-  - pip install setup.py
-script: 
+  - pip install .
+script:  
   - make test
