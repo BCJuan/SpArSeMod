@@ -67,7 +67,7 @@ To adapt to your specific problem, try to imitate one of those examples. The com
 
 The process described is for a CNN based network and the [CIFAR 10 Binary](http://manikvarma.org/code/LDKL/download.html).
 
-For a more and complete guide for SpArSeMoD usage, you can checkout the ![Documentation](https://sparsemod.readthedocs.io/en/latest/)
+For a more and complete guide for SpArSeMoD usage, you can checkout the [Documentation](https://sparsemod.readthedocs.io/en/latest/)
 ## Results
 
 1. The models will be placed in the folder specified in the configuration as `root`, and there, a `models` folder will be created, where all the models will be stored. Only pareto models are saved.
