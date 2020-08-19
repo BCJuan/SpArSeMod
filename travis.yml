@@ -1,7 +1,6 @@
 language: python
 python:
   - "3.6"
-
 install:  
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
@@ -19,6 +18,5 @@ install:
   - conda info -a
   - conda install sparse.yml
   - pip install .
-
 script: 
   - make test
