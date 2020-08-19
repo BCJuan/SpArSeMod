@@ -17,6 +17,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
   - conda env create -n sparse -f sparse.yml
-  - pip install .
+  - conda activate sparse
+  - pip install setup.py
 script: 
   - make test
