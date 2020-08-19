@@ -1,9 +1,10 @@
-from ax.core.parameter import RangeParameter, ParameterType, ChoiceParameter
+from random import choice, randint, random
+
 from ax import SearchSpace
+from ax.core.parameter import ChoiceParameter, ParameterType, RangeParameter
 from torch import nn, rand
-from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch.autograd import Variable
-from random import choice, random, randint
+from torch.quantization import DeQuantStub, QuantStub, fuse_modules
 
 
 class DownsampleConv(nn.Module):
@@ -19,9 +20,13 @@ class DownsampleConv(nn.Module):
 
     def __init__(self, nin, nout, kernel_size, downsample):
         super(DownsampleConv, self).__init__()
-        pointwise = nn.Conv2d(nin, round(nin * (1 - downsample)), kernel_size=1)
+        pointwise = nn.Conv2d(
+            nin, round(nin * (1 - downsample)), kernel_size=1
+        )
         seq = [
-            nn.Conv2d(round(nin * (1 - downsample)), nout, kernel_size=kernel_size),
+            nn.Conv2d(
+                round(nin * (1 - downsample)), nout, kernel_size=kernel_size
+            ),
             nn.BatchNorm2d(num_features=nout, momentum=0.1),
             nn.ReLU(inplace=False),
         ]
@@ -49,7 +54,11 @@ class DepthwiseSeparableConv(nn.Module):
     def __init__(self, nin, nout, kernel_size):
         super(DepthwiseSeparableConv, self).__init__()
         depthwise = nn.Conv2d(
-            nin, nin * kernel_size, kernel_size=kernel_size, padding=1, groups=nin
+            nin,
+            nin * kernel_size,
+            kernel_size=kernel_size,
+            padding=1,
+            groups=nin,
         )
         seq = [
             nn.Conv2d(nin * kernel_size, nout, kernel_size=1),
@@ -67,7 +76,9 @@ class DepthwiseSeparableConv(nn.Module):
 
 
 class ConvBNReLU(nn.Sequential):
-    def __init__(self, in_planes, out_planes, kernel_size=3, stride=1, groups=1):
+    def __init__(
+        self, in_planes, out_planes, kernel_size=3, stride=1, groups=1
+    ):
         padding = (kernel_size - 1) // 2
         super(ConvBNReLU, self).__init__(
             nn.Conv2d(
@@ -145,7 +156,8 @@ class Net(nn.Module):
         classifier.append(
             nn.Linear(
                 parametrization.get(
-                    "fc_weights_layer_" + str(parametrization.get("num_fc_layers", 0)),
+                    "fc_weights_layer_"
+                    + str(parametrization.get("num_fc_layers", 0)),
                     self.odd_shape[0],
                 ),
                 classes,
@@ -167,10 +179,11 @@ class Net(nn.Module):
     def create_conv_block(self, j, channels):
         conv = []
         for i in range(
-            1, self.parametrization.get("conv_" + str(j) + "_num_layers", 1) + 1
+            1,
+            self.parametrization.get("conv_" + str(j) + "_num_layers", 1) + 1,
         ):
             conv_type = self.parametrization.get(
-                "conv_" + str(j) + "_layer_" + str(i) + "_type", "Conv2D"
+                "conv_" + str(j) + "_layer_" + str(i) + "_type", 0
             )
 
             if i == 1 and j != 1:
@@ -183,9 +196,10 @@ class Net(nn.Module):
                 index_b = j
 
             in_channels = self.parametrization.get(
-                "conv_" + str(index_b) + "_layer_" + str(index_l) + "_filters", channels
+                "conv_" + str(index_b) + "_layer_" + str(index_l) + "_filters",
+                channels,
             )
-            if conv_type == "SeparableConv2D":
+            if conv_type == 2:
                 conv_layer = DepthwiseSeparableConv(
                     in_channels,
                     self.parametrization.get(
@@ -195,7 +209,7 @@ class Net(nn.Module):
                         "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
                     ),
                 )
-            elif conv_type == "DownsampledConv2D":
+            elif conv_type == 1:
                 conv_layer = DownsampleConv(
                     in_channels,
                     self.parametrization.get(
@@ -205,19 +219,22 @@ class Net(nn.Module):
                         "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
                     ),
                     self.parametrization.get(
-                        "conv_" + str(j) + "_layer_" + str(i) + "_downsample", 0
+                        "conv_" + str(j) + "_layer_" + str(i) + "_downsample",
+                        0,
                     ),
                 )
 
-            if conv_type == "Conv2D":
+            if conv_type == 0:
                 conv.append(
                     ConvBNReLU(
                         in_channels,
                         self.parametrization.get(
-                            "conv_" + str(j) + "_layer_" + str(i) + "_filters", 6
+                            "conv_" + str(j) + "_layer_" + str(i) + "_filters",
+                            6,
                         ),
                         self.parametrization.get(
-                            "conv_" + str(j) + "_layer_" + str(i) + "_kernel", 3
+                            "conv_" + str(j) + "_layer_" + str(i) + "_kernel",
+                            3,
                         ),
                     )
                 )
@@ -236,7 +253,9 @@ class Net(nn.Module):
                     )
                 )
             )
-        conv.append(nn.Dropout(self.parametrization.get("drop_" + str(j), 0.2)))
+        conv.append(
+            nn.Dropout(self.parametrization.get("drop_" + str(j), 0.2))
+        )
         return nn.Sequential(*conv)
 
     def _get_conv_output(self, bs, shape, feature_function):
@@ -348,11 +367,17 @@ def search_space():
     )
     ##########################################################################
     param7 = RangeParameter(
-        name="num_conv_blocks", lower=1, upper=2, parameter_type=ParameterType.INT
+        name="num_conv_blocks",
+        lower=1,
+        upper=2,
+        parameter_type=ParameterType.INT,
     )
     #########################################################################
     param8 = RangeParameter(
-        name="conv_1_num_layers", lower=1, upper=3, parameter_type=ParameterType.INT
+        name="conv_1_num_layers",
+        lower=1,
+        upper=3,
+        parameter_type=ParameterType.INT,
     )
     param9 = RangeParameter(
         name="conv_1_layer_1_filters",
@@ -373,28 +398,40 @@ def search_space():
         parameter_type=ParameterType.INT,
     )
     param12 = RangeParameter(
-        name="conv_1_layer_1_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_1_layer_1_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
     param13 = RangeParameter(
-        name="conv_1_layer_2_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_1_layer_2_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
     param14 = RangeParameter(
-        name="conv_1_layer_3_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_1_layer_3_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
-    param15 = ChoiceParameter(
+    param15 = RangeParameter(
         name="conv_1_layer_1_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
-    param16 = ChoiceParameter(
+    param16 = RangeParameter(
         name="conv_1_layer_2_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
-    param17 = ChoiceParameter(
+    param17 = RangeParameter(
         name="conv_1_layer_3_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
     param18 = RangeParameter(
         name="conv_1_layer_1_downsample",
@@ -416,7 +453,10 @@ def search_space():
     )
     #########################################################################
     param21 = RangeParameter(
-        name="conv_2_num_layers", lower=1, upper=3, parameter_type=ParameterType.INT
+        name="conv_2_num_layers",
+        lower=1,
+        upper=3,
+        parameter_type=ParameterType.INT,
     )
     param22 = RangeParameter(
         name="conv_2_layer_1_filters",
@@ -437,28 +477,40 @@ def search_space():
         parameter_type=ParameterType.INT,
     )
     param25 = RangeParameter(
-        name="conv_2_layer_1_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_2_layer_1_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
     param26 = RangeParameter(
-        name="conv_2_layer_2_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_2_layer_2_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
     param27 = RangeParameter(
-        name="conv_2_layer_3_kernel", lower=2, upper=5, parameter_type=ParameterType.INT
+        name="conv_2_layer_3_kernel",
+        lower=2,
+        upper=5,
+        parameter_type=ParameterType.INT,
     )
-    param28 = ChoiceParameter(
+    param28 = RangeParameter(
         name="conv_2_layer_1_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
-    param29 = ChoiceParameter(
+    param29 = RangeParameter(
         name="conv_2_layer_2_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
-    param30 = ChoiceParameter(
+    param30 = RangeParameter(
         name="conv_2_layer_3_type",
-        parameter_type=ParameterType.STRING,
-        values=["Conv2D", "DownsampledConv2D", "SeparableConv2D"],
+        parameter_type=ParameterType.INT,
+        lower=0,
+        upper=2,
     )
     param31 = RangeParameter(
         name="conv_2_layer_1_downsample",
@@ -480,13 +532,22 @@ def search_space():
     )
     # ##########################################################################
     param47 = RangeParameter(
-        name="num_fc_layers", lower=0, upper=2, parameter_type=ParameterType.INT
+        name="num_fc_layers",
+        lower=0,
+        upper=2,
+        parameter_type=ParameterType.INT,
     )
     param48 = RangeParameter(
-        name="fc_weights_layer_1", lower=10, upper=200, parameter_type=ParameterType.INT
+        name="fc_weights_layer_1",
+        lower=10,
+        upper=200,
+        parameter_type=ParameterType.INT,
     )
     param49 = RangeParameter(
-        name="fc_weights_layer_2", lower=10, upper=200, parameter_type=ParameterType.INT
+        name="fc_weights_layer_2",
+        lower=10,
+        upper=200,
+        parameter_type=ParameterType.INT,
     )
     ########################################################################
     param50 = RangeParameter(
@@ -496,10 +557,16 @@ def search_space():
         parameter_type=ParameterType.FLOAT,
     )
     param51 = RangeParameter(
-        name="learning_gamma", lower=0.9, upper=0.99, parameter_type=ParameterType.FLOAT
+        name="learning_gamma",
+        lower=0.9,
+        upper=0.99,
+        parameter_type=ParameterType.FLOAT,
     )
     param52 = RangeParameter(
-        name="learning_step", lower=1, upper=10000, parameter_type=ParameterType.INT
+        name="learning_step",
+        lower=1,
+        upper=10000,
+        parameter_type=ParameterType.INT,
     )
     ########################################################################
     param53 = RangeParameter(
@@ -509,10 +576,16 @@ def search_space():
         name="drop_2", lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
     )
     param56 = RangeParameter(
-        name="drop_fc_1", lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
+        name="drop_fc_1",
+        lower=0.1,
+        upper=0.5,
+        parameter_type=ParameterType.FLOAT,
     )
     param57 = RangeParameter(
-        name="drop_fc_2", lower=0.1, upper=0.5, parameter_type=ParameterType.FLOAT
+        name="drop_fc_2",
+        lower=0.1,
+        upper=0.5,
+        parameter_type=ParameterType.FLOAT,
     )
     ########################################################################
     param58 = RangeParameter(
@@ -609,12 +682,10 @@ def layer_type(config):
     """
     block = choice(range(1, config["num_conv_blocks"] + 1))
     layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
-    types = set(config["conv_" + str(block) + "_layer_" + str(layer) + "_type"])
-    original_types = set(["Conv2D", "DownsampledConv2D", "SeparableConv2D"])
-    possible_types = list(original_types - types)
-    new_layer_type = choice(possible_types)
-    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = str(
-        new_layer_type
+    types = config["conv_" + str(block) + "_layer_" + str(layer) + "_type"]
+
+    config["conv_" + str(block) + "_layer_" + str(layer) + "_type"] = randint(
+        0, 2
     )
     return config
 
@@ -626,7 +697,9 @@ def num_conv_filters(config):
     block = choice(range(1, config["num_conv_blocks"] + 1))
     layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
     new_n_filters = randint(1, 50)
-    config["conv_" + str(block) + "_layer_" + str(layer) + "_filters"] = new_n_filters
+    config[
+        "conv_" + str(block) + "_layer_" + str(layer) + "_filters"
+    ] = new_n_filters
     return config
 
 
@@ -637,7 +710,9 @@ def kernel_size(config):
     block = choice(range(1, config["num_conv_blocks"] + 1))
     layer = choice(range(1, config["conv_" + str(block) + "_num_layers"] + 1))
     new_kernel_size = randint(2, 5)
-    config["conv_" + str(block) + "_layer_" + str(layer) + "_kernel"] = new_kernel_size
+    config[
+        "conv_" + str(block) + "_layer_" + str(layer) + "_kernel"
+    ] = new_kernel_size
     return config
 
 
