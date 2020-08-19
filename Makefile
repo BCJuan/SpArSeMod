@@ -1,5 +1,6 @@
 TEST_PATH=./tests/
 ROOT_PATH=./sparsemod/
+
 clean-pycache:
 	find . -type f -name "__pycache__" -exec rm -rf {} \;
 	

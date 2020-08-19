@@ -20,4 +20,5 @@ install:
   - conda install sparse.yml
   - pip install .
 
-script: make test
+script: 
+  - make test
