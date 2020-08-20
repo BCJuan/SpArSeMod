@@ -1,4 +1,4 @@
-name: torch
+name: sparse
 channels:
   - pytorch-nightly
   - defaults
@@ -10,29 +10,44 @@ dependencies:
   - backcall=0.1.0
   - blas=1.0
   - bleach=3.1.4
-  - ca-certificates=2020.1.1
+  - boost=1.67.0
+  - bzip2=1.0.8
+  - ca-certificates=2020.6.24
+  - caffe=1.0
   - cairo=1.14.12
-  - certifi=2020.4.5.1
+  - certifi=2020.6.20
   - cffi=1.14.0
+  - cloudpickle=1.5.0
   - cudatoolkit=10.2.89
   - cycler=0.10.0
   - cython=0.29.17
+  - cytoolz=0.10.1
+  - dask-core=2.20.0
   - dbus=1.13.12
   - decorator=4.4.2
   - defusedxml=0.6.0
   - entrypoints=0.3
   - expat=2.2.6
+  - ffmpeg=4.0
+  - flake8=3.8.3
   - fontconfig=2.13.0
+  - freeglut=3.0.0
   - freetype=2.9.1
   - fribidi=1.0.5
+  - gflags=2.2.2
   - glib=2.63.1
+  - glog=0.3.5
   - gmp=6.1.2
   - graphite2=1.3.13
   - graphviz=2.40.1
   - gst-plugins-base=1.14.0
   - gstreamer=1.14.0
+  - h5py=2.8.0
   - harfbuzz=1.8.8
+  - hdf5=1.10.2
   - icu=58.2
+  - imageio=2.9.0
+  - importlib-metadata=1.7.0
   - importlib_metadata=1.5.0
   - intel-openmp=2020.0
   - ipykernel=5.1.4
@@ -40,6 +55,7 @@ dependencies:
   - ipython_genutils=0.2.0
   - ipywidgets=7.5.1
   - isort=4.3.21
+  - jasper=2.0.14
   - jedi=0.16.0
   - jinja2=2.11.2
   - joblib=0.14.1
@@ -52,17 +68,25 @@ dependencies:
   - kiwisolver=1.1.0
   - lazy-object-proxy=1.4.3
   - ld_impl_linux-64=2.33.1
+  - leveldb=1.20
+  - libboost=1.67.0
   - libedit=3.1.20181209
   - libffi=3.2.1
   - libgcc-ng=9.1.0
   - libgfortran-ng=7.3.0
+  - libglu=9.0.0
+  - libopencv=3.4.2
+  - libopus=1.3.1
   - libpng=1.6.37
+  - libprotobuf=3.12.3
   - libsodium=1.0.16
   - libstdcxx-ng=9.1.0
   - libtiff=4.1.0
   - libuuid=1.0.3
+  - libvpx=1.7.0
   - libxcb=1.13
   - libxml2=2.9.9
+  - lmdb=0.9.23
   - markupsafe=1.1.1
   - matplotlib=3.1.3
   - matplotlib-base=3.1.3
@@ -75,6 +99,7 @@ dependencies:
   - nbconvert=5.6.1
   - nbformat=5.0.4
   - ncurses=6.2
+  - networkx=2.4
   - ninja=1.9.0
   - notebook=6.0.3
   - numpy=1.18.1
@@ -95,7 +120,11 @@ dependencies:
   - prompt-toolkit=3.0.4
   - prompt_toolkit=3.0.4
   - ptyprocess=0.6.0
+  - py-boost=1.67.0
+  - py-opencv=3.4.2
+  - pycodestyle=2.6.0
   - pycparser=2.20
+  - pyflakes=2.2.0
   - pygments=2.6.1
   - pylint=2.4.4
   - pyparsing=2.4.6
@@ -103,60 +132,86 @@ dependencies:
   - pyrsistent=0.16.0
   - python=3.7.7
   - python-dateutil=2.8.1
-  - pytorch=1.7.0.dev20200818
+  - python-gflags=3.1.2
+  - python-leveldb=0.201
+  - pytorch=1.6.0.dev20200514
+  - pywavelets=1.1.1
   - pyzmq=18.1.1
   - qt=5.9.7
   - qtconsole=4.7.3
   - qtpy=1.9.0
   - readline=8.0
+  - scikit-image=0.16.2
   - scipy=1.4.1
   - send2trash=1.5.0
   - setuptools=46.1.3
   - sip=4.19.8
   - six=1.14.0
+  - snappy=1.1.8
   - sqlite=3.31.1
   - terminado=0.8.3
   - testpath=0.4.4
   - tk=8.6.8
-  - torchvision=0.8.0.dev20200818
+  - toolz=0.10.0
+  - torchvision=0.7.0.dev20200514
   - tornado=6.0.4
   - tqdm=4.45.0
   - traitlets=4.3.3
-  - typing_extensions=3.7.4.2
   - wcwidth=0.1.9
   - webencodings=0.5.1
   - wheel=0.34.2
   - widgetsnbextension=3.5.1
   - wrapt=1.12.1
   - xz=5.2.5
+  - yaml=0.2.5
   - zeromq=4.3.1
   - zipp=3.1.0
   - zlib=1.2.11
   - zstd=1.3.7
   - pip:
+    - alabaster==0.7.12
     - appdirs==1.4.4
     - ax-platform==0.1.11
-    - black==19.10b0
+    - babel==2.8.0
     - botorch==0.2.3
     - cfgv==3.1.0
-    - click==7.1.2
+    - chardet==3.0.4
+    - commonmark==0.9.1
     - distlib==0.3.0
+    - docutils==0.16
     - filelock==3.0.12
     - future==0.18.2
     - gpytorch==1.1.1
     - identify==1.4.15
+    - idna==2.10
+    - imagesize==1.2.0
     - nodeenv==1.3.5
+    - onnx==1.7.0
+    - packaging==20.4
     - pandas==1.0.3
-    - pathspec==0.8.0
     - plotly==4.6.0
     - pre-commit==2.4.0
+    - protobuf==4.0.0rc2
     - pycocotools==2.0.0
     - pytz==2019.3
     - pyyaml==5.3.1
-    - regex==2020.7.14
+    - recommonmark==0.6.0
+    - requests==2.24.0
     - retrying==1.3.3
     - scikit-learn==0.22.2.post1
+    - snowballstemmer==2.0.0
+    - sparsemod==0.1.3
+    - sphinx==3.1.2
+    - sphinx-rtd-theme==0.5.0
+    - sphinxcontrib-applehelp==1.0.2
+    - sphinxcontrib-devhelp==1.0.2
+    - sphinxcontrib-htmlhelp==1.0.3
+    - sphinxcontrib-jsmath==1.0.1
+    - sphinxcontrib-qthelp==1.0.3
+    - sphinxcontrib-serializinghtml==1.1.4
     - toml==0.10.1
-    - typed-ast==1.4.1
+    - typing-extensions==3.7.4.2
+    - urllib3==1.25.9
     - virtualenv==20.0.20
-prefix: /home/blue/miniconda3/envs/torch
+prefix: /home/kostal/anaconda3/envs/sparse
+
