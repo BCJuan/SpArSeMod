@@ -3,7 +3,7 @@ from os import path, mkdir
 from time import time
 import numpy as np
 from torch import nn as nn
-from sparsemod.utils_data import configuration, bool_converter  # str_to_list
+from sparsemod.utils_data import configuration, bool_converter, str_to_list
 from sparsemod.sparse import Sparse
 from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2
 from cnn import search_space, Net, operations
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             epochs3=int(args["EPOCHS3"]),
             name=str(args["NAME"]),
             root=args["ROOT"],
-            objectives=int(args["OBJECTIVES"]),
+            objectives=str_to_list(args["OBJECTIVES"]),
             batch_size=int(args["BATCH_SIZE"]),
             morphisms=bool_converter(args["MORPHISMS"]),
             pruning=bool_converter(args["PRUNING"]),

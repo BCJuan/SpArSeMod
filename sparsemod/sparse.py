@@ -17,7 +17,7 @@ from tqdm import tqdm
 from torch import load, save
 from numpy import argmin, stack
 from numpy.linalg import norm
-
+from operator import itemgetter
 from .utils_data import get_shape_from_dataloader
 from .morpher import Morpher
 from .heir import clean_models_return_pareto
@@ -181,8 +181,9 @@ class Sparse:
         """
         self.data.df.to_csv(path.join(self.root, self.name + ".csv"))
         metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
-        for i in range(self.objectives):
-            register_metric(metrics[i])
+        metrics_register = list(itemgetter(*self.objectives)(metrics))
+        for i in metrics_register:
+            register_metric(i)
         register_runner(MyRunner)
         save(self.exp, path.join(self.root, self.name + ".json"))
 

@@ -16,6 +16,7 @@ from ax.core.objective import MultiObjective, Objective
 from pandas import DataFrame, read_csv
 from numpy import log
 from torch import save, load
+from operator import itemgetter
 from .utils_data import get_shape_from_dataloader
 from .quant_n_prune import quant
 from .model import Trainer
@@ -108,14 +109,14 @@ class SparseExperiment:
         experiment = Experiment(
             name="experiment_building_blocks", search_space=self.search_space
         )
-
-        if self.objectives > 1:
+        metrics = list(itemgetter(*self.objectives)(metric_list))
+        if len(self.objectives) > 1:
             objective = MultiObjective(
-                metrics=metric_list[: self.objectives], minimize=True
+                metrics=metrics, minimize=True
             )
         else:
             objective = Objective(
-                metric=metric_list[: self.objectives][0], minimize=True
+                metric=metrics[0], minimize=True
             )
 
         optimization_config = OptimizationConfig(objective=objective)
@@ -414,8 +415,9 @@ class MyRunner(Runner):
 def load_data(name, n_obj=None):
     """ Loads the data from the experiment file json"""
     metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
-    for i in range(n_obj):
-        register_metric(metrics[i])
+    metrics_register = list(itemgetter(*n_obj)(metrics))
+    for i in range(metrics_register):
+        register_metric(i)
     register_runner(MyRunner)
     name = name + ".json"
     return load(name)
