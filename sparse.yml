@@ -1,6 +1,7 @@
 name: sparse
 channels:
   - pytorch-nightly
+  - pytorch
   - defaults
 dependencies:
   - _libgcc_mutex=0.1
