@@ -416,7 +416,7 @@ def load_data(name, n_obj=None):
     """ Loads the data from the experiment file json"""
     metrics = [AccuracyMetric, WeightMetric, FeatureMapMetric, LatencyMetric]
     metrics_register = list(itemgetter(*n_obj)(metrics))
-    for i in range(metrics_register):
+    for i in metrics_register:
         register_metric(i)
     register_runner(MyRunner)
     name = name + ".json"

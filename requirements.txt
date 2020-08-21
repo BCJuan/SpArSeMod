@@ -1,0 +1,29 @@
+ax-platform @ git+https://git@github.com/facebook/Ax.git@ddb6a0e32cdc81723ea52d24faf1dd54ae8a2c4a
+botorch==0.3.0
+certifi==2020.6.20
+cffi @ file:///tmp/build/80754af9/cffi_1596809855670/work
+future==0.18.2
+gpytorch==1.1.1
+Jinja2==2.11.2
+joblib==0.16.0
+MarkupSafe==1.1.1
+mkl-fft==1.1.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1596233707986/work
+olefile==0.46
+pandas==1.1.1
+Pillow @ file:///tmp/build/80754af9/pillow_1594307325547/work
+plotly==4.9.0
+pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
+python-dateutil==2.8.1
+pytz==2020.1
+retrying==1.3.3
+scikit-learn==0.23.2
+scipy==1.5.2
+six==1.15.0
+threadpoolctl==2.1.0
+torch==1.7.0.dev20200819
+torchvision==0.8.0.dev20200820
+tqdm @ file:///tmp/build/80754af9/tqdm_1596810128862/work
+typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1592847887441/work

@@ -3,10 +3,10 @@ from os import path, mkdir
 from time import time
 import numpy as np
 from torch import nn as nn, manual_seed
-from sparsemod.sparse.utils_data import configuration, bool_converter, str_to_list
-from sparsemod.sparse.sparse import Sparse
-from sparsemod.examples.load_data import prepare_cifar10, prepare_mnist, prepare_cifar2, prepare_cost
-from sparsemod.sparse.test import ModelTester
+from sparsemod.utils_data import configuration, bool_converter, str_to_list
+from sparsemod.sparse import Sparse
+from load_data import prepare_cost
+from test import ModelTester
 from cnn2d_cost import search_space, Net, operations, split_arrange_pad_n_pack
 
 
@@ -53,6 +53,8 @@ if __name__ == "__main__":
             collate_fn=collate_fn,
             splitter=bool_converter(args["SPLITTER"]),
             morpher_ops=operations,
+            arc=bool_converter(args["ARC"]),
+            cuda=str(args['CUDA_N'])
         )
         sparse_instance.run_sparse()
         time_end = time()
@@ -64,8 +66,8 @@ if __name__ == "__main__":
         ModelTester(
             root=str(args["ROOT"]),
             name=str(args["NAME"]),
-            arm=int(args["ARM"]),
-            n_obj=int(args["OBJECTIVES"]),
+            arm=str(args["ARM"]),
+            n_obj=str_to_list(args["OBJECTIVES"]),
             epochs=int(args["EPOCHS"]),
             pruning=bool_converter(args["PRUNING"]),
             quant_scheme=str(args["QUANT_SCHEME"]),

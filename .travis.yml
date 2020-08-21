@@ -1,5 +1,6 @@
 language: python
 python:
+  - "3.7"
   - "3.6"
 install:  
   # We do this conditionally because it saves us some downloading if the
@@ -18,6 +19,7 @@ install:
   - conda info -a
   - conda env create -n sparse -f sparse.yml
   - conda activate sparse
+  - pip install -r requirements.txt
   - pip install .
 script:  
   - make test

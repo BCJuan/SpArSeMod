@@ -1,18 +1,9 @@
 documents/
 examples/data/
-examples/cnn_cost_example/results
-examples/cnn_cost_example/models
-examples/cnn_cost_example/__pycache__
-examples/cnn_rnn_cost_example/results
-examples/cnn_rnn_cost_example/models
-examples/cnn_rnn_cost_example/__pycache__
-examples/rnn_cost_example/results
-examples/rnn_cost_example/models
-xamples/rnn_cost_example/__pycache__
-examples/cnn_cifar_example/results
-examples/cnn_cifar_example/models
-examples/cnn_cifar_example/__pycache__
-
+examples/*/results
+examples/*/models
+examples/*/__pycache__
+examples/*/.ipynb_checkpoints
 
 sparse.code-workspace
 .vscode/

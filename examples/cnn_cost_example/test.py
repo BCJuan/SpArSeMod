@@ -1,15 +1,16 @@
-from .utils_experiment import load_data, pass_data_to_exp
+
 from os import path
-from ..examples.load_data import prepare_cost
 from torch import load
-from .model import Trainer
-from .utils_experiment import AccuracyMetric
-from .sparse import reload_net
 from numpy import zeros, save, mean as npmean, asarray
-from .utils_data import get_shape_from_dataloader
 import copy
 from functools import partial
 from tqdm import tqdm
+from sparsemod.utils_data import get_shape_from_dataloader
+from sparsemod.sparse import reload_net
+from sparsemod.utils_experiment import load_data, pass_data_to_exp
+from sparsemod.model import Trainer
+from sparsemod.utils_experiment import AccuracyMetric
+from load_data import prepare_cost
 
 
 class ModelTester(object):
@@ -45,12 +46,12 @@ class ModelTester(object):
         exp = load_data(path.join(self.root, self.name), self.n_obj)
         data = pass_data_to_exp(path.join(self.root, self.name + ".csv"))
         exp.attach_data(data)
-        return exp.trials[self.arm].arm.parameters
+        return exp._arms_by_name[self.arm].parameters
 
     def reload_net(self, arm_params, classes, input_shape, net):
         net = net(arm_params, classes, input_shape)
         # TODO: problem with batch and arm names
-        model_filename = path.join(self.models_path, str(self.arm) + "_0.pth")
+        model_filename = path.join(self.models_path, self.arm + ".pth")
         net.load_state_dict(load(model_filename))
         return net
 
@@ -74,6 +75,7 @@ class ModelTester(object):
                 self.quant_params,
                 self.collate_fn,
                 self.splitter,
+                self.models_path
             )
             AccMetric.parametrization = self.arm_parameters()
             AccMetric.reload = True
