@@ -2,7 +2,7 @@ import os
 import unittest
 import shutil
 import ax
-from sparsemod.model import Trainer
+from sparsemod.model import SimpleTrainer
 from load_data import prepare_cifar10
 from cnn import Net, search_space
 
@@ -13,7 +13,7 @@ class TrainingTestCase(unittest.TestCase):
     def setUp(self):
         dataset, classes = prepare_cifar10()
         self.models_path = "./models"
-        self.trainer = Trainer(pruning=True, datasets=dataset, models_path=self.models_path)
+        self.trainer = SimpleTrainer(pruning=True, datasets=dataset, models_path=self.models_path)
         experiment = ax.Experiment(
                         name="model_test",
                         search_space=search_space(),

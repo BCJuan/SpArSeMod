@@ -22,12 +22,38 @@ from torch import (
     max as maxim,
     sum as summ,
 )
-
+from abc import ABC, abstractmethod
 from .heir import copy_weights
 from .quant_n_prune import prune_net
 
 
-class Trainer:
+class AbstractTrainer(ABC):
+    """ 
+    ABstract class for a trainer. Best to build up 
+    from simpleTrainer or a based implementation. In simple
+    Trainer you can look up to all the required elements to return
+    """
+    def __init__(self, ):
+        pass
+
+    @property
+    @abstractmethod
+    def load_dataloaders(self):
+        """For loading the dataloaders with the inputted collate"""
+        pass
+
+    @abstractmethod
+    def train(self):
+        """ Train general loop"""
+        pass
+
+    @abstractmethod
+    def evaluate(self):
+        """ Evaluation loop """
+        pass
+
+
+class SimpleTrainer(AbstractTrainer):
     """
     Class for trainning and evaluating models.
     It includes dataloaders, datasets, training
@@ -42,7 +68,7 @@ class Trainer:
         models_path=None,
         cuda="cuda:0",
     ):
-
+        super().__init__()
         self.datasets = datasets
         self.dtype = ddtype
         # TODO: choose GPU with less memory
@@ -55,6 +81,7 @@ class Trainer:
         self.dataloader = None
         self.criterion = nn.CrossEntropyLoss()
 
+    @property
     def load_dataloaders(self, batch_size, collate_fn):
         """
         Defines data loaders as a call to be able to define

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from sparsemod.utils_data import get_shape_from_dataloader
 from sparsemod.sparse import reload_net
 from sparsemod.utils_experiment import load_data, pass_data_to_exp
-from sparsemod.model import Trainer
+from sparsemod.model import SimpleTrainer
 from sparsemod.utils_experiment import AccuracyMetric
 from load_data import prepare_cost
 
