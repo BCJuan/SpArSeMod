@@ -1,6 +1,6 @@
 name: sparse
 channels:
-  - pytprch-nighlty
+  - pytorch-nightly
   - defaults
 dependencies:
   - python=3.7
