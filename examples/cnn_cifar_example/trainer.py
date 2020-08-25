@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Model function to train and evaluate the models
-It is called from the metric accuracy
-"""
-from __future__ import division
 from os import path
 import copy
 from typing import Dict
@@ -22,35 +16,9 @@ from torch import (
     max as maxim,
     sum as summ,
 )
-from abc import ABC, abstractmethod
-from .heir import copy_weights
-from .quant_n_prune import prune_net
-
-
-class AbstractTrainer(ABC):
-    """ 
-    ABstract class for a trainer. Best to build up 
-    from simpleTrainer or a based implementation. In simple
-    Trainer you can look up to all the required elements to return
-    """
-    def __init__(self, ):
-        pass
-
-    @property
-    @abstractmethod
-    def load_dataloaders(self):
-        """For loading the dataloaders with the inputted collate"""
-        pass
-
-    @abstractmethod
-    def train(self):
-        """ Train general loop"""
-        pass
-
-    @abstractmethod
-    def evaluate(self):
-        """ Evaluation loop """
-        pass
+from sparsemod.heir import copy_weights
+from sparsemod.quant_n_prune import prune_net
+from sparsemod.model import AbstractTrainer
 
 
 class SimpleTrainer(AbstractTrainer):
@@ -80,7 +48,6 @@ class SimpleTrainer(AbstractTrainer):
         self.models_path = models_path
         self.dataloader = None
         self.criterion = nn.CrossEntropyLoss()
-
 
     def load_dataloaders(self, batch_size, collate_fn):
         """
