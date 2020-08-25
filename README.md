@@ -85,25 +85,25 @@ For a more and complete guide for SpArSeMoD usage, you can checkout the [Documen
     + [ ] Sobol stage
     + [ ] Gaussian process based stage
     + [ ] Morphisms
-+ [ ] Complete documentation for
-    + [ ] Tutorial
-    + [ ] General description and concepts
-    + [ ] Load it in Readthe Docs
-    + [ ] install documentation
-+ [ ] Include tests in 
-    + [ ] Travis CI
-    + [ ] Makefile
++ [x] Complete documentation for
+    + [x] Tutorial
+    + [x] General description and concepts
+    + [x] Load it in Readthe Docs
+    + [x] install documentation
++ [x] Include tests in 
+    + [x] Travis CI
+    + [x] Makefile
 
 + [ ] Complete `download_data`for tutorial
-+ [ ] REad the docs problems 
-+ [ ] Travis Hooks
++ [x] REad the docs problems 
++ [x] Travis Hooks
 
 # Improvements
 
 The next points represent current WIP points considered as weak or defective points of the framework. 
 
-+ [ ] Check batch size for GP works
-+ [ ] Add notebook for selecting best network and inspecting results
++ [x] Check batch size for GP works
++ [x] Add notebook for selecting best network and inspecting results
 + [ ] When loading the data it should be loaded only up to an index, since we dont want to reload morphed solutions results
 
 This code has a main point of smell:
