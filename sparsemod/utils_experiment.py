@@ -19,7 +19,7 @@ from torch import save, load
 from operator import itemgetter
 from .utils_data import get_shape_from_dataloader
 from .quant_n_prune import quant
-from .model import Trainer
+from .model import SimpleTrainer
 
 # TODO: use original repo
 from .flops_counter_experimental import get_model_complexity_info
@@ -48,6 +48,7 @@ class SparseExperiment:
             "splitter",
             "models_path",
             "cuda",
+            "trainer"
         }
         self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
         self.epochs = epochs
@@ -79,6 +80,7 @@ class SparseExperiment:
                 splitter=self.splitter,
                 models_path=self.models_path,
                 cuda=self.cuda,
+                trainer=self.trainer
             ),
             WeightMetric(
                 name="weight",
@@ -87,6 +89,7 @@ class SparseExperiment:
                 net=self.net,
                 collate_fn=self.collate_fn,
                 splitter=self.splitter,
+                trainer=self.trainer
             ),
             FeatureMapMetric(
                 name="ram",
@@ -95,6 +98,7 @@ class SparseExperiment:
                 net=self.net,
                 collate_fn=self.collate_fn,
                 splitter=self.splitter,
+                trainer=self.trainer
             ),
             LatencyMetric(
                 name="latency",
@@ -104,6 +108,7 @@ class SparseExperiment:
                 flops_capacity=self.flops,
                 collate_fn=self.collate_fn,
                 splitter=self.splitter,
+                trainer=self.trainer
             ),
         ]
         experiment = Experiment(
@@ -146,12 +151,17 @@ class AccuracyMetric(Metric):
         splitter=False,
         models_path=None,
         cuda="cuda:0",
+        trainer=None
     ):
         super().__init__(name, lower_is_better=True)
         self.epochs = epochs
-        self.trainer = Trainer(
-            pruning=pruning, datasets=datasets, models_path=models_path, cuda=cuda
-        )
+
+        if trainer:
+            self.trainer = trainer(pruning=pruning, datasets=datasets, models_path=models_path, cuda=cuda)
+        else:
+            self.trainer = SimpleTrainer(
+                pruning=pruning, datasets=datasets, models_path=models_path, cuda=cuda
+            )
         self.reload = False
         self.old_net = None
         self.pruning = pruning
@@ -218,14 +228,17 @@ class WeightMetric(Metric):
     Class for the weight metric
     """
 
-    def __init__(self, name, datasets, classes, net, collate_fn, splitter):
+    def __init__(self, name, datasets, classes, net, collate_fn, splitter, trainer=None):
         super().__init__(name, lower_is_better=True)
         # TODO: maximum limit is nowadays hardcoded as 10**8, change to
         # variable
         self.top = log(10 ** 8)
         self.classes = classes
         self.net = net
-        self.trainer = Trainer(pruning=True, datasets=datasets)
+        if trainer:
+            self.trainer = trainer(pruning=True, datasets=datasets)
+        else:
+            self.trainer = SimpleTrainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
         self.splitter = splitter
 
@@ -276,14 +289,17 @@ class FeatureMapMetric(Metric):
     Class for the weight metric
     """
 
-    def __init__(self, name, datasets, classes, net, collate_fn, splitter):
+    def __init__(self, name, datasets, classes, net, collate_fn, splitter, trainer=None):
         super().__init__(name, lower_is_better=True)
         # TODO: maximum limit is nowadays hardcoded as 10**8, change to
         # variable
         self.top = log(10 ** 8)
         self.classes = classes
         self.net = net
-        self.trainer = Trainer(pruning=True, datasets=datasets)
+        if trainer:
+            self.trainer = trainer(pruning=True, datasets=datasets)
+        else:
+            self.trainer = SimpleTrainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
         self.splitter = splitter
 
@@ -341,14 +357,18 @@ class LatencyMetric(Metric):
     """ IMplements latency according to the number of operations in the network"""
 
     def __init__(
-        self, name, datasets, classes, net, flops_capacity, collate_fn, splitter
+        self, name, datasets, classes, net, flops_capacity, collate_fn, splitter,
+        trainer=None
     ):
         super().__init__(name, lower_is_better=True)
         self.classes = classes
         self.net = net
         self.flops_capacity = flops_capacity
         self.top = log(10 ** 4)
-        self.trainer = Trainer(pruning=True, datasets=datasets)
+        if trainer:
+            self.trainer = trainer(pruning=True, datasets=datasets)
+        else:
+            self.trainer = SimpleTrainer(pruning=True, datasets=datasets)
         self.collate_fn = collate_fn
         self.splitter = splitter
 

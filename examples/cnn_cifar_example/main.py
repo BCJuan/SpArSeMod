@@ -7,7 +7,7 @@ from sparsemod.utils_data import configuration, bool_converter, str_to_list
 from sparsemod.sparse import Sparse
 from load_data import prepare_cifar10, prepare_mnist, prepare_cifar2
 from cnn import search_space, Net, operations
-
+from trainer import SimpleTrainer
 
 if __name__ == "__main__":
 
@@ -49,7 +49,8 @@ if __name__ == "__main__":
             splitter=bool_converter(args["SPLITTER"]),
             morpher_ops=operations,
             arc=bool_converter(args["ARC"]),
-            cuda=str(args['CUDA_N'])
+            cuda=str(args['CUDA_N']),
+            trainer = SimpleTrainer
         )
         sparse_instance.run_sparse()
         time_end = time()
