@@ -73,7 +73,8 @@ class Sparse:
             "morpher_ops",
             "arc",
             "cuda",
-            "trainer"
+            "trainer",
+            "ext_conf"
         }
 
         self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)

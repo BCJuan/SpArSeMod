@@ -50,7 +50,8 @@ if __name__ == "__main__":
             morpher_ops=operations,
             arc=bool_converter(args["ARC"]),
             cuda=str(args['CUDA_N']),
-            trainer = SimpleTrainer
+            trainer = SimpleTrainer,
+            ext_conf=None
         )
         sparse_instance.run_sparse()
         time_end = time()
