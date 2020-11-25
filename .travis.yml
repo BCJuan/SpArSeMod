@@ -19,7 +19,7 @@ install:
   - conda info -a
   - conda env create -n sparse -f sparse.yml
   - conda activate sparse
-  - pip install -r requirements.txt
+  - pip install -r requirements.txt --use-feature=2020-resolver
   - pip install .
 script:  
   - make test
