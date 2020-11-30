@@ -115,6 +115,18 @@ Necessary improvements for the framework:
 1. Add raytune distribution
 2. Add tolerance checker as stopper
 
+# Citation
+If you use SpArSeMod in your work, please cite us as follows:
+```
+@inproceedings{Borrego-Carazo2020,
+address = {Miami, Florida},
+author = {Borrego-Carazo, Juan and Castells-Rufas, David and Carrabina, Jordi and Biempica, Ernesto},
+booktitle = {19TH IEEE INTERNATIONAL CONFERENCE ON MACHINE LEARNING AND APPLICATIONS (ICMLA)},
+publisher = {IEEE},
+title = {{Extending SpArSe: Automatic Gesture Recognition Architectures for Embedded Devices}},
+year = {2020}
+}
+```
 
 # Support
 
